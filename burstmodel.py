@@ -27,10 +27,10 @@ def event_rate(time, event_time, scale, amp, skew):
 ### note: theta_all is a numpy array of n by m, 
 ### where n is the number of peaks, and m is the number of parameters
 ### per peak
-def model_means(Delta, , skew, bkg, scale, theta_evt, nbins=10):
+def model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10):
 
     delta = Delta/nbins
-    nsmall = int(T/delta)
+    nsmall = nbins_data*nbins
     time_small = np.arange(nsmall)*delta
     rate_small = np.zeros(nsmall)
 
@@ -84,27 +84,30 @@ class DictPosterior(object):
 
     '''
     note: implicit assumption is that array times is equally spaced
-
+          nbins_data: number of bins in data
+          nbins: multiplicative factor for model light curve bins
     '''
-    def __init__(self, times, counts, model, npar):
+    def __init__(self, times, counts, model, npar, nbins=10):
         self.times = times
         self.counts = counts
         self.model = model
         self.npar = npar
 
         self.Delta = times[1]-times[0]
-        self.T =  (times[-1]-times[0])
+        self.nbins_data = len(times)
+        self.nbins = nbins
 
-        return
         
 
     ## theta = [scale, skew, move1, amp1, move2, amp2]    
     def loglike(theta):
-    
+        
         ### unpack theta:
         skew, bkg, scale, theta_evt = unpack(theta)
         
+        lambdas = model_means(self.Delta, self.nbins_data, skew, bkg, scale, theta_evt, nbins=self.nbins)
 
+        return log_likelihood(lambdas, self.counts)
 
     ## change parameters:
     

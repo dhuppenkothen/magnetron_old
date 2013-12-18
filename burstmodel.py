@@ -70,10 +70,17 @@ def unpack(theta):
     return skew, bkg, scale, theta_evt
 
 
-
-
 ## go from weird shape to numpy array
-def pack(theta, npar):
+def pack(skew, bkg, scale, theta_evt):
+
+    theta = np.zeros(len(theta_evt.flatten()))
+    theta[0] = skew
+    theta[1] = bkg
+    theta[2] = scale
+    theta[3:] = theta_evt.flatten()
+
+    return theta
+
 
 class DictPosterior(Posterior, object):
 

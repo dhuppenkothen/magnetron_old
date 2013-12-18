@@ -2,7 +2,7 @@ TransientDict
 =============
 
 Using dumbed-down dictionary methods to fit the bursts from magnetrons.
-Oops we meant "Magnetars".
+Oops we meant "magnetars".
 
 authors
 -------

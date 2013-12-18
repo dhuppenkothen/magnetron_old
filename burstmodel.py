@@ -36,20 +36,22 @@ def event_rate(time, theta):
 ### note: theta_all is a numpy array of n by m, 
 ### where n is the number of peaks, and m is the number of parameters
 ### per peak
-def time_map(Delta, T, theta_all, nbins=10):
+def model_means(Delta, T, theta_all, nbins=10):
 
     delta = Delta/nbins
     nsmall = int(T/delta)
     time_small = np.arange(nsmall)*delta
-    counts_small = np.zeros(nsmall)
+    rate_small = np.zeros(nsmall)
 
     for t in theta_all:
-        counts_temp = event_rate(time_small, t)
-        counts_small = counts_small + counts_temp
-    
-    return counts_small 
+        rate_temp = event_rate(time_small, t)
+        rate_small = rate_small + rate_temp
 
+    nrow = len(counts_small)/nbins
+    rate_map = rate_small.reshape(nrow, nbins)
+    rate_map_sum = np.sum(rate_map, axis=1)*delta
 
+    return rate_map_sum
 
 
 

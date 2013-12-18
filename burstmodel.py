@@ -1,3 +1,7 @@
+
+import matplotlib.pyplot as plt
+from pylab import * 
+
 import numpy as np
 import copy
 
@@ -173,7 +177,7 @@ class DictPosterior(object):
 def model_burst():
 
     times = np.arange(1000.0)/10000.0
-    counts = np.random.poisson(10.0, size=len(times))
+    counts = np.random.poisson(2000.0, size=len(times))
 
     skew = 3.0
     scale = 0.005
@@ -189,6 +193,43 @@ def model_burst():
 
     return theta
 
+
+def test_burst(times, counts):
+
+    skew = 5.0
+    bkg = 2000.0
+    scale = 0.01
+
+    theta_evt = np.array([[0.82, 30000], [0.87, 60000], [0.95, 50000], [1.05, 20000]])
+    
+    Delta = times[1]-times[0]
+    nbins_data = len(times)
+
+    counts_model = model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10) 
+
+    plt.plot(times, counts, 'k')
+    plt.plot(times, counts_model, 'r')
+
+    theta = pack(skew, bkg, scale, theta_evt)   
+    return theta
+
+
+def plot_test(times, counts, theta):
+
+    plt.plot(times, counts, 'k')
+
+
+    Delta = times[1]-times[0]
+    nbins_data = len(times)
+
+
+    for t in np.atleast_2d(theta):
+
+        skew, bkg, scale, theta_evt = unpack(t)
+        counts_model = model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10)
+        plt.plot(times, counts_model, 'r')
+
+    return
 
 # Poisson log likelihood based on a set of rates
 # log[ prod exp(-lamb)*lamb^x/x! ]

@@ -1,12 +1,12 @@
-
+import numpy as np
 
 def word(time, width, skew = 2.0):
 
     t = np.array(time)/width
     #y = exp(((x>0)*2-1)*x)
-    y = zeros_like(t)
-    y[t<0] = exp(t[t<0])
-    y[t>0] = exp(-skew*t[t>0])
+    y = np.zeros_like(t)
+    y[t<=0] = np.exp(skew*t[t<=0])
+    y[t>0] = np.exp(-t[t>0])
 
     return y
 #    y1 = [np.exp(x) for x in xvar if x < 0]

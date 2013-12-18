@@ -1,12 +1,12 @@
 
 
-def word(xvar, width, skew = 2.0):
+def word(time, width, skew = 2.0):
 
-    x = np.array(xvar)/width
+    t = np.array(time)/width
     #y = exp(((x>0)*2-1)*x)
-    y = zeros_like(x)
-    y[x<0] = exp(x[x<0])
-    y[x>0] = exp(-skew*x[x>0])
+    y = zeros_like(t)
+    y[t<0] = exp(t[t<0])
+    y[t>0] = exp(-skew*t[t>0])
 
     return y
 #    y1 = [np.exp(x) for x in xvar if x < 0]
@@ -19,7 +19,7 @@ def word(xvar, width, skew = 2.0):
 #### theta[1] is scale parameter
 #### theta[2] is amplitude
 
-def double_exponential(x, theta):
+def double_exponential(time, theta):
 
     #x = x - theta[0]
 
@@ -27,10 +27,10 @@ def double_exponential(x, theta):
     scale = theta[1]
     amp = theta[2]
 
-    x = x - move
-    y = amp*word(x, scale)
+    time = time - move
+    counts = amp*word(time, scale)
 
-    return y
+    return counts
     
 
 

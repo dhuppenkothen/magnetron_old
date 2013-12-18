@@ -27,7 +27,7 @@ def double_exponential(x, theta):
     scale = theta[1]
     amp = theta[2]
 
-    x = x - move]
+    x = x - move
     y = amp*word(x, scale)
 
     return y

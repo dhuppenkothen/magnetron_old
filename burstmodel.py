@@ -119,10 +119,19 @@ class DictPosterior(object):
 import scipy.special
 def log_likelihood(lambdas, data):
     return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
-		-np.sum(scipy.special.gammaln(data + 1))
+        -np.sum(scipy.special.gammaln(data + 1))
 
 
 
-
-
+# Our prior for a SINGLE WORD
+# Input: parameter vector, which gets unpacked into named things
+# feel free to change the order if that's how you defined it - BJB
+def log_prior(params):
+    [amplitude, scale, skew] = unpack(params)
+    if amplitude < np.log(-10.) or amplitude > np.log(10.) or \
+        scale < np.log(-6.) or scale > np.log(12.) or skew < np.log(-1.5) or \
+        skew > np.log(1.5):
+        return -np.Inf
+    return 0.
+    # okay now do it proper...
 

@@ -32,7 +32,11 @@ def double_exponential(x, theta):
 
     return y
     
-
-
-    
+# Poisson log likelihood based on a set of rates
+# log[ prod exp(-lamb)*lamb^x/x! ]
+# exp(-lamb)
+import scipy.special
+def log_likelihood(lambdas, data):
+    return -np.sum(lambdas) - np.sum(data*np.log(lambdas))\
+		-np.sum(scipy.special.gammaln(data))
 

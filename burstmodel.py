@@ -59,12 +59,15 @@ def unpack(theta):
     theta_evt is an array of npeaks by 2, where npeaks is the number of peaks
     each row is (event_time, amp)
     '''
-    skew = theta[0]
-    bkg = theta[1]
-    scale = theta[2]
+    skew = np.exp(theta[0])
+    bkg = np.exp(theta[1])
+    scale = np.exp(theta[2])
 
     theta_evt = theta[3:].reshape((len(theta)-3)/2, 2)
-    
+   
+    for i,t in enumerate(theta_evt):
+        theta_evt[i][1] = np.exp(t[1])
+ 
     return skew, bkg, scale, theta_evt
 
 
@@ -72,9 +75,13 @@ def unpack(theta):
 def pack(skew, bkg, scale, theta_evt):
 
     theta = np.zeros(len(theta_evt.flatten())+3)
-    theta[0] = skew
-    theta[1] = bkg
-    theta[2] = scale
+    theta[0] = np.log(skew)
+    theta[1] = np.log(bkg)
+    theta[2] = np.log(scale)
+
+    for i,t in enumerate(theta_evt):
+        theta_evt[i][1] = np.log(t[1])
+
     theta[3:] = theta_evt.flatten()
 
     return theta
@@ -97,7 +104,30 @@ class DictPosterior(object):
         self.nbins_data = len(times)
         self.nbins = nbins
 
-        
+
+
+    def logprior(theta):
+
+        # Our prior for a SINGLE WORD
+        # Input: parameter vector, which gets unpacked into named things
+        # feel free to change the order if that's how you defined it - BJB
+
+        saturation_countrate = 3.5e5 ### in counts/s
+        T = self.times[-1] - self.times[0]
+    
+
+        skew, bkg, scale, theta_evt = unpack(theta)
+        if  scale < self.Delta or scale > T or skew < np.exp(-1.5) or skew > np.exp(3.0):
+            return -np.Inf
+
+        all_event_times = theta_evt[:,0]
+        all_amp = theta_evt[:,1]
+        if np.min(event_times) < self.times[0] or np.max(event_times) > self.times[1] or \
+                np.min(all_amp) < 0.1/self.Delta or np.max(all_amp) > saturation_countrate:
+            return -np.Inf
+
+        return 0.
+
 
     ## theta = [scale, skew, move1, amp1, move2, amp2]    
     def loglike(theta):
@@ -111,6 +141,18 @@ class DictPosterior(object):
 
     ## change parameters:
     
+
+    def logposterior(theta):
+        return logprior(theta) + loglike(theta)
+
+
+    def __call__(theta):
+        return logposterior(theta   def logposterior(theta):
+        return logprior(theta) + loglike(theta)
+
+
+    def __call__(theta):
+        return logposterior(theta))
 
 
 # Poisson log likelihood based on a set of rates
@@ -128,12 +170,12 @@ def log_likelihood(lambdas, data):
 # Our prior for a SINGLE WORD
 # Input: parameter vector, which gets unpacked into named things
 # feel free to change the order if that's how you defined it - BJB
-def log_prior(params):
-    [amplitude, scale, skew] = unpack(params)
-    if amplitude < np.log(-10.) or amplitude > np.log(10.) or \
-        scale < np.log(-6.) or scale > np.log(12.) or skew < np.log(-1.5) or \
-        skew > np.log(1.5):
-        return -np.Inf
-    return 0.
-    # okay now do it proper...
+#def log_prior(params):
+#    [amplitude, scale, skew] = unpack(params)
+#    if amplitude < np.log(-1000.) or amplitude > np.log(1000.) or \
+#        scale < np.log(-6.) or scale > np.log(12.) or skew < np.log(-1.5) or \
+#        skew > np.log(1.5):
+#        return -np.Inf
+#    return 0.
+#    # okay now do it proper...
 

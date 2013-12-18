@@ -1,10 +1,12 @@
+from collections import defaultdict
 
 import matplotlib.pyplot as plt
 from pylab import * 
 
 import numpy as np
 import copy
-
+import argparse
+import emcee
 
 def word(time, scale, skew = 2.0):
 
@@ -193,13 +195,15 @@ def model_burst():
 
     return theta
 
+### put in burst times array and counts array
+def test_burst(times, counts, namestr = 'testburst', nwalker=32):
 
-def test_burst(times, counts):
+    times = times - times[0]
 
+    ### initialise guess for burst 090122218, tstart = 47.4096 
     skew = 5.0
     bkg = 2000.0
     scale = 0.01
-
     theta_evt = np.array([[0.82, 30000], [0.87, 60000], [0.95, 50000], [1.05, 20000]])
     
     Delta = times[1]-times[0]
@@ -207,11 +211,34 @@ def test_burst(times, counts):
 
     counts_model = model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10) 
 
+    figure()
     plt.plot(times, counts, 'k')
     plt.plot(times, counts_model, 'r')
+    plt.xlabel('Time [s]', fontsize=18)
+    plt.ylabel('Counts per bin', fontsize=18)
+    plt.title('Light curve with initial guess for model', fontsize=18)
+    plt.savefig(namestr + '_initialguess.png', format='png')
+    plt.close()
 
     theta = pack(skew, bkg, scale, theta_evt)   
-    return theta
+
+    lpost = DictPosterior(times, counts)
+    
+    p0 = [theta+np.random.rand(len(theta))*1.0e-3 for t in range(nwalker)]
+
+    sampler = emcee.EnsembleSampler(nwalker, len(theta), lpost)
+    pos, prob, state = sampler.run_mcmc(p0, 200)
+    sampler.reset()
+    sampler.run_mcmc(pos, 1000, rstate0 = state)
+
+    plot_test(times, counts, sampler.flatchain[-10:])
+    plt.xlabel('Time [s]', fontsize=18)
+    plt.ylabel('Counts per bin', fontsize=18)
+    plt.title('Light curve with draws from posterior sample', fontsize=18)
+    plt.savefig(namestr + '_posteriorsample.png', format='png')
+    plt.close()
+
+    return 
 
 
 def plot_test(times, counts, theta):
@@ -243,16 +270,39 @@ def log_likelihood(lambdas, data):
         -np.sum(scipy.special.gammaln(data + 1))
 
 
+def conversion(filename):
+    f=open(filename, 'r')
+    output_lists=defaultdict(list)
+    for line in f:
+        if not line.startswith('#'):
+             line=[value for value in line.split()]
+             for col, data in enumerate(line):
+                 output_lists[col].append(data)
+    return output_lists
 
-# Our prior for a SINGLE WORD
-# Input: parameter vector, which gets unpacked into named things
-# feel free to change the order if that's how you defined it - BJB
-#def log_prior(params):
-#    [amplitude, scale, skew] = unpack(params)
-#    if amplitude < np.log(-1000.) or amplitude > np.log(1000.) or \
-#        scale < np.log(-6.) or scale > np.log(12.) or skew < np.log(-1.5) or \
-#        skew > np.log(1.5):
-#        return -np.Inf
-#    return 0.
-#    # okay now do it proper...
+def main(): 
 
+    data = conversion(filename)
+    times = np.array([float(t) for t in data[0]])    
+    counts = np.array([float(c) for c in data[1]])
+
+    test_burst(times, counts, namestr = namestr, nwalker=nwalkers)
+   
+    return
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Script to play around with Fermi/GBM magnetar data')
+    parser.add_argument('-f', '--filename', action='store', dest ='filename', help='input filename')
+    parser.add_argument('-n', '--namestr', action='store', dest='namestr', help='Output filename string')
+    parser.add_argument('--nwalkers', action='store', default='32', help='Number of emcee walkers')
+ 
+
+    clargs = parser.parse_args()
+    
+    nwalkers = int(clargs.nwalkers)
+    filename = clargs.filename
+    namestr = clargs.namestr
+
+    main()

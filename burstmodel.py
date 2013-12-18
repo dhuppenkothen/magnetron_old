@@ -147,12 +147,12 @@ class DictPosterior(object):
 
 
     def __call__(theta):
-        return logposterior(theta   def logposterior(theta):
+       # return logposterior(theta   def logposterior(theta):
         return logprior(theta) + loglike(theta)
 
 
     def __call__(theta):
-        return logposterior(theta))
+        return logposterior(theta)
 
 
 # Poisson log likelihood based on a set of rates

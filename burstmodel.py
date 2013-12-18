@@ -37,6 +37,6 @@ def double_exponential(time, theta):
 # exp(-lamb)
 import scipy.special
 def log_likelihood(lambdas, data):
-    return -np.sum(lambdas) - np.sum(data*np.log(lambdas))\
-		-np.sum(scipy.special.gammaln(data))
+    return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
+		-np.sum(scipy.special.gammaln(data + 1))
 

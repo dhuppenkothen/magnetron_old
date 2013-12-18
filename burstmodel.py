@@ -122,8 +122,8 @@ def log_likelihood(lambdas, data):
 # feel free to change the order if that's how you defined it - BJB
 def log_prior(params):
     [amplitude, scale, skew] = unpack(params)
-    if amplitude < np.log(-10.) or amplitude > np.log(10.) or
-        scale < np.log(-6.) or scale > np.log(12.) or skew < np.log(-1.5) or
+    if amplitude < np.log(-10.) or amplitude > np.log(10.) or \
+        scale < np.log(-6.) or scale > np.log(12.) or skew < np.log(-1.5) or \
         skew > np.log(1.5):
         return -np.Inf
     return 0.

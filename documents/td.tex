@@ -1,19 +1,65 @@
+% This document is part of the transientdict project.
+% Copyright 2013 the authors.
+
 \documentclass[12pt]{article}
 
+\newcommand{\project}[1]{\textsl{#1}}
+\newcommand{\Fermi}{\project{Fermi}}
 \newcommand{\given}{\,|\,}
 \newcommand{\dd}{\mathrm{d}}
 \renewcommand{\count}{y}
 \newcommand{\pars}{\theta}
 \newcommand{\mean}{\lambda}
 \newcommand{\Poisson}{{\mathcal P}}
+\newcommand{\Uniform}{{\mathcal U}}
 \newcommand{\bg}{\mathrm{bg}}
 \newcommand{\word}{\phi}
 
 \begin{document}
 
-Data for one burst are photon counts $\count_n$ (integer) in $N$ bins $n$.  That's it.
+\section*{A model for magnetar bursts}
 
-Model for the data in or near one burst.
+\noindent
+Huppenkothen, Murray, Hogg, Brewer, Frean \\
+\textsl{2013 December}
+
+\paragraph{abstract}
+Magnetars are whatever and people need whatever.
+Magnetars produce bursts,
+  each of which appears to be composed of a set of one or more spikes.
+Here we build a probabilistic generative model for the \Fermi\ GBM photon data on Magnetar bursts.
+The spikes appear to be somewhat asymmetric
+  (rise looks different from decay),
+  have various amplitudes,
+  but have widths that appear to be similar \emph{within} each burst.
+We model each burst as being composed of a mixture of spikes,
+  where each spike is a scaled, stretched, and shifted version of a universal dimensionless function.
+We perform probabilistic inference with a Poisson likelihood and vague priors to determine
+  the positions, amplitudes, and positions of the spikes,
+  the width of the spikes in each burst,
+  and the shape of the dimensionless spike function.
+The phenomenology of spike multiplicity, shape, and width is discussed.
+
+\section{introduction}
+
+Magnetars make bursts.
+Magnetar bursts have many spikes each.
+The spikes look similar within each burst.
+That motivates a very simple model,
+  in which each burst is made up of a sum of spike models, which we call words.
+
+\section{data}
+
+The ``raw'' data, for our purposes, are photon arrival times.
+These come from triggered photon streams telemetered down from the \Fermi\ Gamma-ray Burst Monitor (GBM).
+These data streams have [the following fucked up properties, including dead time, saturation]
+
+In what follows, the data for one burst are photon counts $\count_n$
+(integer) in $N$ bins $n$.  That's it, bitches.
+
+\section{model}
+
+The model for the data in or near one burst is
 \begin{eqnarray}
 p(\count_n\given\pars) &=& \Poisson(\count_n\given\mean_n)
 \\
@@ -21,7 +67,10 @@ p(\count_n\given\pars) &=& \Poisson(\count_n\given\mean_n)
 \\
 \mean_{nk} &\equiv& \int_{t_n-\Delta/2}^{t_n+\Delta/2} A_k\,\word(\frac{t'-t_k}{\tau})\,\dd t'
 \\
-\word(\xi) &=& \left\{\begin{array}{ll}\exp(s\,\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi) & \mbox{for $\xi\geq 0$}\end{array}\right.
+\word(\xi) &=& \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right.
+\\
+\theta &\equiv& [s, \mean_{\bg}, \tau, \{A_k, t_k\}_{k=1}^K ]
+\quad,
 \end{eqnarray}
 where $\Poisson(\count\given\mean)$ is the Poisson probability of getting count $y$ given mean rate $\mean$,
   $\pars$ is the vector or blob of all model parameters,
@@ -32,5 +81,29 @@ where $\Poisson(\count\given\mean)$ is the Poisson probability of getting count 
   $\phi(\xi)$ is the dimensionless word function,
   $A_k, t_k, \tau$ are the amplitudes, time offsets, and width scalings of the words,
   and $s$ is a parameter that sets the asymmetry of the word.
+
+The model for a large set of bursts is\ldots
+
+The prior pdfs are
+\begin{eqnarray}
+p(\ln\lambda_{\bg}) &=& \Uniform(\ln\lambda_{\bg}\given a_1, a_2)
+\\
+p(\ln s) &=& \Uniform(\ln s\given a_3, a_4)
+\\
+p(\ln\tau) &=& \Uniform(\ln\tau\given a_5, a_6)
+\\
+p(\ln A_k) &=& \Uniform(\ln A_k\given a_7, a_8)
+\\
+p(t_k) &=& \Uniform(t_k\given a_9, a_{10})
+\quad,
+\end{eqnarray}
+where $\Uniform(x\given a, b)$ is the uniform distribution for $x$ in the range $a<x<b$.
+
+\section{results}
+
+\section{discussion}
+
+\paragraph{acknowledgements}
+We thank the organizers of MaxEnt2013.
 
 \end{document}

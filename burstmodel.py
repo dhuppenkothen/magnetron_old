@@ -1,5 +1,4 @@
 import numpy as np
-import lightcurve
 import posterior
 
 def word(time, scale, skew = 2.0):
@@ -29,7 +28,7 @@ def event_rate(time, event_time, scale, amp, skew):
 ### note: theta_all is a numpy array of n by m, 
 ### where n is the number of peaks, and m is the number of parameters
 ### per peak
-def model_means(Delta, T, skew, bkg, scale, theta_evt, nbins=10):
+def model_means(Delta, , skew, bkg, scale, theta_evt, nbins=10):
 
     delta = Delta/nbins
     nsmall = int(T/delta)
@@ -73,7 +72,7 @@ def unpack(theta):
 ## go from weird shape to numpy array
 def pack(skew, bkg, scale, theta_evt):
 
-    theta = np.zeros(len(theta_evt.flatten()))
+    theta = np.zeros(len(theta_evt.flatten())+3)
     theta[0] = skew
     theta[1] = bkg
     theta[2] = scale
@@ -82,13 +81,20 @@ def pack(skew, bkg, scale, theta_evt):
     return theta
 
 
-class DictPosterior(Posterior, object):
+class DictPosterior(object):
 
-    def __init__(self, time, counts, model, npar):
-        self.time = time
+    '''
+    note: implicit assumption is that array times is equally spaced
+
+    '''
+    def __init__(self, times, counts, model, npar):
+        self.times = times
         self.counts = counts
         self.model = model
         self.npar = npar
+
+        self.Delta = times[1]-times[0]
+        self.T =  (times[-1]-times[0])
 
         return
         
@@ -97,7 +103,7 @@ class DictPosterior(Posterior, object):
     def loglike(theta):
     
         ### unpack theta:
-        npeaks = (len(theta)-2)/(npar-2)
+        skew, bkg, scale, theta_evt = unpack(theta)
         
 
 

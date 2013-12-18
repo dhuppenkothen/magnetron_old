@@ -28,7 +28,7 @@ def event_rate(time, event_time, scale, amp, skew):
 ### note: theta_all is a numpy array of n by m, 
 ### where n is the number of peaks, and m is the number of parameters
 ### per peak
-def model_means(Delta, , skew, bkg, scale, theta_evt, nbins=10):
+def model_means(Delta, skew, bkg, scale, theta_evt, nbins=10):
 
     delta = Delta/nbins
     nsmall = int(T/delta)

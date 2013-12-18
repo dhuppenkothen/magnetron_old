@@ -1,9 +1,10 @@
 import numpy as np
 import lightcurve
+import posterior
 
-def word(time, width, skew = 2.0):
+def word(time, scale, skew = 2.0):
 
-    t = np.array(time)/width
+    t = np.array(time)/scale
     #y = exp(((x>0)*2-1)*x)
     y = np.zeros_like(t)
     y[t<=0] = np.exp(t[t<=0])
@@ -16,43 +17,85 @@ def word(time, width, skew = 2.0):
 #    return y1
 
 
-#### theta[0] is move parameter
-#### theta[1] is scale parameter
-#### theta[2] is amplitude
-
-def event_rate(time, theta):
+def event_rate(time, event_time, scale, amp, skew):
 
     #x = x - theta[0]
 
-    move = theta[0]
-    scale = theta[1]
-    amp = theta[2]
-
-    time = time - move
-    counts = amp*word(time, scale)
+    time = time - event_time
+    counts = amp*word(time, scale, skew)
 
     return counts
     
 ### note: theta_all is a numpy array of n by m, 
 ### where n is the number of peaks, and m is the number of parameters
 ### per peak
-def model_means(Delta, T, theta_all, nbins=10):
+def model_means(Delta, T, skew, bkg, scale, theta_evt, nbins=10):
 
     delta = Delta/nbins
     nsmall = int(T/delta)
     time_small = np.arange(nsmall)*delta
     rate_small = np.zeros(nsmall)
 
-    for t in theta_all:
-        rate_temp = event_rate(time_small, t)
+
+    for (event_time, amp) in theta_evt:
+       
+        rate_temp = event_rate(time_small, t[0], event_time, scale, amp, skew)
         rate_small = rate_small + rate_temp
 
     nrow = len(counts_small)/nbins
     rate_map = rate_small.reshape(nrow, nbins)
     rate_map_sum = np.sum(rate_map, axis=1)*delta
 
-    return rate_map_sum
+    rate_map_all = rate_map_sum + bkg*Delta
 
+    return rate_map_all
+
+
+## go from numpy array weird shape
+def unpack(theta):
+    '''
+    unpacks the numpy array of parameters into a form that model_means can read.
+
+    returns: skew, bkg, scale, theta_evt
+
+    theta_evt is an array of npeaks by 2, where npeaks is the number of peaks
+    each row is (event_time, amp)
+    '''
+    skew = theta[0]
+    bkg = theta[1]
+    scale = theta[2]
+
+    theta_evt = theta[3:].reshape((len(theta)-3)/2, 2)
+    
+    return skew, bkg, scale, theta_evt
+
+
+
+
+## go from weird shape to numpy array
+def pack(theta, npar):
+
+class DictPosterior(Posterior, object):
+
+    def __init__(self, time, counts, model, npar):
+        self.time = time
+        self.counts = counts
+        self.model = model
+        self.npar = npar
+
+        return
+        
+
+    ## theta = [scale, skew, move1, amp1, move2, amp2]    
+    def loglike(theta):
+    
+        ### unpack theta:
+        npeaks = (len(theta)-2)/(npar-2)
+        
+
+
+    ## change parameters:
+    
 
 
 # Poisson log likelihood based on a set of rates

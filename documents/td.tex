@@ -1,7 +1,36 @@
 \documentclass[12pt]{article}
 
+\newcommand{\given}{\,|\,}
+\newcommand{\dd}{\mathrm{d}}
+\renewcommand{\count}{y}
+\newcommand{\pars}{\theta}
+\newcommand{\mean}{\lambda}
+\newcommand{\Poisson}{{\mathcal P}}
+\newcommand{\bg}{\mathrm{bg}}
+\newcommand{\word}{\phi}
+
 \begin{document}
 
-Hello world!
+Data for one burst are photon counts $\count_n$ (integer) in $N$ bins $n$.  That's it.
+
+Model for the data in or near one burst.
+\begin{eqnarray}
+p(\count_n\given\pars) &=& \Poisson(\count_n\given\mean_n)
+\\
+\mean_n &=& \mean_{\bg} + \sum_{k=1}^K \mean_{nk}
+\\
+\mean_{nk} &\equiv& \int_{t_n-\Delta/2}^{t_n+\Delta/2} A_k\,\word(\frac{t'-t_k}{\tau})\,\dd t'
+\\
+\word(\xi) &=& \left\{\begin{array}{ll}\exp(s\,\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi) & \mbox{for $\xi\geq 0$}\end{array}\right.
+\end{eqnarray}
+where $\Poisson(\count\given\mean)$ is the Poisson probability of getting count $y$ given mean rate $\mean$,
+  $\pars$ is the vector or blob of all model parameters,
+  $\mean_{\bg}$ is the background (DC) level in the bin,
+  $t_n$ is the time of the center of the bin,
+  $\Delta$ is the full width of the bin,
+  $K$ is the number of words (spikes) $k$ making up the burst,
+  $\phi(\xi)$ is the dimensionless word function,
+  $A_k, t_k, \tau$ are the amplitudes, time offsets, and width scalings of the words,
+  and $s$ is a parameter that sets the asymmetry of the word.
 
 \end{document}

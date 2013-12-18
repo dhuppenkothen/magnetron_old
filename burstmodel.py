@@ -35,6 +35,7 @@ def double_exponential(time, theta):
 # Poisson log likelihood based on a set of rates
 # log[ prod exp(-lamb)*lamb^x/x! ]
 # exp(-lamb)
+# I (BJB) have tested this against R's dpois( , , log=TRUE)
 import scipy.special
 def log_likelihood(lambdas, data):
     return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\

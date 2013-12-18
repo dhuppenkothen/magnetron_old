@@ -1,28 +1,51 @@
 import burstmodel
 import numpy as np
 
+### parfile needs to be an ascii file with the trigger ID 
+### on the first column, the burst start time on the second and
+### guesses for the parameters on the rest of the columns
+def read_pardata(parfile):
 
-def runbursts(bid):
+    fpar = open(parfile, 'r')
+    content = fpar.readlines()
+ 
+    bids, bsts, theta_guesses =[], [], []
 
-    filenames = glob.glob(str(bid) + '*data.dat')
-    parafile = glob.glob(str(bid) + '_params.dat')
-    pardata = burstmodel.conversion(parafile)
+    for c in content:
+        if not c[0] == '#':
+            bids.append(c.split()[0])
+            bsts.append(float(c.split()[1]))
+            theta_guesses.append([float(t) for t in c.split()[2:]])
 
-    bsts = np.array([float(t) for t in pardata[0]])
-    params = np.array([np.array([float(t) for t in p.split(',')]) for p in pardata[1]])
+    return bids, bsts, theta_guesses
 
+def runbursts(parfile):
+
+    filenames = glob.glob('*data.dat')
+    parafile = glob.glob(parfile)
+    bids, bsts, theta_guesses = read_pardata(parfile) 
 
     for i,f in enumerate(filenames):
 
+        ## pick apart data file name to get identifiers
         [bid, bstart, stuff] = f.split('_')
 
+        ## check whether there's an entry for this file name in the parameter
+        ## list; if not, skip!
+        b_ind = np.where((bsts>float(bstart)-0.1) & (bsts<float(bstart)+0.1))[0]
+        if b_ind.size == 0:
+            continue
+
+        ## read in data
         data = burstmodel.conversion(f)
         times = np.array([float(t) for t in data[0]])
         counts = np.array([float(t) for t in data[1]])
 
+        ### find right initial guess from list
         b_ind = np.where((bsts>float(bstart)-0.1) & (bsts<float(bstart)+0.1))[0][0]
         theta_guess = params[b_ind]
 
+        ## run preliminary analysis
         burstmodel.test_burst(times, counts, theta_guess, namestr = str(bid) + '_' + str(bstart))
    
         return

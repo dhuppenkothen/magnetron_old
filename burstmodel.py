@@ -113,7 +113,7 @@ class DictPosterior(Posterior, object):
 import scipy.special
 def log_likelihood(lambdas, data):
     return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
-		-np.sum(scipy.special.gammaln(data + 1))
+        -np.sum(scipy.special.gammaln(data + 1))
 
 
 

@@ -1,4 +1,12 @@
+from collections import defaultdict
+
+import matplotlib.pyplot as plt
+from pylab import * 
+
 import numpy as np
+import copy
+import argparse
+import emcee
 
 def word(time, scale, skew = 2.0):
 
@@ -37,10 +45,10 @@ def model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10):
 
     for (event_time, amp) in theta_evt:
        
-        rate_temp = event_rate(time_small, t[0], event_time, scale, amp, skew)
+        rate_temp = event_rate(time_small, event_time, scale, amp, skew)
         rate_small = rate_small + rate_temp
 
-    nrow = len(counts_small)/nbins
+    nrow = len(rate_small)/nbins
     rate_map = rate_small.reshape(nrow, nbins)
     rate_map_sum = np.sum(rate_map, axis=1)*delta
 
@@ -59,12 +67,20 @@ def unpack(theta):
     theta_evt is an array of npeaks by 2, where npeaks is the number of peaks
     each row is (event_time, amp)
     '''
-    skew = theta[0]
-    bkg = theta[1]
-    scale = theta[2]
 
-    theta_evt = theta[3:].reshape((len(theta)-3)/2, 2)
-    
+
+    skew = np.exp(theta[0])
+    bkg = np.exp(theta[1])
+    scale = np.exp(theta[2])
+
+    #print('theta in unpack: ' + str(theta))
+
+    theta_evt = copy.copy(theta[3:]).reshape((len(theta)-3)/2, 2)
+   
+    for i in range(len(theta_evt)):
+    #    print(theta_evt[i][1])
+        theta_evt[i][1] = np.exp(theta_evt[i][1])
+ 
     return skew, bkg, scale, theta_evt
 
 
@@ -72,9 +88,13 @@ def unpack(theta):
 def pack(skew, bkg, scale, theta_evt):
 
     theta = np.zeros(len(theta_evt.flatten())+3)
-    theta[0] = skew
-    theta[1] = bkg
-    theta[2] = scale
+    theta[0] = np.log(skew)
+    theta[1] = np.log(bkg)
+    theta[2] = np.log(scale)
+
+    for i in range(len(theta_evt)):
+        theta_evt[i][1] = np.log(theta_evt[i][1])
+
     theta[3:] = theta_evt.flatten()
 
     return theta
@@ -87,24 +107,57 @@ class DictPosterior(object):
           nbins_data: number of bins in data
           nbins: multiplicative factor for model light curve bins
     '''
-    def __init__(self, times, counts, model, npar, nbins=10):
+    def __init__(self, times, counts, nbins=10):
         self.times = times
         self.counts = counts
-        self.model = model
-        self.npar = npar
+        #self.model = model
+        #self.npar = npar
 
         self.Delta = times[1]-times[0]
         self.nbins_data = len(times)
         self.nbins = nbins
 
-        
+
+
+    def logprior(self, theta):
+
+        # Our prior for a SINGLE WORD
+        # Input: parameter vector, which gets unpacked into named things
+        # feel free to change the order if that's how you defined it - BJB
+
+        saturation_countrate = 3.5e5 ### in counts/s
+        T = self.times[-1] - self.times[0]
+    
+ 
+        skew, bkg, scale, theta_evt = unpack(theta)
+#        print('theta_evt in logprior: ' + str(theta_evt)) 
+#        print('theta in logprior: ' + str(theta))
+
+        if  scale < self.Delta or scale > T or skew < np.exp(-1.5) or skew > np.exp(3.0) or \
+                bkg < 0 or bkg > saturation_countrate:
+            return -np.Inf
+
+        all_event_times = theta_evt[:,0]
+        all_amp = theta_evt[:,1]
+        if np.min(all_event_times) < self.times[0] or np.max(all_event_times) > self.times[-1] or \
+                np.min(all_amp) < 0.1/self.Delta or np.max(all_amp) > saturation_countrate:
+            return -np.Inf
+
+        return 0.
+
 
     ## theta = [scale, skew, move1, amp1, move2, amp2]    
-    def loglike(theta):
-        
+    def loglike(self, theta):
+  
+#        print('theta in loglike: ' + str(theta))
+
         ### unpack theta:
         skew, bkg, scale, theta_evt = unpack(theta)
-        
+        #print('theta_evt in loglike: ' + str(theta_evt))
+        #print('theta in loglike: ' + str(theta))
+
+
+
         lambdas = model_means(self.Delta, self.nbins_data, skew, bkg, scale, theta_evt, nbins=self.nbins)
 
         return log_likelihood(lambdas, self.counts)
@@ -112,6 +165,98 @@ class DictPosterior(object):
     ## change parameters:
     
 
+    def logposterior(self, theta):
+        return self.logprior(theta) + self.loglike(theta)
+
+
+    def __call__(self, theta):
+        return self.logposterior(theta)
+
+
+
+
+
+def model_burst():
+
+    times = np.arange(1000.0)/10000.0
+    counts = np.random.poisson(2000.0, size=len(times))
+
+    skew = 3.0
+    scale = 0.005
+    bkg = 5.0
+
+    nspikes = 2
+    theta_evt = np.zeros((nspikes,2))
+
+    for i in range(nspikes):
+        theta_evt[i] = [np.random.rand()*times[-1], 10.0/(times[1]-times[0])]
+        
+    theta = pack(skew, bkg, scale, theta_evt)
+
+    return theta
+
+### put in burst times array and counts array
+def test_burst(times, counts, namestr = 'testburst', nwalker=32):
+
+    times = times - times[0]
+
+    ### initialise guess for burst 090122218, tstart = 47.4096 
+    skew = 5.0
+    bkg = 2000.0
+    scale = 0.01
+    theta_evt = np.array([[0.82, 30000], [0.87, 60000], [0.95, 50000], [1.05, 20000]])
+    
+    Delta = times[1]-times[0]
+    nbins_data = len(times)
+
+    counts_model = model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10) 
+
+    figure()
+    plt.plot(times, counts, 'k')
+    plt.plot(times, counts_model, 'r')
+    plt.xlabel('Time [s]', fontsize=18)
+    plt.ylabel('Counts per bin', fontsize=18)
+    plt.title('Light curve with initial guess for model', fontsize=18)
+    plt.savefig(namestr + '_initialguess.png', format='png')
+    plt.close()
+
+    theta = pack(skew, bkg, scale, theta_evt)   
+
+    lpost = DictPosterior(times, counts)
+    
+    p0 = [theta+np.random.rand(len(theta))*1.0e-3 for t in range(nwalker)]
+
+    sampler = emcee.EnsembleSampler(nwalker, len(theta), lpost)
+    pos, prob, state = sampler.run_mcmc(p0, 200)
+    sampler.reset()
+    sampler.run_mcmc(pos, 1000, rstate0 = state)
+
+    plot_test(times, counts, sampler.flatchain[-10:])
+    plt.xlabel('Time [s]', fontsize=18)
+    plt.ylabel('Counts per bin', fontsize=18)
+    plt.title('Light curve with draws from posterior sample', fontsize=18)
+    plt.savefig(namestr + '_posteriorsample.png', format='png')
+    plt.close()
+
+    return 
+
+
+def plot_test(times, counts, theta):
+
+    plt.plot(times, counts, 'k')
+
+
+    Delta = times[1]-times[0]
+    nbins_data = len(times)
+
+
+    for t in np.atleast_2d(theta):
+
+        skew, bkg, scale, theta_evt = unpack(t)
+        counts_model = model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10)
+        plt.plot(times, counts_model, 'r')
+
+    return
 
 # Poisson log likelihood based on a set of rates
 # log[ prod exp(-lamb)*lamb^x/x! ]
@@ -120,20 +265,44 @@ class DictPosterior(object):
 ### lambdas: numpy array of Poisson rates: mean expected integrated in a bin
 import scipy.special
 def log_likelihood(lambdas, data):
+
     return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
         -np.sum(scipy.special.gammaln(data + 1))
 
 
+def conversion(filename):
+    f=open(filename, 'r')
+    output_lists=defaultdict(list)
+    for line in f:
+        if not line.startswith('#'):
+             line=[value for value in line.split()]
+             for col, data in enumerate(line):
+                 output_lists[col].append(data)
+    return output_lists
 
-# Our prior for a SINGLE WORD
-# Input: parameter vector, which gets unpacked into named things
-# feel free to change the order if that's how you defined it - BJB
-def log_prior(params):
-    [amplitude, scale, skew] = unpack(params)
-    if amplitude < np.log(-10.) or amplitude > np.log(10.) or \
-        scale < np.log(-6.) or scale > np.log(12.) or skew < np.log(-1.5) or \
-        skew > np.log(1.5):
-        return -np.Inf
-    return 0.
-    # okay now do it proper...
+def main(): 
 
+    data = conversion(filename)
+    times = np.array([float(t) for t in data[0]])    
+    counts = np.array([float(c) for c in data[1]])
+
+    test_burst(times, counts, namestr = namestr, nwalker=nwalkers)
+   
+    return
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Script to play around with Fermi/GBM magnetar data')
+    parser.add_argument('-f', '--filename', action='store', dest ='filename', help='input filename')
+    parser.add_argument('-n', '--namestr', action='store', dest='namestr', help='Output filename string')
+    parser.add_argument('--nwalkers', action='store', default='32', help='Number of emcee walkers')
+ 
+
+    clargs = parser.parse_args()
+    
+    nwalkers = int(clargs.nwalkers)
+    filename = clargs.filename
+    namestr = clargs.namestr
+
+    main()

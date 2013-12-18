@@ -1,5 +1,4 @@
 import numpy as np
-import posterior
 
 def word(time, scale, skew = 2.0):
 

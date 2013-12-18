@@ -60,8 +60,8 @@ def time_map(Delta, T, theta_all, nbins=10):
 ### lambdas: numpy array of Poisson rates: mean expected integrated in a bin
 import scipy.special
 def log_likelihood(lambdas, data):
-    return -np.sum(lambdas) - np.sum(data*np.log(lambdas))\
-		-np.sum(scipy.special.gammaln(data))
+    return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
+		-np.sum(scipy.special.gammaln(data + 1))
 
 
 

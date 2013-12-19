@@ -1,5 +1,7 @@
 import burstmodel
 import numpy as np
+import argparse
+import glob
 
 ### parfile needs to be an ascii file with the trigger ID 
 ### on the first column, the burst start time on the second and
@@ -21,9 +23,13 @@ def read_pardata(parfile):
 
 def runbursts(parfile):
 
-    filenames = glob.glob('*data.dat')
+    filenames = glob.glob('090122037a*data.dat')
+    print(filenames)
     parafile = glob.glob(parfile)
     bids, bsts, theta_guesses = read_pardata(parfile) 
+
+    bsts = np.array([float(b) for b in bsts])
+    print(bsts)
 
     for i,f in enumerate(filenames):
 
@@ -32,7 +38,9 @@ def runbursts(parfile):
 
         ## check whether there's an entry for this file name in the parameter
         ## list; if not, skip!
+        print('bstart: ' + str(bstart))
         b_ind = np.where((bsts>float(bstart)-0.1) & (bsts<float(bstart)+0.1))[0]
+        print(b_ind)
         if b_ind.size == 0:
             continue
 
@@ -43,7 +51,7 @@ def runbursts(parfile):
 
         ### find right initial guess from list
         b_ind = np.where((bsts>float(bstart)-0.1) & (bsts<float(bstart)+0.1))[0][0]
-        theta_guess = params[b_ind]
+        theta_guess = theta_guesses[b_ind]
 
         ## run preliminary analysis
         burstmodel.test_burst(times, counts, theta_guess, namestr = str(bid) + '_' + str(bstart))
@@ -51,5 +59,19 @@ def runbursts(parfile):
         return
 
 
+def main():
+
+    runbursts(parfile)
+
+    return
 
 
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Script to run the spike fitting via MCMC with a bunch of bursts')
+    parser.add_argument('-f', '--filename', action='store', dest ='filename', help='input filename')
+
+    clargs = parser.parse_args()
+    parfile = clargs.filename
+
+    main()

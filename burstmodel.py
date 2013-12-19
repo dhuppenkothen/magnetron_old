@@ -76,6 +76,7 @@ def unpack(theta):
 
     #print('theta in unpack: ' + str(theta))
 
+    theta = np.array(theta)
     theta_evt = copy.copy(theta[3:]).reshape((len(theta)-3)/2, 2)
    
     for i in range(len(theta_evt)):
@@ -232,7 +233,7 @@ def test_burst(times, counts, theta_guess, namestr = 'testburst', nwalker=32):
     #Delta = times[1]-times[0]
     #nbins_data = len(times)
  
-    theta, counts_model = initial_guess(times, counts, skew, bkg, scale, theta_evt):
+    theta, counts_model = initial_guess(times, counts, skew, bkg, scale, theta_evt)
 
     figure()
     plt.plot(times, counts, 'k')
@@ -263,7 +264,7 @@ def test_burst(times, counts, theta_guess, namestr = 'testburst', nwalker=32):
 
 
     ### quick hack to save emcee sampler to disc
-    f = open(namestr + '_sampler.dat')
+    f = open(namestr + '_sampler.dat', 'w')
     pickle.dump(sampler, f)
     f.close()
 

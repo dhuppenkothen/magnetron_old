@@ -7,6 +7,7 @@ import numpy as np
 import copy
 import argparse
 import emcee
+import cPickle as pickle
 
 def word(time, scale, skew = 2.0):
 
@@ -195,21 +196,43 @@ def model_burst():
 
     return theta
 
-### put in burst times array and counts array
-def test_burst(times, counts, namestr = 'testburst', nwalker=32):
+def initial_guess(times, counts, skew, bkg, scale, theta_evt):
 
     times = times - times[0]
 
     ### initialise guess for burst 090122218, tstart = 47.4096 
-    skew = 5.0
-    bkg = 2000.0
-    scale = 0.01
-    theta_evt = np.array([[0.82, 30000], [0.87, 60000], [0.95, 50000], [1.05, 20000]])
-    
+    #skew = 5.0
+    #bkg = 2000.0
+    #scale = 0.01
+    #theta_evt = np.array([[0.82, 30000], [0.87, 60000], [0.95, 50000], [1.05, 20000]])
+
+
     Delta = times[1]-times[0]
     nbins_data = len(times)
 
-    counts_model = model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10) 
+    counts_model = model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10)
+
+    figure()
+    plt.plot(times, counts, 'k')
+    plt.plot(times, counts_model, 'r')
+    plt.xlabel('Time [s]', fontsize=18)
+    plt.ylabel('Counts per bin', fontsize=18)
+    plt.title('Light curve with initial guess for model', fontsize=18)
+
+    theta = pack(skew, bkg, scale, np.array(theta_evt))
+
+    return theta, counts_model
+
+
+### put in burst times array and counts array
+def test_burst(times, counts, theta_guess, namestr = 'testburst', nwalker=32):
+
+    skew, bkg, scale, theta_evt = unpack(theta_guess)
+
+    #Delta = times[1]-times[0]
+    #nbins_data = len(times)
+ 
+    theta, counts_model = initial_guess(times, counts, skew, bkg, scale, theta_evt):
 
     figure()
     plt.plot(times, counts, 'k')
@@ -237,6 +260,12 @@ def test_burst(times, counts, namestr = 'testburst', nwalker=32):
     plt.title('Light curve with draws from posterior sample', fontsize=18)
     plt.savefig(namestr + '_posteriorsample.png', format='png')
     plt.close()
+
+
+    ### quick hack to save emcee sampler to disc
+    f = open(namestr + '_sampler.dat')
+    pickle.dump(sampler, f)
+    f.close()
 
     return 
 

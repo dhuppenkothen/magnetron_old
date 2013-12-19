@@ -56,7 +56,7 @@ def runbursts(parfile):
         ## run preliminary analysis
         burstmodel.test_burst(times, counts, theta_guess, namestr = str(bid) + '_' + str(bstart))
    
-        return
+    return
 
 
 def main():

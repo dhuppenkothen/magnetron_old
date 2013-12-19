@@ -247,7 +247,10 @@ def test_burst(times, counts, theta_guess, namestr = 'testburst', nwalker=32):
     theta = pack(skew, bkg, scale, theta_evt)   
 
     lpost = DictPosterior(times, counts)
-    
+   
+    if nwalker < 2*len(theta):
+        nwalker = 2*len(theta)
+
     p0 = [theta+np.random.rand(len(theta))*1.0e-3 for t in range(nwalker)]
 
     sampler = emcee.EnsembleSampler(nwalker, len(theta), lpost)

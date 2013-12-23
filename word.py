@@ -64,6 +64,17 @@ class TwoExp(Word, object):
         return
 
 
+    def _exp(self, theta_all):
+    
+        theta_exp = [theta_flat[0], np.exp(theta_flat[1]), np.exp(theta_flat[2]), np.exp(theta_flat[3])]
+
+        return theta_exp
+
+    def _log(self, theta_all):
+
+        theta_log = [theta_flat[0], np.log(theta_flat[1]), np.log(theta_flat[2]), np.log(theta_flat[3])]
+        return theta_log
+
     def model(self, event_time, scale=1.0, amp=1.0, skew=1.0):
         ''' The model method contains the actual function definition.
         Returns a numpy-array of size len(self.times)
@@ -86,7 +97,9 @@ class TwoExp(Word, object):
         amp = np.log(theta_flat[2])
         skew = np.log(theta_flat[3])
 
-        if scale < np.log(self.Delta) or scale > np.log(T) or skew < -1.5 or skew > 3.0 or \
+        print(np.log(self.T))
+
+        if scale < np.log(self.Delta) or scale > np.log(self.T) or skew < -1.5 or skew > 3.0 or \
                 event_time < self.times[0] or event_time > self.times[-1] or \
                 amp < -10.0 or amp > np.log(saturation_countrate):
             return -np.Inf 
@@ -116,6 +129,18 @@ class CombinedWords(Word, object):
         self.npar = np.sum([w.npar for w in self.wordlist])
         Word.__init__(self,times)
         return
+
+
+    def _exp(self, theta_packed):
+
+        theta_exp = [w._exp(t) for t,w in zip(theta_packed, self.wordlist)]
+        return theta_exp
+
+    def _log(self, theta_packed):
+
+        theta_log = [w._log(t) for t,w in zip(theta_packed, self.wordlist)]
+        return theta_log
+
 
     ### theta_all is packed
     def model(self, theta_packed):

@@ -28,7 +28,7 @@ ax.add_artist(ar2)
 
 # Add text
 text(-0.4, 1.*exp(-1.), r'$\tau$')
-text(2.7, 1.*exp(-1.), r'$S\tau$')
+text(2.7, 1.*exp(-1.), r'$\tau S$')
 
 savefig('documents/word.pdf', bbox_inches='tight')
 show()

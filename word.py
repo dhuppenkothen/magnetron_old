@@ -3,6 +3,10 @@ from pylab import *
 
 import numpy as np
 
+### the saturation count rate for Fermi/GBM
+### is a global variable
+saturation_countrate = 3.5e5
+
 class Word(object):
     ''' General Word class: container for word shapes of various forms.
     !!! DO NOT INSTANTIATE THIS CLASS! USE SUBCLASSES INSTEAD!!!'''
@@ -10,6 +14,9 @@ class Word(object):
     ### on initialisation, read in list of times and save as attribute
     def __init__(self, times):
         self.times = np.array(times)
+        self.T = self.times[-1] - self.times[0]
+        self.Delta = self.times[1] - self.times[0]
+
 
     def _pack(self, npars, theta_flat):
 
@@ -71,13 +78,27 @@ class TwoExp(Word, object):
         y[t>0] = np.exp(-t[t>0]/skew)
 
         return np.array(amp*y)
-  
+ 
+    def logprior(self, theta_flat):
+
+        event_time = theta_flat[0]
+        scale = np.log(theta_flat[1])
+        amp = np.log(theta_flat[2])
+        skew = np.log(theta_flat[3])
+
+        if scale < np.log(self.Delta) or scale > np.log(T) or skew < -1.5 or skew > 3.0 or \
+                event_time < self.times[0] or event_time > self.times[-1] or \
+                amp < -10.0 or amp > np.log(saturation_countrate):
+            return -np.Inf 
+        else:
+            return 0.0
+
+ 
     def __call__(self, theta_flat):
         
         if not type(theta_flat) == list and not type(theta_flat) == np.array:
             theta_flat = [theta_flat]
         return self.model(*theta_flat)
-
 
 
 

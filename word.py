@@ -133,6 +133,15 @@ class CombinedWords(Word, object):
         return y
  
 
+    def logprior(self, theta_packed):
+
+        lprior = 0.0
+        for t,w in zip(theta_packed, wordlist):
+            lprior = lprior + wordlist.logprior(t)
+
+        return lprior
+        
+
     def __call__(self, theta_flat):
 
         theta_packed = self._pack([w.npar for w in self.wordlist], theta_flat)

@@ -8,10 +8,11 @@ import copy
 import argparse
 import emcee
 import cPickle as pickle
+import scipy.special
 
 import word
 
-
+saturation_countrate = 3.5e5
 #### DEPRECATED: USE WORD CLASS INSTEAD #####
 #def word(time, scale, skew = 2.0):
 
@@ -27,14 +28,14 @@ import word
 #### COMPUTE
 
 
-class BurstModel(object):
+class BurstDict(object):
 
     def __init__(self, times, counts, wordlist):
 
         self.times = np.array(times)
         self.counts = np.array(counts)
         self.wordlist = wordlist
-        self.model = self._create_model()
+        self.wordmodel = self._create_model()
         self.Delta = self.times[1] - self.times[0]
         self.nbins_data = len(self.times)
         return
@@ -42,24 +43,25 @@ class BurstModel(object):
     def _create_model(self):
 
         ### create a model definition that includes the background!
-        ### theta_all is flat
-        def event_rate(model_times, theta_all):
+        ### theta_all is flat and has non-log parameters
+        def event_rate(model_times, theta_exp):
             
             ### last element must be background counts!
-            bkg = theta_all[-1]
+            bkg = theta_exp[-1]
 
             if size(self.wordlist) > 1:
-                model = word.CombinedWords(model_times, self.wordlist)
+                wordmodel = word.CombinedWords(model_times, self.wordlist)
             else:
-                model = self.wordlist(model_times)
+                wordmodel = self.wordlist(model_times)
 
-            y = model(theta_all[:-1]) + bkg
+            y = wordmodel(theta_exp[:-1]) + bkg
 
             return y
 
         return event_rate
 
-    ### theta_all is flat
+    ### theta_all is flat and takes log parameters to be consistent with
+    ### likelihood functions
     def model_means(self, theta_all, nbins=10):
 
         ## small time bin size delta
@@ -69,8 +71,9 @@ class BurstModel(object):
         ## make a high-resolution time array 
         times_small = np.arange(nsmall)*delta
 
+        theta_exp = self.wordmodel._exp(theta_all)
         ## compute high-resolution count rate
-        rate_small = self.model(times_small, theta_all)
+        rate_small = self.wordmodel(times_small, theta_exp)
 
         ## add together nbins neighbouring counts
         rate_map = rate_small.reshape(self.nbins_data, nbins)
@@ -80,84 +83,65 @@ class BurstModel(object):
 
 
 
+class WordPosterior(object):
 
-def event_rate(time, event_time, scale, amp, skew):
-
-    #x = x - theta[0]
-
-    time = time - event_time
-    counts = amp*word(time, scale, skew)
-
-    return counts
-    
-### note: theta_all is a numpy array of n by m, 
-### where n is the number of peaks, and m is the number of parameters
-### per peak
-def model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10):
-
-    delta = Delta/nbins
-    nsmall = nbins_data*nbins
-    time_small = np.arange(nsmall)*delta
-    rate_small = np.zeros(nsmall)
-
-
-    for (event_time, amp) in theta_evt:
-       
-        rate_temp = event_rate(time_small, event_time, scale, amp, skew)
-        rate_small = rate_small + rate_temp
-
-    nrow = len(rate_small)/nbins
-    rate_map = rate_small.reshape(nrow, nbins)
-    rate_map_sum = np.sum(rate_map, axis=1)*delta
-
-    rate_map_all = rate_map_sum + bkg*Delta
-
-    return rate_map_all
-
-
-## go from numpy array weird shape
-def unpack(theta):
     '''
-    unpacks the numpy array of parameters into a form that model_means can read.
+    WordPosterior class for making a word model posterior 
+    note: burstmodel is of type BurstDict
 
-    returns: skew, bkg, scale, theta_evt
-
-    theta_evt is an array of npeaks by 2, where npeaks is the number of peaks
-    each row is (event_time, amp)
     '''
+    def __init__(self, times, counts, burstmodel):
+        self.times = times
+        self.counts = counts
+        self.burstmodel = burstmodel
+
+    def logprior(self, theta):
+
+        bkg = theta[-1]
+
+        lprior = 0
+        lprior = lprior + self.burstmodel.wordmodel.logprior(theta[:-1])
+
+        if bkg > np.log(saturation_countrate) or np.isinf(lprior):
+            return -np.inf
+        else: 
+            return 0.0     
 
 
-    skew = np.exp(theta[0])
-    bkg = np.exp(theta[1])
-    scale = np.exp(theta[2])
+    ### lambdas: numpy array of Poisson rates: mean expected integrated in a bin
+    ### Poisson likelihood for data and a given model
+    def _log_likelihood(lambdas, data):
 
-    #print('theta in unpack: ' + str(theta))
-
-    theta = np.array(theta)
-    theta_evt = copy.copy(theta[3:]).reshape((len(theta)-3)/2, 2)
-   
-    for i in range(len(theta_evt)):
-    #    print(theta_evt[i][1])
-        theta_evt[i][1] = np.exp(theta_evt[i][1])
- 
-    return skew, bkg, scale, theta_evt
+        return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
+            -np.sum(scipy.special.gammaln(data + 1))
 
 
-## go from weird shape to numpy array
-def pack(skew, bkg, scale, theta_evt):
 
-    theta = np.zeros(len(theta_evt.flatten())+3)
-    theta[0] = np.log(skew)
-    theta[1] = np.log(bkg)
-    theta[2] = np.log(scale)
+    ### theta is flat and in log-space
+    def loglike(self, theta):
+        lambdas = self.burstmodel.model_means(theta) 
 
-    for i in range(len(theta_evt)):
-        theta_evt[i][1] = np.log(theta_evt[i][1])
+        return self._log_likelihood(lambdas, self.counts)
 
-    theta[3:] = theta_evt.flatten()
+    ## change parameters:
 
-    return theta
 
+    def logposterior(self, theta):
+        return self.logprior(theta) + self.loglike(theta)
+
+
+    def __call__(self, theta):
+        return self.logposterior(theta)
+
+
+
+
+
+
+
+#######################################################################
+#### OLD IMPLEMENTATION! ##############################################
+#######################################################################
 
 class DictPosterior(object):
 
@@ -166,10 +150,10 @@ class DictPosterior(object):
           nbins_data: number of bins in data
           nbins: multiplicative factor for model light curve bins
     '''
-    def __init__(self, times, counts, nbins=10):
+    def __init__(self, times, counts, wordmodel, nbins=10):
         self.times = times
         self.counts = counts
-        #self.model = model
+        self.model = model
         #self.npar = npar
 
         self.Delta = times[1]-times[0]
@@ -232,6 +216,94 @@ class DictPosterior(object):
         return self.logposterior(theta)
 
 
+
+
+#### DEPRECATED: USE WORD CLASS INSTEAD #####
+#def word(time, scale, skew = 2.0):
+
+#    t = np.array(time)/scale
+#    y = np.zeros_like(t)
+#    y[t<=0] = np.exp(t[t<=0])
+#    y[t>0] = np.exp(-t[t>0]/skew)
+
+#    return y
+#######
+
+def event_rate(time, event_time, scale, amp, skew):
+
+    #x = x - theta[0]
+
+    time = time - event_time
+    counts = amp*word(time, scale, skew)
+
+    return counts
+
+### note: theta_all is a numpy array of n by m, 
+### where n is the number of peaks, and m is the number of parameters
+### per peak
+def model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10):
+
+    delta = Delta/nbins
+    nsmall = nbins_data*nbins
+    time_small = np.arange(nsmall)*delta
+    rate_small = np.zeros(nsmall)
+
+
+    for (event_time, amp) in theta_evt:
+
+        rate_temp = event_rate(time_small, event_time, scale, amp, skew)
+        rate_small = rate_small + rate_temp
+
+    nrow = len(rate_small)/nbins
+    rate_map = rate_small.reshape(nrow, nbins)
+    rate_map_sum = np.sum(rate_map, axis=1)*delta
+
+    rate_map_all = rate_map_sum + bkg*Delta
+
+    return rate_map_all
+
+## go from numpy array weird shape
+def unpack(theta):
+    '''
+    unpacks the numpy array of parameters into a form that model_means can read.
+
+    returns: skew, bkg, scale, theta_evt
+
+    theta_evt is an array of npeaks by 2, where npeaks is the number of peaks
+    each row is (event_time, amp)
+    '''
+
+
+    skew = np.exp(theta[0])
+    bkg = np.exp(theta[1])
+    scale = np.exp(theta[2])
+
+    #print('theta in unpack: ' + str(theta))
+
+    theta = np.array(theta)
+    theta_evt = copy.copy(theta[3:]).reshape((len(theta)-3)/2, 2)
+
+    for i in range(len(theta_evt)):
+    #    print(theta_evt[i][1])
+        theta_evt[i][1] = np.exp(theta_evt[i][1])
+
+    return skew, bkg, scale, theta_evt
+
+
+## go from weird shape to numpy array
+def pack(skew, bkg, scale, theta_evt):
+
+    theta = np.zeros(len(theta_evt.flatten())+3)
+    theta[0] = np.log(skew)
+    theta[1] = np.log(bkg)
+    theta[2] = np.log(scale)
+
+    for i in range(len(theta_evt)):
+        theta_evt[i][1] = np.log(theta_evt[i][1])
+
+    theta[3:] = theta_evt.flatten()
+
+    return theta
 
 
 

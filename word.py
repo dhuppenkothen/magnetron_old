@@ -52,12 +52,12 @@ class TwoExp(Word, object):
     with a sharp peak in the middle.'''
 
     def __init__(self, times):
-        self.npar = 3
+        self.npar = 4
         Word.__init__(self, times)
         return
 
 
-    def model(self, event_time, scale, skew):
+    def model(self, event_time, scale=1.0, amp=1.0, skew=1.0):
         ''' The model method contains the actual function definition.
         Returns a numpy-array of size len(self.times)
         Parameters:
@@ -70,10 +70,15 @@ class TwoExp(Word, object):
         y[t<=0] = np.exp(t[t<=0])
         y[t>0] = np.exp(-t[t>0]/skew)
 
-        return np.array(y)
+        return np.array(amp*y)
   
     def __call__(self, theta_flat):
+        
+        if not type(theta_flat) == list and not type(theta_flat) == np.array:
+            theta_flat = [theta_flat]
         return self.model(*theta_flat)
+
+
 
 
 
@@ -113,65 +118,4 @@ class CombinedWords(Word, object):
         return self.model(theta_packed)
 
 
-
-
-def tests():
-
-    ''' test suite for Word class'''
-
-    print('First test: unscaled TwoExp word') 
-    times = np.arange(2000.0)/1000.0 - 1.0
-    event_time = 0.00
-    scale = 1.0
-    skew = 1.0
-
-    w = TwoExp(times)
-    y = w([event_time, scale, skew])
-
-    plt.figure()
-    plt.plot(times, y, lw=2, color='black')
-    plt.xlabel('Time [s]', fontsize=18)
-    plt.ylabel('Counts per bin', fontsize=18)
-    plt.title(r'Raw word, $t_\mathrm{start} = 0$, scale $\sigma = 1.0$, skew $\alpha = 1.0$')
-    plt.savefig('word_test1.png', format='png')
-    plt.close()
-
-    print('Second test: scaled TwoExp word')
-    event_time = 0.5
-    scale = 0.5
-    skew = 3.0
-    w = TwoExp(times)
-    y = w([event_time, scale, skew])
-
-    plt.figure()
-    plt.plot(times, y, lw=2, color='black')
-    plt.xlabel('Time [s]', fontsize=18)
-    plt.ylabel('Counts per bin', fontsize=18)
-    plt.title(r'Raw word, $t_\mathrm{start} = 0.5$, scale $\sigma = 0.5$, skew $\alpha = 3.0$')
-    plt.savefig('word_test2.png', format='png')
-    plt.close()
-
-
-    print('Third test: two combined words')
-
-    event_time1 = 0.0
-    event_time2 = 0.5
-    scale1 = 0.1
-    scale2 = 0.1
-    skew1 = 1.0
-    skew2 = 5.0
-
-    w = CombinedWords(times, [TwoExp, TwoExp])
-    y = w([event_time1, scale1, skew1, event_time2, scale2, skew2])
-
-    plt.figure()
-    plt.plot(times, y, lw=2, color='black')
-    plt.xlabel('Time [s]', fontsize=18)
-    plt.ylabel('Counts per bin', fontsize=18)
-    plt.title(r'2 Words, $t_{\mathrm{start}} = 0.0$ and $0.5$, scale $\sigma_{1,2} = 0.1$, skew $\alpha_1 = 1.0$, $\alpha_2 = 3$ ')
-    plt.savefig('word_test3.png', format='png')
-    plt.close()
- 
-
-    return
 

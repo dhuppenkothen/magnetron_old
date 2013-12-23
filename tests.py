@@ -1,4 +1,6 @@
 
+import matplotlib.pyplot as plt
+from pylab import *
 
 
 import numpy as np
@@ -17,7 +19,7 @@ def word_tests():
     skew = 1.0
 
 
-    w = TwoExp(times)
+    w = word.TwoExp(times)
     y = w(event_time)
 
     plt.figure()
@@ -28,13 +30,17 @@ def word_tests():
     plt.savefig('word_test1.png', format='png')
     plt.close()
 
+    print(' ... saved in word_test1.png. \n')
+
+
+
     print('Second test: scaled TwoExp word')
     event_time = 0.5
     scale = 0.5
     skew = 3.0
     amp = 10.0
     print('times: ' + str(times))
-    w = TwoExp(times)
+    w = word.TwoExp(times)
     y = w([event_time, scale,amp, skew])
 
     plt.figure()
@@ -45,6 +51,7 @@ def word_tests():
     plt.savefig('word_test2.png', format='png')
     plt.close()
 
+    print(' ... saved in word_test2.png. \n')
 
     print('Third test: two combined words')
 
@@ -57,7 +64,7 @@ def word_tests():
     skew1 = 1.0
     skew2 = 5.0
 
-    w = CombinedWords(times, [TwoExp, TwoExp])
+    w = word.CombinedWords(times, [word.TwoExp, word.TwoExp])
     y = w([event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2])
 
     plt.figure()
@@ -68,6 +75,7 @@ def word_tests():
     plt.savefig('word_test3.png', format='png')
     plt.close()
 
+    print(' ... saved in word_test3.png. \n')
 
     return
 
@@ -97,27 +105,78 @@ def burst_tests():
     print('counts array: ' + str(b.counts))
     print('type of counts array: ' + str(type(b.counts)))
 
-    print('model function (going to test in detail below: ' + str(self.model))
+    print('model function (going to test in detail below: ' + str(b.model))
 
     print('Delta (should be 0.001): ' + str(b.Delta))
     print('nbins_data (should be 1000): ' + str(b.nbins_data))
 
     print('Now testing whether model creation works ... ')
     theta = [event_time, scale, amp, skew, bkg]
-    y = b.model(theta)
+    y = b.model(times, theta)
 
     plt.figure()
     plt.plot(times, y, lw=2, color='black')
     plt.xlabel('Time [s]', fontsize=18)
     plt.ylabel('Counts per bin', fontsize=18)
-    plt.title(r'Model test, $t_\mathrm{start} = 0.5$, scale $\sigma = 0.1$, amplitude $A = 50$, skew $\alpha = 3$, $\mathrm{bkg} = 3')
+    plt.title(r'Model test, $t_\mathrm{start} = 0.5$, scale $\sigma = 0.1$, amplitude $A = 5$, skew $\alpha = 3$, $\mathrm{bkg} = 3$')
     plt.savefig('burst_test1.png', format='png')
     plt.close()
 
+    print('... saved in burst_test1.png. \n')
     
+    print('Test 2: Three spikes')
 
+    event_time1 = 0.2
+    scale1 = 0.05
+    amp1 = 5
+    skew1 = 5
 
+    event_time2 = 0.4
+    scale2 = 0.01
+    amp2 = 10
+    skew2 = 1.0
 
+    event_time3 = 0.7
+    scale3 = 0.005
+    amp3 = 2
+    skew3 = 10
 
+    bkg = 3
+
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
+            event_time3, scale3, amp3, skew3, bkg]
+
+    b = burstmodel.BurstModel(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
+    y = b.model(times, theta)
+
+    plt.figure()
+    plt.plot(times, y, lw=2, color='black')
+    plt.xlabel('Time [s]', fontsize=18)
+    plt.ylabel('Counts per bin', fontsize=18)
+    plt.title(r'Model test, $t_\mathrm{start} = 0.2, 0.4, 0.7$,'\
+            r' scale $\sigma = 0.05, 0.01, 0.1$, amplitude $A = 5, 10, 2$,'\
+            r' skew $\alpha = 5, 1, 10$, $\mathrm{bkg} = 3$', fontsize=10)
+    plt.savefig('burst_test2.png', format='png')
+    plt.close()
+
+    print('... saved in burst_test2.png. \n')
+
+    print('Test 3: call method model_means to make same model as above')
+
+    y = b.model_means(theta, nbins=10)
+
+    plt.figure()
+    plt.plot(times, y, lw=2, color='black')
+    plt.xlabel('Time [s]', fontsize=18)
+    plt.ylabel('Counts per bin', fontsize=18)
+    plt.title(r'Model test, $t_\mathrm{start} = 0.2, 0.4, 0.7$,'\
+            r' scale $\sigma = 0.05, 0.01, 0.1$, amplitude $A = 5, 10, 2$,'\
+            r' skew $\alpha = 5, 1, 10$, $\mathrm{bkg} = 3$', fontsize=10)
+    plt.savefig('burst_test3.png', format='png')
+    plt.close()
+
+    print('... saved in burst_test3.png \n')
+
+    print('burst_test2.png and burst_test3.png should look the same!')
 
 

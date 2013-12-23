@@ -9,19 +9,76 @@ import argparse
 import emcee
 import cPickle as pickle
 
-def word(time, scale, skew = 2.0):
+import word
 
-    t = np.array(time)/scale
-    #y = exp(((x>0)*2-1)*x)
-    y = np.zeros_like(t)
-    y[t<=0] = np.exp(t[t<=0])
-    y[t>0] = np.exp(-t[t>0]/skew)
 
-    return y
-#    y1 = [np.exp(x) for x in xvar if x < 0]
-#    y2 = [np.exp(-x/skew) for x in xvar if x > 0]
-#    y1.extend(y2)
-#    return y1
+#### DEPRECATED: USE WORD CLASS INSTEAD #####
+#def word(time, scale, skew = 2.0):
+
+#    t = np.array(time)/scale
+#    y = np.zeros_like(t)
+#    y[t<=0] = np.exp(t[t<=0])
+#    y[t>0] = np.exp(-t[t>0]/skew)
+
+#    return y
+#######
+
+
+#### COMPUTE
+
+
+class BurstModel(object):
+
+    def __init__(self, times, counts, wordlist):
+
+        self.times = np.array(times)
+        self.counts = np.array(counts)
+        self.wordlist = wordlist
+        self.model = self._create_model()
+        self.Delta = self.times[1] - self.times[0]
+        self.nbins_data = len(self.times)
+        return
+
+    def _create_model(self):
+
+        ### create a model definition that includes the background!
+        ### theta_all is flat
+        def event_rate(model_times, theta_all):
+            
+            ### last element must be background counts!
+            bkg = theta_all[-1]
+
+            if size(self.wordlist) > 1:
+                model = word.CombinedWords(model_times, self.wordlist)
+            else:
+                model = self.wordlist(model_times)
+
+            y = model(theta_all[:-1]) + bkg
+
+            return y
+
+        return event_rate
+
+    ### theta_all is flat
+    def model_means(self, theta_all, nbins=10):
+
+        ## small time bin size delta
+        delta = self.Delta/nbins
+        ## number of small time bins
+        nsmall = self.nbins_data*nbins
+        ## make a high-resolution time array 
+        times_small = np.arange(nsmall)*delta
+
+        ## compute high-resolution count rate
+        rate_small = self.model(times_small, theta_all)
+
+        ## add together nbins neighbouring counts
+        rate_map = rate_small.reshape(self.nbins_data, nbins)
+        rate_map_sum = np.sum(rate_map, axis=1)*delta
+
+        return rate_map_sum
+
+
 
 
 def event_rate(time, event_time, scale, amp, skew):

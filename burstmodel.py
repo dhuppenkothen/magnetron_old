@@ -1,15 +1,42 @@
-from collections import defaultdict
+#### MODELLING BURSTS WITH WORDS #######################
+#
+# This module defines classes to model magnetar bursts  
+# as superposition of simple shapes ("words")
+#
+# Classes:
+#   BurstDict:  produces a superposition of arbitrary words
+#               to use as a model for a magnetar bursts
+#       methods: 
+#                _create_model: yields a function that takes
+#                               a list of times and a bunch of
+#                               parameters and returns a count rate
+#
+#                model_means:   takes a list of times and some parameters,
+#                               then makes a finer time grid, computers the
+#                               count rate via the output of _create_model and
+#                               averages neighbouring bins back to the original
+#                               resolution of the initial time grid
+#
+#  WordPosterior:   class that defines the posterior for a Poisson-distributed
+#                   data set and a superposition of words as a model
+#
+#
+#
 
+### python module imports
+from collections import defaultdict
+import cPickle as pickle
+import argparse
+import copy
+
+### third party modules
 import matplotlib.pyplot as plt
 from pylab import * 
-
 import numpy as np
-import copy
-import argparse
-import emcee
-import cPickle as pickle
 import scipy.special
+import emcee
 
+### local scripts
 import word
 
 saturation_countrate = 3.5e5
@@ -25,7 +52,6 @@ saturation_countrate = 3.5e5
 #######
 
 
-#### COMPUTE
 
 
 class BurstDict(object):
@@ -51,10 +77,13 @@ class BurstDict(object):
 
             if size(self.wordlist) > 1:
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
-            else:
+                y = wordmodel(theta_exp[:-1]) + bkg
+            elif size(self.wordlist) == 1:
                 wordmodel = self.wordlist(model_times)
-
-            y = wordmodel(theta_exp[:-1]) + bkg
+                y = wordmodel(theta_exp[:-1]) + bkg
+            else: 
+                wordmodel = None
+                y = np.zeros(len(self.times)) + bkg
 
             return y
 
@@ -71,7 +100,11 @@ class BurstDict(object):
         ## make a high-resolution time array 
         times_small = np.arange(nsmall)*delta
 
-        theta_exp = self.wordmodel._exp(theta_all)
+        if self.wordlist >= 1:
+            theta_exp = self.wordmodel._exp(theta_all)
+        else:
+            theta_exp = theta_all
+        
         ## compute high-resolution count rate
         rate_small = self.wordmodel(times_small, theta_exp)
 
@@ -135,6 +168,112 @@ class WordPosterior(object):
 
 
 
+class BurstModel(object):
+
+    def __init__(self, times, counts):
+        self.times = times
+        self.counts = counts
+        self.T = self.times[-1] - self.times[0]
+        self.Delta = self.times[1] - self.times[0]
+        #self.burstdict = BurstDict(times, counts, wordlist)
+        #self.lpost = WordPosterior(times, counts, self.burstdict) 
+        return
+
+
+        ### note to self: need to implement triangle package and make
+        ### shiny triangle plots!
+        def mcmc(burstmodel, initial_theta, nwalker=500, niter=200, burnin=100):
+
+            lpost = WordPosterior(self.times, self.counts, burstmodel)
+
+            if nwalker < 2*len(theta):
+                print('Too few walkers! Resetting to 2*len(theta)')
+                nwalker = 2*len(theta)
+
+            p0 = [theta+np.random.rand(len(theta))*1.0e-3 for t in range(nwalker)]
+
+            sampler = emcee.EnsembleSampler(nwalker, len(theta), self.lpost)
+            pos, prob, state = sampler.run_mcmc(p0, 200)
+            sampler.reset()
+            sampler.run_mcmc(pos, 1000, rstate0 = state)
+
+            return sampler
+
+
+        def find_spikes(model = word.TwoExp, nmax = 10):
+
+            all_burstdict = []
+            all_sampler = []
+            all_means, all_std = []
+
+
+            for n in range(nmax):
+                
+                ## define burst model   
+                wordlist = [model for m in range(n)]
+                burstmodel = BurstDict(self.times, self.counts, wordlist) 
+
+                #find position where to put a spike
+                if n == 0:
+                    theta_init = [np.mean(self.counts)]
+                    sampler = self.mcmc(burstmodel, theta_init) 
+
+                    postmean = map(lambda y: np.mean(y), sampler.flatchain)
+                    poststd = map(lambda y: np.std(y), sampler.flatchain)
+
+                    all_sampler.append(sampler)
+                    all_means.append(postmean)
+                    all_std.append(poststd)
+                    all_burstdict.append(burstdict)
+
+                    bkg = postmean[0]
+
+
+                ## extract posterior means from last model run
+                old_postmeans = all_means[-1] 
+                old_burstdict = all_burstdict[-1]
+                model = old_burstdict.model_means(old_postmeans, nbins=10) 
+
+                datamodel_ratio = self.counts/model
+                max_diff = max(datamodel_ratio)
+                max_ind = np.where(datamodel_ratio == max_diff)[0]
+                max_loc = self.times[max_ind]
+
+                if model == word.TwoExp:
+                   new_event_time = max_loc
+                   new_scale = 0.1*self.T
+                   new_amp = max_diff
+                   new_skew = 1.0
+                   theta_new_init = [new_event_time, new_scale, new_amp, new_skew]
+
+                 
+                theta_init = np.zeros(len(old_postmeans)+model.npar)
+                theta_init[:len(old_postmeans)-1] = old_postmeans
+                theta_init[len(old_postmeans)-1:-1] = theta_new_init
+                theta_init[-1] = old_postmeans[-1]
+
+                ## wiggle around parameters a bit
+                random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
+                theta_init = theta_init*(1.0+random_shift)
+
+                sampler = self.mcmc(burstmodel, theta_init)
+
+                postmean = map(lambda y: np.mean(y), sampler.flatchain)
+                poststd = map(lambda y: np.std(y), sampler.flatchain)
+
+                all_sampler.append(sampler)
+                all_means.append(postmean)
+                all_std.append(poststd)
+                all_burstdict.append(burstdict)
+
+
+
+                ## now I need to: return count rate from previous model
+                ## then find highest data/model outlier
+                ## place new initial guess there, + small deviation in all paras?
+                ## run mcmc
+                ## append new posterior solution to old one 
+    
 
 
 

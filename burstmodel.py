@@ -156,12 +156,12 @@ class WordPosterior(object):
 
         return self._log_likelihood(lambdas, self.counts)
 
-    ## change parameters:
-
 
     def logposterior(self, theta):
         return self.logprior(theta) + self.loglike(theta)
 
+    ## compute Bayesian Information Criterion
+    def bic(self, theta):
 
     def __call__(self, theta):
         return self.logposterior(theta)
@@ -266,7 +266,7 @@ class BurstModel(object):
                 all_std.append(poststd)
                 all_burstdict.append(burstdict)
 
-
+            return all_sampler, all_means, all_std, all_burstdict
 
                 ## now I need to: return count rate from previous model
                 ## then find highest data/model outlier

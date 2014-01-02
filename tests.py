@@ -53,6 +53,30 @@ def word_tests():
 
     print(' ... saved in word_test2.png. \n')
 
+    print('Testing logprior for single word: ')
+
+    test_theta = [0.1, 0.1, 5.0, 4.0]
+    print('test theta: ' + str(test_theta) + '; This should work!')
+    print('logprior: ' + str(w.logprior(test_theta)) + '\n')
+
+    test_theta = [1.1, 0.1, 5.0, 4.0]
+    print('test theta: ' + str(test_theta) + '; This shouldnt work, event_time out of bounds!')
+    print('logprior: ' + str(w.logprior(test_theta)) + '\n')
+
+    test_theta = [0.5, 1.1, 1.0, 4.0]
+    print('test theta: ' + str(test_theta) + '; This shouldnt work, scale out of bounds!')
+    print('logprior: ' + str(w.logprior(test_theta)) + '\n')
+
+    test_theta = [0.5, 0.1, 1.0e-11, 4.0]
+    print('test theta: ' + str(test_theta) + '; This shouldnt work, amplitude out of bounds!')
+    print('logprior: ' + str(w.logprior(test_theta)) + '\n')
+
+    test_theta = [0.5, 0.1, 1.0, np.exp(4.0)]
+    print('test theta: ' + str(test_theta) + '; This shouldnt work, skew out of bounds!')
+    print('logprior: ' + str(w.logprior(test_theta)) + '\n')
+
+
+
     print('Third test: two combined words')
 
     event_time1 = 0.0
@@ -77,6 +101,7 @@ def word_tests():
 
     print(' ... saved in word_test3.png. \n')
 
+
     return
 
 
@@ -98,7 +123,7 @@ def burst_tests():
     bkg = 3.0
 
     ## initialise burst object
-    b = burstmodel.BurstModel(times, counts, word.TwoExp)
+    b = burstmodel.BurstDict(times, counts, word.TwoExp)
 
     print('time array: ' + str(b.times))
     print('type of time array: ' + str(type(b.times)))
@@ -146,7 +171,7 @@ def burst_tests():
     theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
             event_time3, scale3, amp3, skew3, bkg]
 
-    b = burstmodel.BurstModel(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
+    b = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
     y = b.model(times, theta)
 
     plt.figure()
@@ -178,5 +203,7 @@ def burst_tests():
     print('... saved in burst_test3.png \n')
 
     print('burst_test2.png and burst_test3.png should look the same!')
+
+
 
 

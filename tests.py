@@ -213,3 +213,92 @@ def burst_tests():
     return
 
 
+def wordposterior_tests():
+
+    ## 1-second time array
+    times = np.arange(1000.0)/1000.0
+    ## dummy variable: I don't currently have counts
+    counts = np.ones(len(times))
+ 
+    ## define burst model
+    b = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
+    ## define posterior for model
+    wpost = burstmodel.WordPosterior(times, counts, b)
+
+    ## define a bunch of parameters
+    event_time1 = 0.2
+    scale1 = np.log(0.05)
+    amp1 = np.log(5)
+    skew1 = np.log(5)
+
+    event_time2 = 0.4
+    scale2 = np.log(0.01)
+    amp2 = np.log(10)
+    skew2 = np.log(1.0)
+
+    event_time3 = 0.7
+    scale3 = np.log(0.005)
+    amp3 = np.log(2)
+    skew3 = np.log(10)
+
+    bkg = np.log(3)
+
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
+            event_time3, scale3, amp3, skew3, bkg]
+
+    print('Test 1: Testing prior with reasonable parameters:')
+    print('This should be 0: ' + str(wpost.logprior(theta)) + "\n")
+
+    print('Test 2: Testing prior with unreasonable parameter in burst model: ')
+    theta[0] = 2.1
+    print('This should be -inf, event time out of bounds: ' + str(wpost.logprior(theta)) + "\n")
+
+    print('Test 3: Testing prior with unreasonable background parameter: ')
+    theta[0] = 0.2
+    theta[-1] = np.log(3.8e5)
+    print('This should be -inf, backgorund count rate is above saturation count rate: ' + str(wpost.logprior(theta)) + "\n")
+
+    print('Test 4: Log-likelihood with amplitudes: ')
+    theta[-1] = np.log(3.0)
+
+    print('This likelihood should be small, parameters do not match data: ' + str(wpost.loglike(theta)) + "\n")   
+
+    print('Test 5: Log-likelihood for near-zero amplitudes: ')
+
+    amp1 = amp2 = amp3 = -100.0
+    theta[-1] = np.log(1.0)
+
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
+            event_time3, scale3, amp3, skew3, bkg]
+
+    print('This likelihood should be okay, parameters match data: ' + str(wpost.loglike(theta)) + "\n")
+    
+    print('Test 6: Log-likelihood for data matching initial parameters: ')
+    amp1 = np.log(10.0)
+    amp2 = np.log(5.0)
+    amp3 = np.log(2.0)
+   
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
+            event_time3, scale3, amp3, skew3, bkg]
+
+    counts = b.model_means(theta)
+    wpost = burstmodel.WordPosterior(times, counts, b)
+    
+    print('This likelihood should be okay, likelihood for same parameter set that data is created from: ' + str(wpost.loglike(theta)) + "\n")
+
+ 
+    print('Test 7: Testing the logposterior of the last model: ')
+    print('This should be same as Test 6: ' + str(wpost.logposterior(theta)) + "\n")
+
+    print('Test 8: Testing the logposterior with an unreasonable prior: ')
+    theta[-1] = np.log(3.8e5)
+    print('This should be -inf, bkg > saturation count rate: ' + str(wpost.logposterior(theta)) + "\n")
+
+    return
+        
+    
+    
+
+
+
+

@@ -101,7 +101,7 @@ class TwoExp(Word, object):
         amp = np.log(theta_flat[2])
         skew = np.log(theta_flat[3])
 
-        print(np.log(self.T))
+        #print(np.log(self.T))
 
         if scale < np.log(self.Delta) or scale > np.log(self.T) or skew < -1.5 or skew > 3.0 or \
                 event_time < self.times[0] or event_time > self.times[-1] or \
@@ -176,7 +176,7 @@ class CombinedWords(Word, object):
         
 
     def __call__(self, theta_packed):
-        print('theta_packed: ' + str(theta_packed)) 
+        #print('theta_packed: ' + str(theta_packed)) 
 #        theta_packed = self._pack([w.npar for w in self.wordlist], theta_flat)
         return self.model(theta_packed)
 

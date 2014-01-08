@@ -85,7 +85,7 @@ class BurstDict(object):
             
             ### last element must be background counts!
             bkg = theta_exp[-1]
-            print('Theta exp in event_rate: ' + str(theta_exp))
+            #print('Theta exp in event_rate: ' + str(theta_exp))
             if size(self.wordlist) > 1:
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
                 y = wordmodel(theta_exp[:-1]) + bkg
@@ -114,7 +114,7 @@ class BurstDict(object):
         if self.wordlist >= 1: 
             theta_all_packed= self.wordobject._pack(theta_all)
             theta_exp = self.wordobject._exp(theta_all_packed)
-            print('theta_exp in model_means: ' + str(theta_exp) + "\n")
+            #print('theta_exp in model_means: ' + str(theta_exp) + "\n")
         else:
             theta_exp = theta_all
  
@@ -146,7 +146,9 @@ class WordPosterior(object):
         bkg = theta[-1]
 
         lprior = 0
-        lprior = lprior + self.burstmodel.wordmodel.logprior(theta[:-1])
+        theta_packed = self.burstmodel.wordobject._pack(theta)
+        theta_exp = self.burstmodel.wordobject._exp(theta_packed)
+        lprior = lprior + self.burstmodel.wordobject.logprior(theta_exp[:-1])
 
         if bkg > np.log(saturation_countrate) or np.isinf(lprior):
             return -np.inf
@@ -156,7 +158,7 @@ class WordPosterior(object):
 
     ### lambdas: numpy array of Poisson rates: mean expected integrated in a bin
     ### Poisson likelihood for data and a given model
-    def _log_likelihood(lambdas, data):
+    def _log_likelihood(self, lambdas, data):
 
         return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
             -np.sum(scipy.special.gammaln(data + 1))

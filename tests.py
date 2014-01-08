@@ -8,6 +8,44 @@ import numpy as np
 import word
 import burstmodel
 
+### make a test data set: 3 spikes with varying positions,
+### widths, skews and amplitudes
+def test_data():
+
+    times = np.arange(1000.0)/1000.0 
+    counts = np.ones(len(times))
+
+    event_time1 = 0.2
+    scale1 = np.log(0.05)
+    amp1 = np.log(50.0)
+    skew1 = np.log(5)
+
+    event_time2 = 0.4
+    scale2 = np.log(0.01)
+    amp2 = np.log(100.0)
+    skew2 = np.log(1.0)
+
+    event_time3 = 0.7
+    scale3 = np.log(0.005)
+    amp3 = np.log(20.0)
+    skew3 = np.log(10)
+
+    bkg = np.log(10)
+    
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
+            event_time3, scale3, amp3, skew3, bkg]
+
+    b = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
+    theta_packed = b.wordobject._pack(theta)
+    theta_exp = b.wordobject._exp(theta_packed)
+    y = b.wordmodel(times, theta_exp)
+
+    counts = np.array([np.random.poisson(c) for c in y])
+    b = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
+
+    return b
+
+
 def word_tests():
 
     ''' test suite for Word class'''

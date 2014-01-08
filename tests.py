@@ -63,7 +63,8 @@ def word_tests():
     print('test theta: ' + str(test_theta) + '; This shouldnt work, event_time out of bounds!')
     print('logprior: ' + str(w.logprior(test_theta)) + '\n')
 
-    test_theta = [0.5, 1.1, 1.0, 4.0]
+    test_theta = [0.5, 2.1, 1.0, 4.0]
+    print('w.T: ' + str(w.T))
     print('test theta: ' + str(test_theta) + '; This shouldnt work, scale out of bounds!')
     print('logprior: ' + str(w.logprior(test_theta)) + '\n')
 
@@ -89,7 +90,9 @@ def word_tests():
     skew2 = 5.0
 
     w = word.CombinedWords(times, [word.TwoExp, word.TwoExp])
-    y = w([event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2])
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2]
+    theta_packed = w._pack(theta)
+    y = w(theta_packed)
 
     plt.figure()
     plt.plot(times, y, lw=2, color='black')
@@ -130,14 +133,14 @@ def burst_tests():
     print('counts array: ' + str(b.counts))
     print('type of counts array: ' + str(type(b.counts)))
 
-    print('model function (going to test in detail below: ' + str(b.model))
+    print('model function (going to test in detail below: ' + str(b.wordmodel))
 
     print('Delta (should be 0.001): ' + str(b.Delta))
     print('nbins_data (should be 1000): ' + str(b.nbins_data))
 
     print('Now testing whether model creation works ... ')
     theta = [event_time, scale, amp, skew, bkg]
-    y = b.model(times, theta)
+    y = b.wordmodel(times, theta)
 
     plt.figure()
     plt.plot(times, y, lw=2, color='black')
@@ -152,27 +155,29 @@ def burst_tests():
     print('Test 2: Three spikes')
 
     event_time1 = 0.2
-    scale1 = 0.05
-    amp1 = 5
-    skew1 = 5
+    scale1 = np.log(0.05)
+    amp1 = np.log(5)
+    skew1 = np.log(5)
 
     event_time2 = 0.4
-    scale2 = 0.01
-    amp2 = 10
-    skew2 = 1.0
+    scale2 = np.log(0.01)
+    amp2 = np.log(10)
+    skew2 = np.log(1.0)
 
     event_time3 = 0.7
-    scale3 = 0.005
-    amp3 = 2
-    skew3 = 10
+    scale3 = np.log(0.005)
+    amp3 = np.log(2)
+    skew3 = np.log(10)
 
-    bkg = 3
+    bkg = np.log(3)
 
     theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
             event_time3, scale3, amp3, skew3, bkg]
 
     b = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
-    y = b.model(times, theta)
+    theta_packed = b.wordobject._pack(theta)
+    theta_exp = b.wordobject._exp(theta_packed)
+    y = b.wordmodel(times, theta_exp)
 
     plt.figure()
     plt.plot(times, y, lw=2, color='black')
@@ -188,6 +193,7 @@ def burst_tests():
 
     print('Test 3: call method model_means to make same model as above')
 
+    print(theta)
     y = b.model_means(theta, nbins=10)
 
     plt.figure()
@@ -204,6 +210,6 @@ def burst_tests():
 
     print('burst_test2.png and burst_test3.png should look the same!')
 
-
+    return
 
 

@@ -61,12 +61,23 @@ class BurstDict(object):
         self.times = np.array(times)
         self.counts = np.array(counts)
         self.wordlist = wordlist
-        self.wordmodel = self._create_model()
+        self.wordmodel, self.wordobject = self._create_model()
         self.Delta = self.times[1] - self.times[0]
         self.nbins_data = len(self.times)
         return
 
     def _create_model(self):
+
+        if size(self.wordlist) > 1:
+            wordmodel = word.CombinedWords(self.times, self.wordlist)
+        #    y = wordmodel(theta_exp[:-1]) + bkg
+        elif size(self.wordlist) == 1:
+            wordmodel = self.wordlist(self.times)
+        #    y = wordmodel(theta_exp[:-1]) + bkg
+        else:
+            wordmodel = None
+        #    y = np.zeros(len(self.times)) + bkg
+  
 
         ### create a model definition that includes the background!
         ### theta_all is flat and has non-log parameters
@@ -74,7 +85,7 @@ class BurstDict(object):
             
             ### last element must be background counts!
             bkg = theta_exp[-1]
-
+            print('Theta exp in event_rate: ' + str(theta_exp))
             if size(self.wordlist) > 1:
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
                 y = wordmodel(theta_exp[:-1]) + bkg
@@ -83,11 +94,11 @@ class BurstDict(object):
                 y = wordmodel(theta_exp[:-1]) + bkg
             else: 
                 wordmodel = None
-                y = np.zeros(len(self.times)) + bkg
+                y = np.zeros(len(model_times)) + bkg
 
             return y
 
-        return event_rate
+        return event_rate, wordmodel
 
     ### theta_all is flat and takes log parameters to be consistent with
     ### likelihood functions
@@ -100,17 +111,19 @@ class BurstDict(object):
         ## make a high-resolution time array 
         times_small = np.arange(nsmall)*delta
 
-        if self.wordlist >= 1:
-            theta_exp = self.wordmodel._exp(theta_all)
+        if self.wordlist >= 1: 
+            theta_all_packed= self.wordobject._pack(theta_all)
+            theta_exp = self.wordobject._exp(theta_all_packed)
+            print('theta_exp in model_means: ' + str(theta_exp) + "\n")
         else:
             theta_exp = theta_all
-        
+ 
         ## compute high-resolution count rate
         rate_small = self.wordmodel(times_small, theta_exp)
 
         ## add together nbins neighbouring counts
         rate_map = rate_small.reshape(self.nbins_data, nbins)
-        rate_map_sum = np.sum(rate_map, axis=1)*delta
+        rate_map_sum = np.sum(rate_map, axis=1)/float(nbins)
 
         return rate_map_sum
 
@@ -162,6 +175,8 @@ class WordPosterior(object):
 
     ## compute Bayesian Information Criterion
     def bic(self, theta):
+        print('This does not do anything right now!')
+        return
 
     def __call__(self, theta):
         return self.logposterior(theta)

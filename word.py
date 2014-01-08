@@ -35,6 +35,10 @@ class Word(object):
             theta_new.append(theta_flat[par_counter:par_counter+n])
             par_counter = par_counter + n
 
+        ### if there are more parameters than are in the words, append
+        ### the rest at the end
+        if np.sum(npars) < len(theta_flat):
+            theta_new.extend(theta_flat[np.sum(npars):])
         ## theta_new will be a weird list with len(npars) elements and each
         ## element will have length n, for each n in npars
         return theta_new
@@ -64,7 +68,7 @@ class TwoExp(Word, object):
         return
 
 
-    def _exp(self, theta_all):
+    def _exp(self, theta_flat):
     
         theta_exp = [theta_flat[0], np.exp(theta_flat[1]), np.exp(theta_flat[2]), np.exp(theta_flat[3])]
 
@@ -126,31 +130,35 @@ class CombinedWords(Word, object):
 
         ### instantiate word objects
         self.wordlist = [w(times) for w in wordlist]
-        self.npar = np.sum([w.npar for w in self.wordlist])
+        self.npar_list = [w.npar for w in self.wordlist]
+        self.npar = np.sum(self.npar_list)
         Word.__init__(self,times)
         return
 
 
     def _exp(self, theta_packed):
-
-        theta_exp = [w._exp(t) for t,w in zip(theta_packed, self.wordlist)]
+        theta_exp = [w._exp(t) for t,w in zip(theta_packed[:len(self.wordlist)], self.wordlist)]
+        if len(theta_packed) > len(self.wordlist):
+            theta_exp.extend(np.exp(theta_packed[len(self.wordlist):]))
         return theta_exp
 
     def _log(self, theta_packed):
-
-        theta_log = [w._log(t) for t,w in zip(theta_packed, self.wordlist)]
+        theta_log = [w._log(t) for t,w in zip(theta_packed[:len(self.wordlist)], self.wordlist)]
+        if len(theta_packed) > len(self.wordlist):
+            theta_log.extend(np.log(theta_packed[len(self.wordlist):]))
         return theta_log
+
+    def _pack(self, theta_flat):
+            return Word._pack(self, self.npar_list, theta_flat)
 
 
     ### theta_all is packed
     def model(self, theta_packed):
 
         y = np.zeros(len(self.times))
-        error_theta_packed = 'Length of theta_all does not match length of word list'
-        assert len(theta_packed) == len(self.wordlist), error_theta_packed
 
         error_theta_individual = 'Number of elements in theta does not match required number of parameters in word!'
-        for t,w in zip(theta_packed, self.wordlist):
+        for t,w in zip(theta_packed[:len(self.wordlist)], self.wordlist):
             assert len(t) == w.npar, error_theta_individual
 
             y = y + w(t) ## add word to output array
@@ -161,15 +169,15 @@ class CombinedWords(Word, object):
     def logprior(self, theta_packed):
 
         lprior = 0.0
-        for t,w in zip(theta_packed, wordlist):
-            lprior = lprior + wordlist.logprior(t)
+        for t,w in zip(theta_packed[:len(self.wordlist)], self.wordlist):
+            lprior = lprior + w.logprior(t)
 
         return lprior
         
 
-    def __call__(self, theta_flat):
-
-        theta_packed = self._pack([w.npar for w in self.wordlist], theta_flat)
+    def __call__(self, theta_packed):
+        print('theta_packed: ' + str(theta_packed)) 
+#        theta_packed = self._pack([w.npar for w in self.wordlist], theta_flat)
         return self.model(theta_packed)
 
 

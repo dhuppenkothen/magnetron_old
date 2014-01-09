@@ -78,13 +78,15 @@ class TwoExp(Word, object):
 
     @staticmethod
     def _exp(theta_packed):
-
-        if size(theta_packed) > 1:
+#        print(theta_packed)
+        depth = lambda L: isinstance(L, list) and max(map(depth, L))+1
+        d = depth(theta_packed)
+        if d > 1:
             theta_temp = theta_packed[0]
         else:
             theta_temp = theta_packed
         theta_exp = [theta_temp[0], np.exp(theta_temp[1]), np.exp(theta_temp[2]), np.exp(theta_temp[3])]
-        if size(theta_packed) > 1:
+        if d > 1:
             theta_exp = [theta_exp]
             theta_exp.extend(np.exp(theta_packed[1:]))
         return theta_exp
@@ -92,12 +94,14 @@ class TwoExp(Word, object):
     @staticmethod
     def _log(theta_packed):
 
-        if size(theta_packed) > 1:
+        depth = lambda L: isinstance(L, list) and max(map(depth, L))+1
+        d = depth(theta_packed)
+        if d > 1:
             theta_temp = theta_packed[0]
         else:
             theta_temp = theta_packed
         theta_log = [theta_temp[0], np.log(theta_temp[1]), np.log(theta_temp[2]), np.log(theta_temp[3])]
-        if size(theta_packed) > 1:
+        if d > 1:
             theta_log = [theta_log]
             theta_log.extend(np.log(theta_packed[1:]))
 

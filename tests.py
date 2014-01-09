@@ -1,7 +1,5 @@
-
 import matplotlib.pyplot as plt
 from pylab import *
-
 
 import numpy as np
 
@@ -11,8 +9,7 @@ import burstmodel
 ### make a test data set: 3 spikes with varying positions,
 ### widths, skews and amplitudes
 def test_data():
-
-    times = np.arange(1000.0)/1000.0 
+    times = np.arange(1000.0) / 1000.0
     counts = np.ones(len(times))
 
     event_time1 = 0.2
@@ -31,9 +28,9 @@ def test_data():
     skew3 = np.log(10)
 
     bkg = np.log(10)
-    
-    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
-            event_time3, scale3, amp3, skew3, bkg]
+
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2, \
+             event_time3, scale3, amp3, skew3, bkg]
 
     b = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
     theta_packed = b.wordobject._pack(theta)
@@ -47,15 +44,13 @@ def test_data():
 
 
 def word_tests():
-
     ''' test suite for Word class'''
 
     print('First test: unscaled TwoExp word')
-    times = np.arange(2000.0)/1000.0 - 1.0
+    times = np.arange(2000.0) / 1000.0 - 1.0
     event_time = 0.00
     scale = 1.0
     skew = 1.0
-
 
     w = word.TwoExp(times)
     y = w(event_time)
@@ -70,8 +65,6 @@ def word_tests():
 
     print(' ... saved in word_test1.png. \n')
 
-
-
     print('Second test: scaled TwoExp word')
     event_time = 0.5
     scale = 0.5
@@ -79,7 +72,7 @@ def word_tests():
     amp = 10.0
     print('times: ' + str(times))
     w = word.TwoExp(times)
-    y = w([event_time, scale,amp, skew])
+    y = w([event_time, scale, amp, skew])
 
     plt.figure()
     plt.plot(times, y, lw=2, color='black')
@@ -114,8 +107,6 @@ def word_tests():
     print('test theta: ' + str(test_theta) + '; This shouldnt work, skew out of bounds!')
     print('logprior: ' + str(w.logprior(test_theta)) + '\n')
 
-
-
     print('Third test: two combined words')
 
     event_time1 = 0.0
@@ -136,24 +127,21 @@ def word_tests():
     plt.plot(times, y, lw=2, color='black')
     plt.xlabel('Time [s]', fontsize=18)
     plt.ylabel('Counts per bin', fontsize=18)
-    plt.title(r'2 Words, $t_{\mathrm{start}} = 0.0$ and $0.5$, scale $\sigma_{1,2} = 0.1$, $A_1 = 5$, $A_2 = 10$, skew $\alpha_1 = 1.0$, $\alpha_2 = 3$ ')
+    plt.title(
+        r'2 Words, $t_{\mathrm{start}} = 0.0$ and $0.5$, scale $\sigma_{1,2} = 0.1$, $A_1 = 5$, $A_2 = 10$, skew $\alpha_1 = 1.0$, $\alpha_2 = 3$ ')
     plt.savefig('word_test3.png', format='png')
     plt.close()
 
     print(' ... saved in word_test3.png. \n')
 
-
     return
 
 
-
 def burst_tests():
-
     ## 1-second time array
-    times = np.arange(1000.0)/1000.0
+    times = np.arange(1000.0) / 1000.0
     ## dummy variable: I don't currently have counts
     counts = np.ones(len(times))
-
 
     print('Test 1: Just one word')
 
@@ -184,12 +172,13 @@ def burst_tests():
     plt.plot(times, y, lw=2, color='black')
     plt.xlabel('Time [s]', fontsize=18)
     plt.ylabel('Counts per bin', fontsize=18)
-    plt.title(r'Model test, $t_\mathrm{start} = 0.5$, scale $\sigma = 0.1$, amplitude $A = 5$, skew $\alpha = 3$, $\mathrm{bkg} = 3$')
+    plt.title(
+        r'Model test, $t_\mathrm{start} = 0.5$, scale $\sigma = 0.1$, amplitude $A = 5$, skew $\alpha = 3$, $\mathrm{bkg} = 3$')
     plt.savefig('burst_test1.png', format='png')
     plt.close()
 
     print('... saved in burst_test1.png. \n')
-    
+
     print('Test 2: Three spikes')
 
     event_time1 = 0.2
@@ -209,8 +198,8 @@ def burst_tests():
 
     bkg = np.log(3)
 
-    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
-            event_time3, scale3, amp3, skew3, bkg]
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2, \
+             event_time3, scale3, amp3, skew3, bkg]
 
     b = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
     theta_packed = b.wordobject._pack(theta)
@@ -221,9 +210,9 @@ def burst_tests():
     plt.plot(times, y, lw=2, color='black')
     plt.xlabel('Time [s]', fontsize=18)
     plt.ylabel('Counts per bin', fontsize=18)
-    plt.title(r'Model test, $t_\mathrm{start} = 0.2, 0.4, 0.7$,'\
-            r' scale $\sigma = 0.05, 0.01, 0.1$, amplitude $A = 5, 10, 2$,'\
-            r' skew $\alpha = 5, 1, 10$, $\mathrm{bkg} = 3$', fontsize=10)
+    plt.title(r'Model test, $t_\mathrm{start} = 0.2, 0.4, 0.7$,' \
+              r' scale $\sigma = 0.05, 0.01, 0.1$, amplitude $A = 5, 10, 2$,' \
+              r' skew $\alpha = 5, 1, 10$, $\mathrm{bkg} = 3$', fontsize=10)
     plt.savefig('burst_test2.png', format='png')
     plt.close()
 
@@ -238,9 +227,9 @@ def burst_tests():
     plt.plot(times, y, lw=2, color='black')
     plt.xlabel('Time [s]', fontsize=18)
     plt.ylabel('Counts per bin', fontsize=18)
-    plt.title(r'Model test, $t_\mathrm{start} = 0.2, 0.4, 0.7$,'\
-            r' scale $\sigma = 0.05, 0.01, 0.1$, amplitude $A = 5, 10, 2$,'\
-            r' skew $\alpha = 5, 1, 10$, $\mathrm{bkg} = 3$', fontsize=10)
+    plt.title(r'Model test, $t_\mathrm{start} = 0.2, 0.4, 0.7$,' \
+              r' scale $\sigma = 0.05, 0.01, 0.1$, amplitude $A = 5, 10, 2$,' \
+              r' skew $\alpha = 5, 1, 10$, $\mathrm{bkg} = 3$', fontsize=10)
     plt.savefig('burst_test3.png', format='png')
     plt.close()
 
@@ -252,12 +241,11 @@ def burst_tests():
 
 
 def wordposterior_tests():
-
     ## 1-second time array
-    times = np.arange(1000.0)/1000.0
+    times = np.arange(1000.0) / 1000.0
     ## dummy variable: I don't currently have counts
     counts = np.ones(len(times))
- 
+
     ## define burst model
     b = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
     ## define posterior for model
@@ -281,8 +269,8 @@ def wordposterior_tests():
 
     bkg = np.log(3)
 
-    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
-            event_time3, scale3, amp3, skew3, bkg]
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2, \
+             event_time3, scale3, amp3, skew3, bkg]
 
     print('Test 1: Testing prior with reasonable parameters:')
     print('This should be 0: ' + str(wpost.logprior(theta)) + "\n")
@@ -294,37 +282,39 @@ def wordposterior_tests():
     print('Test 3: Testing prior with unreasonable background parameter: ')
     theta[0] = 0.2
     theta[-1] = np.log(3.8e5)
-    print('This should be -inf, backgorund count rate is above saturation count rate: ' + str(wpost.logprior(theta)) + "\n")
+    print(
+        'This should be -inf, backgorund count rate is above saturation count rate: ' + str(
+            wpost.logprior(theta)) + "\n")
 
     print('Test 4: Log-likelihood with amplitudes: ')
     theta[-1] = np.log(3.0)
 
-    print('This likelihood should be small, parameters do not match data: ' + str(wpost.loglike(theta)) + "\n")   
+    print('This likelihood should be small, parameters do not match data: ' + str(wpost.loglike(theta)) + "\n")
 
     print('Test 5: Log-likelihood for near-zero amplitudes: ')
 
     amp1 = amp2 = amp3 = -100.0
     theta[-1] = np.log(1.0)
 
-    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
-            event_time3, scale3, amp3, skew3, bkg]
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2, \
+             event_time3, scale3, amp3, skew3, bkg]
 
     print('This likelihood should be okay, parameters match data: ' + str(wpost.loglike(theta)) + "\n")
-    
+
     print('Test 6: Log-likelihood for data matching initial parameters: ')
     amp1 = np.log(10.0)
     amp2 = np.log(5.0)
     amp3 = np.log(2.0)
-   
-    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2,\
-            event_time3, scale3, amp3, skew3, bkg]
+
+    theta = [event_time1, scale1, amp1, skew1, event_time2, scale2, amp2, skew2, \
+             event_time3, scale3, amp3, skew3, bkg]
 
     counts = b.model_means(theta)
     wpost = burstmodel.WordPosterior(times, counts, b)
-    
-    print('This likelihood should be okay, likelihood for same parameter set that data is created from: ' + str(wpost.loglike(theta)) + "\n")
 
- 
+    print('This likelihood should be okay, likelihood for same parameter set that data is created from: ' + str(
+        wpost.loglike(theta)) + "\n")
+
     print('Test 7: Testing the logposterior of the last model: ')
     print('This should be same as Test 6: ' + str(wpost.logposterior(theta)) + "\n")
 

@@ -43,7 +43,7 @@ def test_data():
     counts = np.array([np.random.poisson(c) for c in y])
     b = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp, word.TwoExp])
 
-    return b
+    return b, theta
 
 
 def word_tests():

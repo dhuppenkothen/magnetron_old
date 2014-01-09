@@ -35,6 +35,7 @@ from pylab import *
 import numpy as np
 import scipy.special
 import emcee
+import triangle
 
 ### local scripts
 import word
@@ -181,6 +182,7 @@ class WordPosterior(object):
         return
 
     def __call__(self, theta):
+        print(theta)
         return self.logposterior(theta)
 
 
@@ -199,25 +201,33 @@ class BurstModel(object):
 
         ### note to self: need to implement triangle package and make
         ### shiny triangle plots!
-        def mcmc(burstmodel, initial_theta, nwalker=500, niter=200, burnin=100):
+    def mcmc(self, burstmodel, initial_theta, nwalker=500, niter=200, burnin=100, plot=True, plotname = 'test'):
 
             lpost = WordPosterior(self.times, self.counts, burstmodel)
 
-            if nwalker < 2*len(theta):
+            if nwalker < 2*len(initial_theta):
                 print('Too few walkers! Resetting to 2*len(theta)')
-                nwalker = 2*len(theta)
+                nwalker = 2*len(initial_theta)
 
-            p0 = [theta+np.random.rand(len(theta))*1.0e-3 for t in range(nwalker)]
+            p0 = [initial_theta+np.random.rand(len(initial_theta))*1.0e-3 for t in range(nwalker)]
 
-            sampler = emcee.EnsembleSampler(nwalker, len(theta), self.lpost)
+            sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
             pos, prob, state = sampler.run_mcmc(p0, 200)
             sampler.reset()
             sampler.run_mcmc(pos, 1000, rstate0 = state)
 
+            if plot:
+                self.plot_mcmc(sampler.flatchain, plotname = 'test')
+            
             return sampler
 
+    def plot_mcmc(self, data, plotname):
 
-        def find_spikes(model = word.TwoExp, nmax = 10):
+            figure = triangle.corner(data, labels= [], truths = np.zeros(10))
+            return
+
+
+    def find_spikes(self, model = word.TwoExp, nmax = 10):
 
             all_burstdict = []
             all_sampler = []

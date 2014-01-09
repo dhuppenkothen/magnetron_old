@@ -18,7 +18,7 @@ class Word(object):
         self.Delta = self.times[1] - self.times[0]
 
 
-    def _pack(self, npars, theta_flat):
+    def _pack(self, theta_flat, npars=None):
 
         ''' General pack method:
             Requires 
@@ -27,9 +27,13 @@ class Word(object):
         '''
         theta_new = []
 
+        if npars == None:
+            npars = self.npar
         ## dummy variable to count numbers of parameter I have already iterated 
         ## through
         par_counter = 0
+        if size(npars) == 1:
+            npars = [npars]
         ## loop over all parameters
         for n in npars:
             theta_new.append(theta_flat[par_counter:par_counter+n])
@@ -68,17 +72,30 @@ class TwoExp(Word, object):
         return
 
 
-    def _exp(self, theta_flat):
-    
-        theta_exp = [theta_flat[0], np.exp(theta_flat[1]), np.exp(theta_flat[2]), np.exp(theta_flat[3])]
-
+    def _exp(self, theta_packed):
+        if size(theta_packed) > 1:
+            theta_temp = theta_packed[0]
+        else:
+            theta_temp = theta_packed
+        theta_exp = [theta_temp[0], np.exp(theta_temp[1]), np.exp(theta_temp[2]), np.exp(theta_temp[3])]
+        if size(theta_packed) > 1:
+            theta_exp = [theta_exp]
+            theta_exp.extend(np.exp(theta_packed[1:]))
         return theta_exp
 
-    def _log(self, theta_all):
+    def _log(self, theta_packed):
 
-        theta_log = [theta_flat[0], np.log(theta_flat[1]), np.log(theta_flat[2]), np.log(theta_flat[3])]
+        if size(theta_packed) > 1:
+            theta_temp = theta_packed[0]
+        else:
+            theta_temp = theta_packed
+        theta_log = [theta_temp[0], np.log(theta_temp[1]), np.log(theta_temp[2]), np.log(theta_temp[3])]
+        if size(theta_packed) > 1:
+            theta_log = [theta_log]
+            theta_log.extend(np.log(theta_packed[1:]))
+
         return theta_log
-
+ 
     def model(self, event_time, scale=1.0, amp=1.0, skew=1.0):
         ''' The model method contains the actual function definition.
         Returns a numpy-array of size len(self.times)
@@ -94,7 +111,9 @@ class TwoExp(Word, object):
 
         return np.array(amp*y)
  
-    def logprior(self, theta_flat):
+    def logprior(self, theta_packed):
+
+        theta_flat = theta_packed[0]
 
         event_time = theta_flat[0]
         scale = np.log(theta_flat[1])
@@ -111,11 +130,11 @@ class TwoExp(Word, object):
             return 0.0
 
  
-    def __call__(self, theta_flat):
-        
-        if not type(theta_flat) == list and not type(theta_flat) == np.array:
-            theta_flat = [theta_flat]
-        return self.model(*theta_flat)
+    def __call__(self, theta_packed):
+        print('theta_packed in __call__: ' + str(theta_packed))        
+        if not type(theta_packed) == list and not type(theta_packed) == np.array:
+            theta_packed = [theta_packed]
+        return self.model(*theta_packed)
 
 
 
@@ -149,7 +168,7 @@ class CombinedWords(Word, object):
         return theta_log
 
     def _pack(self, theta_flat):
-            return Word._pack(self, self.npar_list, theta_flat)
+            return Word._pack(self, theta_flat, self.npar_list)
 
 
     ### theta_all is packed

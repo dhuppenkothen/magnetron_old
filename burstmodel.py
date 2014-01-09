@@ -85,13 +85,13 @@ class BurstDict(object):
             
             ### last element must be background counts!
             bkg = theta_exp[-1]
-            #print('Theta exp in event_rate: ' + str(theta_exp))
+            #print('in event rate, theta_exp[:-1]' + str(theta_exp[:-1]))
             if size(self.wordlist) > 1:
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
                 y = wordmodel(theta_exp[:-1]) + bkg
             elif size(self.wordlist) == 1:
                 wordmodel = self.wordlist(model_times)
-                y = wordmodel(theta_exp[:-1]) + bkg
+                y = wordmodel(theta_exp[:-1][0]) + bkg
             else:
                 y = np.zeros(len(model_times)) + bkg
 
@@ -119,7 +119,8 @@ class BurstDict(object):
             #print('theta_exp in model_means: ' + str(theta_exp) + "\n")
         else:
             theta_exp = theta_all
- 
+
+        #print('theta_exp in model_means: ' + str(theta_exp))
         ## compute high-resolution count rate
         rate_small = self.wordmodel(times_small, theta_exp)
 
@@ -129,7 +130,17 @@ class BurstDict(object):
 
         return rate_map_sum
 
-
+    def plot_model(self, theta_all, plotname='test'):
+        model_counts = self.model_means(theta_all, nbins=10)
+        fig = plt.figure(figsize=(10,8))
+        plt.plot(self.times, self.counts, lw=1, color='black', label='input data')
+        plt.plot(self.times, model_counts, lw=2, color='red', label='model light curve')
+        plt.xlabel('Time [s]', fontsize=18)
+        plt.ylabel('Count Rate [counts/bin]', fontsize=18)
+        plt.title('An awesome model light curve!')
+        plt.savefig(plotname + '_lc.png', format='png')
+        plt.close()
+        return
 
 class WordPosterior(object):
 
@@ -149,7 +160,10 @@ class WordPosterior(object):
 
         lprior = 0
         # noinspection PyProtectedMember,PyProtectedMember
+        #print('theta in logprior: ' + str(theta))
+        #print(self.burstmodel.wordobject)
         theta_packed = self.burstmodel.wordobject._pack(theta)
+        #print('theta packed in logprior: ' + str(theta_packed))
         # noinspection PyProtectedMember,PyProtectedMember
         theta_exp = self.burstmodel.wordobject._exp(theta_packed)
         lprior = lprior + self.burstmodel.wordobject.logprior(theta_exp[:-1])
@@ -187,7 +201,7 @@ class WordPosterior(object):
         return
 
     def __call__(self, theta):
-        print(theta)
+        #print(theta)
         return self.logposterior(theta)
 
 
@@ -224,13 +238,19 @@ class BurstModel(object):
 
             if plot:
                 self.plot_mcmc(sampler.flatchain, plotname = 'test')
-            
+
+            print('Sampler autocorrelation length: ' + str(sampler.acor))
+            print('Sampler mean acceptance fraction: ' + str(np.mean(sampler.acceptance_fraction)))
+
             return sampler
+
 
     @staticmethod
     def plot_mcmc(data, plotname):
-
-            figure = triangle.corner(data, labels= [], truths = np.zeros(10))
+            print('shape data' + str(np.shape(data)))
+            figure = triangle.corner(data, labels= ['bla' for bla in range(np.shape(data)[1])], \
+                                     truths = np.zeros(np.shape(data)[1]))
+            figure.savefig(plotname + ".png")
             return
 
 

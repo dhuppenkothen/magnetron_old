@@ -7,6 +7,9 @@ import numpy as np
 ### is a global variable
 saturation_countrate = 3.5e5
 
+def depth(L):
+    d = (isinstance(L, list) or isinstance(L, np.ndarray)) and max(map(depth, L))+1
+    return d
 
 class Word(object):
     """ General Word class: container for word shapes of various forms.
@@ -79,12 +82,13 @@ class TwoExp(Word, object):
     @staticmethod
     def _exp(theta_packed):
 #        print(theta_packed)
-        depth = lambda L: isinstance(L, list) and max(map(depth, L))+1
         d = depth(theta_packed)
+        #print('depth: ' + str(d))
         if d > 1:
             theta_temp = theta_packed[0]
         else:
             theta_temp = theta_packed
+        #print('theta_packed in _exp: ' + str(theta_temp))
         theta_exp = [theta_temp[0], np.exp(theta_temp[1]), np.exp(theta_temp[2]), np.exp(theta_temp[3])]
         if d > 1:
             theta_exp = [theta_exp]
@@ -94,7 +98,6 @@ class TwoExp(Word, object):
     @staticmethod
     def _log(theta_packed):
 
-        depth = lambda L: isinstance(L, list) and max(map(depth, L))+1
         d = depth(theta_packed)
         if d > 1:
             theta_temp = theta_packed[0]
@@ -141,9 +144,9 @@ class TwoExp(Word, object):
             return 0.0
 
     def __call__(self, theta_packed):
-        print('theta_packed in __call__: ' + str(theta_packed))
-        if not type(theta_packed) == list and not type(theta_packed) == np.array:
-            theta_packed = [theta_packed]
+        #print('theta_packed in __call__: ' + str(theta_packed))
+#        if not type(theta_packed) == list or not type(theta_packed) == np.array:
+#            theta_packed = [theta_packed]
         return self.model(*theta_packed)
 
 

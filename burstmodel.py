@@ -27,11 +27,9 @@
 from collections import defaultdict
 import cPickle as pickle
 import argparse
-import copy
 
 ### third party modules
-import matplotlib.pyplot as plt
-from pylab import * 
+from pylab import *
 import numpy as np
 import scipy.special
 import emcee
@@ -63,6 +61,7 @@ class BurstDict(object):
         self.counts = np.array(counts)
         self.wordlist = wordlist
         self.wordmodel, self.wordobject = self._create_model()
+        # noinspection PyPep8Naming
         self.Delta = self.times[1] - self.times[0]
         self.nbins_data = len(self.times)
         return
@@ -93,8 +92,7 @@ class BurstDict(object):
             elif size(self.wordlist) == 1:
                 wordmodel = self.wordlist(model_times)
                 y = wordmodel(theta_exp[:-1]) + bkg
-            else: 
-                wordmodel = None
+            else:
                 y = np.zeros(len(model_times)) + bkg
 
             return y
@@ -113,7 +111,10 @@ class BurstDict(object):
         times_small = np.arange(nsmall)*delta
 
         if self.wordlist >= 1: 
+            # noinspection PyProtectedMember
+            # noinspection PyProtectedMember
             theta_all_packed= self.wordobject._pack(theta_all)
+            # noinspection PyProtectedMember,PyProtectedMember
             theta_exp = self.wordobject._exp(theta_all_packed)
             #print('theta_exp in model_means: ' + str(theta_exp) + "\n")
         else:
@@ -132,11 +133,11 @@ class BurstDict(object):
 
 class WordPosterior(object):
 
-    '''
-    WordPosterior class for making a word model posterior 
+    """
+    WordPosterior class for making a word model posterior
     note: burstmodel is of type BurstDict
 
-    '''
+    """
     def __init__(self, times, counts, burstmodel):
         self.times = times
         self.counts = counts
@@ -147,7 +148,9 @@ class WordPosterior(object):
         bkg = theta[-1]
 
         lprior = 0
+        # noinspection PyProtectedMember,PyProtectedMember
         theta_packed = self.burstmodel.wordobject._pack(theta)
+        # noinspection PyProtectedMember,PyProtectedMember
         theta_exp = self.burstmodel.wordobject._exp(theta_packed)
         lprior = lprior + self.burstmodel.wordobject.logprior(theta_exp[:-1])
 
@@ -159,7 +162,8 @@ class WordPosterior(object):
 
     ### lambdas: numpy array of Poisson rates: mean expected integrated in a bin
     ### Poisson likelihood for data and a given model
-    def _log_likelihood(self, lambdas, data):
+    @staticmethod
+    def _log_likelihood(lambdas, data):
 
         return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
             -np.sum(scipy.special.gammaln(data + 1))
@@ -177,7 +181,8 @@ class WordPosterior(object):
         return self.logprior(theta) + self.loglike(theta)
 
     ## compute Bayesian Information Criterion
-    def bic(self, theta):
+    @staticmethod
+    def bic(theta):
         print('This does not do anything right now!')
         return
 
@@ -192,6 +197,7 @@ class BurstModel(object):
     def __init__(self, times, counts):
         self.times = times
         self.counts = counts
+        # noinspection PyPep8Naming
         self.T = self.times[-1] - self.times[0]
         self.Delta = self.times[1] - self.times[0]
         #self.burstdict = BurstDict(times, counts, wordlist)
@@ -212,16 +218,17 @@ class BurstModel(object):
             p0 = [initial_theta+np.random.rand(len(initial_theta))*1.0e-3 for t in range(nwalker)]
 
             sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
-            pos, prob, state = sampler.run_mcmc(p0, 200)
+            pos, prob, state = sampler.run_mcmc(p0, burnin)
             sampler.reset()
-            sampler.run_mcmc(pos, 1000, rstate0 = state)
+            sampler.run_mcmc(pos, niter, rstate0 = state)
 
             if plot:
                 self.plot_mcmc(sampler.flatchain, plotname = 'test')
             
             return sampler
 
-    def plot_mcmc(self, data, plotname):
+    @staticmethod
+    def plot_mcmc(data, plotname):
 
             figure = triangle.corner(data, labels= [], truths = np.zeros(10))
             return
@@ -231,7 +238,7 @@ class BurstModel(object):
 
             all_burstdict = []
             all_sampler = []
-            all_means, all_std = []
+            all_means, all_std = [], []
 
 
             for n in range(nmax):
@@ -251,7 +258,7 @@ class BurstModel(object):
                     all_sampler.append(sampler)
                     all_means.append(postmean)
                     all_std.append(poststd)
-                    all_burstdict.append(burstdict)
+                    all_burstdict.append(burstmodel)
 
                     bkg = postmean[0]
 
@@ -281,7 +288,7 @@ class BurstModel(object):
 
                 ## wiggle around parameters a bit
                 random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
-                theta_init = theta_init*(1.0+random_shift)
+                theta_init *= 1.0 + random_shift
 
                 sampler = self.mcmc(burstmodel, theta_init)
 
@@ -291,7 +298,7 @@ class BurstModel(object):
                 all_sampler.append(sampler)
                 all_means.append(postmean)
                 all_std.append(poststd)
-                all_burstdict.append(burstdict)
+                all_burstdict.append(burstmodel)
 
             return all_sampler, all_means, all_std, all_burstdict
 
@@ -311,15 +318,15 @@ class BurstModel(object):
 
 class DictPosterior(object):
 
-    '''
+    """
     note: implicit assumption is that array times is equally spaced
           nbins_data: number of bins in data
           nbins: multiplicative factor for model light curve bins
-    '''
+    """
     def __init__(self, times, counts, wordmodel, nbins=10):
         self.times = times
         self.counts = counts
-        self.model = model
+        self.model = wordmodel
         #self.npar = npar
 
         self.Delta = times[1]-times[0]
@@ -430,14 +437,14 @@ def model_means(Delta, nbins_data, skew, bkg, scale, theta_evt, nbins=10):
 
 ## go from numpy array weird shape
 def unpack(theta):
-    '''
+    """
     unpacks the numpy array of parameters into a form that model_means can read.
 
     returns: skew, bkg, scale, theta_evt
 
     theta_evt is an array of npeaks by 2, where npeaks is the number of peaks
     each row is (event_time, amp)
-    '''
+    """
 
 
     skew = np.exp(theta[0])
@@ -472,7 +479,7 @@ def pack(skew, bkg, scale, theta_evt):
     return theta
 
 
-
+# noinspection PyNoneFunctionAssignment
 def model_burst():
 
     times = np.arange(1000.0)/10000.0

@@ -44,7 +44,7 @@ def test_data():
 
 
 def word_tests():
-    ''' test suite for Word class'''
+    """ test suite for Word class"""
 
     print('First test: unscaled TwoExp word')
     times = np.arange(2000.0) / 1000.0 - 1.0

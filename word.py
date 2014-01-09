@@ -51,7 +51,8 @@ class Word(object):
         ## element will have length n, for each n in npars
         return theta_new
 
-    def _unpack(self, theta):
+    @staticmethod
+    def _unpack(theta):
         """ General unpack function
         take a weirdly shaped list or numpy array in n dimensions
         and flatten array to 1d

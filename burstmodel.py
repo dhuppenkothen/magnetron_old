@@ -72,7 +72,7 @@ class BurstDict(object):
             wordmodel = word.CombinedWords(self.times, self.wordlist)
         #    y = wordmodel(theta_exp[:-1]) + bkg
         elif size(self.wordlist) == 1:
-            wordmodel = self.wordlist(self.times)
+            wordmodel = self.wordlist[0](self.times)
         #    y = wordmodel(theta_exp[:-1]) + bkg
         else:
             wordmodel = None
@@ -90,7 +90,7 @@ class BurstDict(object):
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
                 y = wordmodel(theta_exp[:-1]) + bkg
             elif size(self.wordlist) == 1:
-                wordmodel = self.wordlist(model_times)
+                wordmodel = self.wordlist[0](model_times)
                 y = wordmodel(theta_exp[:-1][0]) + bkg
             else:
                 y = np.zeros(len(model_times)) + bkg
@@ -110,7 +110,7 @@ class BurstDict(object):
         ## make a high-resolution time array 
         times_small = np.arange(nsmall)*delta
 
-        if self.wordlist >= 1: 
+        if size(self.wordlist) >= 1:
             # noinspection PyProtectedMember
             # noinspection PyProtectedMember
             theta_all_packed= self.wordobject._pack(theta_all)
@@ -156,17 +156,24 @@ class WordPosterior(object):
 
     def logprior(self, theta):
 
-        bkg = theta[-1]
+        if size(theta[-1]) > 1:
+            print('No background parameter specified')
+            bkg = 0.0
+        else:
+            bkg = theta[-1]
 
-        lprior = 0
-        # noinspection PyProtectedMember,PyProtectedMember
-        #print('theta in logprior: ' + str(theta))
-        #print(self.burstmodel.wordobject)
-        theta_packed = self.burstmodel.wordobject._pack(theta)
-        #print('theta packed in logprior: ' + str(theta_packed))
-        # noinspection PyProtectedMember,PyProtectedMember
-        theta_exp = self.burstmodel.wordobject._exp(theta_packed)
-        lprior = lprior + self.burstmodel.wordobject.logprior(theta_exp[:-1])
+        if word.depth(theta) == 1 and len(theta) == 1:
+            lprior = 0
+        else:
+            lprior = 0
+            # noinspection PyProtectedMember,PyProtectedMember
+            #print('theta in logprior: ' + str(theta))
+            #print(self.burstmodel.wordobject)
+            theta_packed = self.burstmodel.wordobject._pack(theta)
+            #print('theta packed in logprior: ' + str(theta_packed))
+            # noinspection PyProtectedMember,PyProtectedMember
+            theta_exp = self.burstmodel.wordobject._exp(theta_packed)
+            lprior = lprior + self.burstmodel.wordobject.logprior(theta_exp[:-1])
 
         if bkg > np.log(saturation_countrate) or np.isinf(lprior):
             return -np.inf
@@ -192,6 +199,9 @@ class WordPosterior(object):
 
 
     def logposterior(self, theta):
+        print('theta in logposterior: ' + str(theta))
+        print('logprior: ' + str(self.logprior(theta)))
+        print('loglike: ' + str(self.loglike(theta)))
         return self.logprior(theta) + self.loglike(theta)
 
     ## compute Bayesian Information Criterion
@@ -203,7 +213,6 @@ class WordPosterior(object):
     def __call__(self, theta):
         #print(theta)
         return self.logposterior(theta)
-
 
 
 class BurstModel(object):
@@ -237,7 +246,7 @@ class BurstModel(object):
             sampler.run_mcmc(pos, niter, rstate0 = state)
 
             if plot:
-                self.plot_mcmc(sampler.flatchain, plotname = 'test')
+                self.plot_mcmc(sampler.flatchain, plotname = plotname)
 
             print('Sampler autocorrelation length: ' + str(sampler.acor))
             print('Sampler mean acceptance fraction: ' + str(np.mean(sampler.acceptance_fraction)))
@@ -254,73 +263,80 @@ class BurstModel(object):
             return
 
 
-    def find_spikes(self, model = word.TwoExp, nmax = 10):
+    def find_spikes(self, model = word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=100, namestr='test'):
 
             all_burstdict = []
             all_sampler = []
-            all_means, all_std = [], []
+            all_means, all_err = [], []
+
+            theta_init = [np.log(np.mean(self.counts))]
+            print('n=0 theta_init : ' + str(theta_init))
+            burstmodel = BurstDict(self.times, self.counts, [])
+            sampler = self.mcmc(burstmodel, theta_init)
+
+            postmean = np.mean(sampler.flatchain, axis=0)
+            posterr = np.std(sampler.flatchain, axis=0)
+
+            all_sampler.append(sampler.flatchain[:2000])
+            all_means.append(postmean)
+            all_err.append(posterr)
+            all_burstdict.append(burstmodel)
 
 
-            for n in range(nmax):
+            for n in np.arange(nmax-1)+1:
                 
                 ## define burst model   
                 wordlist = [model for m in range(n)]
                 burstmodel = BurstDict(self.times, self.counts, wordlist) 
 
-                #find position where to put a spike
-                if n == 0:
-                    theta_init = [np.mean(self.counts)]
-                    sampler = self.mcmc(burstmodel, theta_init) 
-
-                    postmean = map(lambda y: np.mean(y), sampler.flatchain)
-                    poststd = map(lambda y: np.std(y), sampler.flatchain)
-
-                    all_sampler.append(sampler)
-                    all_means.append(postmean)
-                    all_std.append(poststd)
-                    all_burstdict.append(burstmodel)
-
-                    bkg = postmean[0]
-
 
                 ## extract posterior means from last model run
-                old_postmeans = all_means[-1] 
+                old_postmeans = all_means[-1]
+                print('all_means[-1]: ' + str(len(old_postmeans)))
                 old_burstdict = all_burstdict[-1]
-                model = old_burstdict.model_means(old_postmeans, nbins=10) 
+                model_counts = old_burstdict.model_means(old_postmeans, nbins=10)
 
-                datamodel_ratio = self.counts/model
+                datamodel_ratio = self.counts/model_counts
                 max_diff = max(datamodel_ratio)
                 max_ind = np.where(datamodel_ratio == max_diff)[0]
                 max_loc = self.times[max_ind]
 
                 if model == word.TwoExp:
                    new_event_time = max_loc
-                   new_scale = 0.1*self.T
-                   new_amp = max_diff
-                   new_skew = 1.0
+                   new_scale = np.log(0.1*self.T)
+                   new_amp = np.log(max_diff)
+                   new_skew = np.log(1.0)
                    theta_new_init = [new_event_time, new_scale, new_amp, new_skew]
-
+                else:
+                    ### no other models defined!
+                    print('Your preferred model is not part of the code yet! Complain to Daniela and offer\
+                          her chocolate, and it soon might be!')
+                    theta_new_init = np.ones(len(old_postmeans))
                  
-                theta_init = np.zeros(len(old_postmeans)+model.npar)
-                theta_init[:len(old_postmeans)-1] = old_postmeans
+                theta_init = np.zeros(len(old_postmeans)+len(theta_new_init))
+                theta_init[:len(old_postmeans)-1] = old_postmeans[:-1]
                 theta_init[len(old_postmeans)-1:-1] = theta_new_init
-                theta_init[-1] = old_postmeans[-1]
+                theta_init[-1] = np.log(np.mean(datamodel_ratio))
 
                 ## wiggle around parameters a bit
                 random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
                 theta_init *= 1.0 + random_shift
+                print('n = ' + str(n) + ',LENGTH theta_init: ' + str(len(theta_init)))
+                sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin, plot=True,\
+                                    plotname=namestr + '_k' + str(n) + '_posteriors')
 
-                sampler = self.mcmc(burstmodel, theta_init)
+                postmean = np.mean(sampler.flatchain, axis=0)
+                posterr = np.std(sampler.flatchain, axis=0)
 
-                postmean = map(lambda y: np.mean(y), sampler.flatchain)
-                poststd = map(lambda y: np.std(y), sampler.flatchain)
 
-                all_sampler.append(sampler)
+                burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(n))
+
+                all_sampler.append(sampler.flatchain[:2000])
                 all_means.append(postmean)
-                all_std.append(poststd)
+                all_err.append(posterr)
                 all_burstdict.append(burstmodel)
 
-            return all_sampler, all_means, all_std, all_burstdict
+            return all_sampler, all_means, all_err, all_burstdict
 
                 ## now I need to: return count rate from previous model
                 ## then find highest data/model outlier

@@ -126,8 +126,12 @@ class TwoExp(Word, object):
         return np.array(amp * y)
 
     def logprior(self, theta_packed):
+        print('theta_packed: ' + str(theta_packed))
+        if depth(theta_packed) > 1:
+            theta_flat = theta_packed[0]
+        else:
+            theta_flat = theta_packed
 
-        theta_flat = theta_packed[0]
 
         event_time = theta_flat[0]
         scale = np.log(theta_flat[1])
@@ -196,6 +200,7 @@ class CombinedWords(Word, object):
 
 
     def logprior(self, theta_packed):
+#        print('theta_packed: ' + str(theta_packed))
 
         lprior = 0.0
         for t, w in zip(theta_packed[:len(self.wordlist)], self.wordlist):
@@ -205,7 +210,7 @@ class CombinedWords(Word, object):
 
 
     def __call__(self, theta_packed):
-    #print('theta_packed: ' + str(theta_packed))
+        print('theta_packed: ' + str(theta_packed))
     #        theta_packed = self._pack([w.npar for w in self.wordlist], theta_flat)
         return self.model(theta_packed)
 

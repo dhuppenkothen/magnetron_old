@@ -17,10 +17,14 @@
 #                               averages neighbouring bins back to the original
 #                               resolution of the initial time grid
 #
+#               plot_model:     takes a parameter vector and plots
+#                               the data together with the model corresponding to
+#                               that parameter vector
+#
 #  WordPosterior:   class that defines the posterior for a Poisson-distributed
 #                   data set and a superposition of words as a model
 #
-#
+# TODO: add command line functionality
 #
 
 ### python module imports

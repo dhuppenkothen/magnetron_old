@@ -282,7 +282,7 @@ class BurstModel(object):
             all_err.append(posterr)
             all_burstdict.append(burstmodel)
 
-            ### test change for pushing to bitbucket
+            ### test change for pushing to bitbucket!
             for n in np.arange(nmax-1)+1:
                 
                 ## define burst model   

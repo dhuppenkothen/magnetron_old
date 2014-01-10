@@ -72,7 +72,10 @@ class BurstDict(object):
             wordmodel = word.CombinedWords(self.times, self.wordlist)
         #    y = wordmodel(theta_exp[:-1]) + bkg
         elif size(self.wordlist) == 1:
-            wordmodel = self.wordlist[0](self.times)
+            if word.depth(self.wordlist) > 1:
+                wordmodel = self.wordlist[0](self.times)
+            else:
+                wordmodel = self.wordlist(self.times)
         #    y = wordmodel(theta_exp[:-1]) + bkg
         else:
             wordmodel = None
@@ -90,7 +93,10 @@ class BurstDict(object):
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
                 y = wordmodel(theta_exp[:-1]) + bkg
             elif size(self.wordlist) == 1:
-                wordmodel = self.wordlist[0](model_times)
+                if word.depth(self.wordlist) > 1:
+                    wordmodel = self.wordlist[0](model_times)
+                else:
+                    wordmodel = self.wordlist(model_times)
                 y = wordmodel(theta_exp[:-1][0]) + bkg
             else:
                 y = np.zeros(len(model_times)) + bkg

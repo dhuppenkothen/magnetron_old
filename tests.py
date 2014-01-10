@@ -52,8 +52,9 @@ def word_tests():
     scale = 1.0
     skew = 1.0
 
+    theta = [event_time, scale, 1.0, skew]
     w = word.TwoExp(times)
-    y = w(event_time)
+    y = w(theta)
 
     plt.figure()
     plt.plot(times, y, lw=2, color='black')
@@ -165,8 +166,10 @@ def burst_tests():
     print('nbins_data (should be 1000): ' + str(b.nbins_data))
 
     print('Now testing whether model creation works ... ')
-    theta = [event_time, scale, amp, skew, bkg]
-    y = b.wordmodel(times, theta)
+    theta = [event_time, np.log(scale), np.log(amp), np.log(skew), np.log(bkg)]
+    theta_packed = b.wordobject._pack(theta)
+    theta_exp = b.wordobject._exp(theta_packed)
+    y = b.wordmodel(times, theta_exp)
 
     plt.figure()
     plt.plot(times, y, lw=2, color='black')

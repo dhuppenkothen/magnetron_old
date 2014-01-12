@@ -5,10 +5,10 @@ from matplotlib.patches import FancyArrow
 rc("font", size=20, family="serif", serif="Computer Sans")
 rc("text", usetex=True)
 
-import burstmodel
+import word
 
 t = linspace(-10., 10., 10001)
-plot(t, burstmodel.event_rate(t, 1., 0.5, 1., 3.), linewidth=2)
+plot(t, word.TwoExp(t).model(1., 0.5, 1., 3.), linewidth=2)
 xlabel('Time (seconds)')
 ylabel('Poisson Rate')
 ylim([0., 1.1])

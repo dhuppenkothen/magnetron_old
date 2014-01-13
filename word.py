@@ -39,9 +39,10 @@ class Word(object):
             ## dummy variable to count numbers of parameter I have already iterated
         ## through
         par_counter = 0
-        if size(npars) == 1:
+        if size(npars) == 1 and not depth(npars):
             npars = [npars]
             ## loop over all parameters
+        print('npars:' + str(npars))
         for n in npars:
             theta_new.append(theta_flat[par_counter:par_counter + n])
             par_counter = par_counter + n

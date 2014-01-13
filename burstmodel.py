@@ -72,10 +72,12 @@ class BurstDict(object):
 
     def _create_model(self):
 
-        if size(self.wordlist) > 1:
+        if size(self.wordlist) > 1 or type(self.wordlist) is list:
             wordmodel = word.CombinedWords(self.times, self.wordlist)
         #    y = wordmodel(theta_exp[:-1]) + bkg
         elif size(self.wordlist) == 1:
+            print('wordlist: ' + str(self.wordlist))
+            print('depth wordlist: ' + str(word.depth(self.wordlist)))
             if word.depth(self.wordlist) > 1:
                 wordmodel = self.wordlist[0](self.times)
             else:
@@ -93,7 +95,7 @@ class BurstDict(object):
             ### last element must be background counts!
             bkg = theta_exp[-1]
             #print('in event rate, theta_exp[:-1]' + str(theta_exp[:-1]))
-            if size(self.wordlist) > 1:
+            if size(self.wordlist) > 1 or type(self.wordlist) is list:
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
                 y = wordmodel(theta_exp[:-1]) + bkg
             elif size(self.wordlist) == 1:
@@ -270,6 +272,7 @@ class BurstModel(object):
             figure = triangle.corner(data, labels= ['bla' for bla in range(np.shape(data)[1])], \
                                      truths = np.zeros(np.shape(data)[1]))
             figure.savefig(plotname + ".png")
+            plt.close()
             return
 
 

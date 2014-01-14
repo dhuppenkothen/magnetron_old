@@ -74,19 +74,14 @@ class BurstDict(object):
 
         if size(self.wordlist) > 1 or type(self.wordlist) is list:
             wordmodel = word.CombinedWords(self.times, self.wordlist)
-        #    y = wordmodel(theta_exp[:-1]) + bkg
         elif size(self.wordlist) == 1:
-            print('wordlist: ' + str(self.wordlist))
-            print('depth wordlist: ' + str(word.depth(self.wordlist)))
             if word.depth(self.wordlist) > 1:
                 wordmodel = self.wordlist[0](self.times)
             else:
                 wordmodel = self.wordlist(self.times)
-        #    y = wordmodel(theta_exp[:-1]) + bkg
         else:
             wordmodel = None
-        #    y = np.zeros(len(self.times)) + bkg
-  
+
 
         ### create a model definition that includes the background!
         ### theta_all is flat and has non-log parameters
@@ -94,7 +89,6 @@ class BurstDict(object):
             
             ### last element must be background counts!
             bkg = theta_exp[-1]
-            #print('in event rate, theta_exp[:-1]' + str(theta_exp[:-1]))
             if size(self.wordlist) > 1 or type(self.wordlist) is list:
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
                 y = wordmodel(theta_exp[:-1]) + bkg
@@ -128,11 +122,9 @@ class BurstDict(object):
             theta_all_packed= self.wordobject._pack(theta_all)
             # noinspection PyProtectedMember,PyProtectedMember
             theta_exp = self.wordobject._exp(theta_all_packed)
-            #print('theta_exp in model_means: ' + str(theta_exp) + "\n")
         else:
-            theta_exp = theta_all
+            theta_exp = np.exp(theta_all)
 
-        #print('theta_exp in model_means: ' + str(theta_exp))
         ## compute high-resolution count rate
         rate_small = self.wordmodel(times_small, theta_exp)
 
@@ -179,10 +171,7 @@ class WordPosterior(object):
         else:
             lprior = 0
             # noinspection PyProtectedMember,PyProtectedMember
-            #print('theta in logprior: ' + str(theta))
-            #print(self.burstmodel.wordobject)
             theta_packed = self.burstmodel.wordobject._pack(theta)
-            #print('theta packed in logprior: ' + str(theta_packed))
             # noinspection PyProtectedMember,PyProtectedMember
             theta_exp = self.burstmodel.wordobject._exp(theta_packed)
             lprior = lprior + self.burstmodel.wordobject.logprior(theta_exp[:-1])
@@ -211,9 +200,6 @@ class WordPosterior(object):
 
 
     def logposterior(self, theta):
-        #print('theta in logposterior: ' + str(theta))
-        #print('logprior: ' + str(self.logprior(theta)))
-        #print('loglike: ' + str(self.loglike(theta)))
         return self.logprior(theta) + self.loglike(theta)
 
     ## compute Bayesian Information Criterion
@@ -223,7 +209,6 @@ class WordPosterior(object):
         return
 
     def __call__(self, theta):
-        #print(theta)
         return self.logposterior(theta)
 
 
@@ -251,24 +236,31 @@ class WordPosteriorSameScale(WordPosterior, object):
 
         return theta_new
 
-    def logprior(self, theta):
 
+    def logprior(self, theta):
+        """
+        Logprior is defined in subclass for explicit calls to the prior.
+        This is *not* used in logposterior, in order to avoid excessive calls to _insert_scale.
+        """
         theta_new = self._insert_scale(theta)
         WordPosterior.logprior(theta_new)
-
+        return
 
     def loglike(self, theta):
-
+        """
+        Loglike is defined in subclass for explicit calls to the likelihood function.
+        This is *not* used in logposterior, in order to avoid excessive calls to _insert_scale.
+        """
         theta_new = self._insert_scale(theta)
-
         WordPosterior.loglike(theta_new)
-
+        return
 
     def logposterior(self, theta):
 
         theta_new = self._insert_scale(theta)
-
-        WordPosterior.logposterior(theta_new)
+        ## since we have changed the input parameters such that they are in the right format
+        ## for the standard methods in WordPosterior, use those to avoid excessive calls to _insert_scale
+        return WordPosterior.logprior(theta_new) + WordPosterior.loglike(theta_new)
 
 
 class BurstModel(object):
@@ -315,7 +307,6 @@ class BurstModel(object):
 
     @staticmethod
     def plot_mcmc(data, plotname):
-            print('shape data' + str(np.shape(data)))
             figure = triangle.corner(data, labels= ['bla' for bla in range(np.shape(data)[1])], \
                                      truths = np.zeros(np.shape(data)[1]))
             figure.savefig(plotname + ".png")
@@ -347,6 +338,9 @@ class BurstModel(object):
             all_err.append(posterr)
             all_burstdict.append(burstmodel)
             all_theta_init.append(theta_init)
+            print('posterior means, k = 0: ')
+            print(' --- background parameter: ' + str(np.exp(postmean[0])) + ' +/- ' +  str(np.exp(posterr[0])) + "\n")
+
 
             ### test change for pushing to bitbucket
             for n in np.arange(nmax-1)+1:
@@ -358,7 +352,6 @@ class BurstModel(object):
 
                 ## extract posterior means from last model run
                 old_postmeans = all_means[-1]
-                print('all_means[-1]: ' + str(len(old_postmeans)))
                 old_burstdict = all_burstdict[-1]
                 model_counts = old_burstdict.model_means(old_postmeans, nbins=10)
 
@@ -387,7 +380,6 @@ class BurstModel(object):
                 ## wiggle around parameters a bit
                 random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
                 theta_init *= 1.0 + random_shift
-                #print('n = ' + str(n) + ',LENGTH theta_init: ' + str(len(theta_init)))
                 sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
                                     scale_locked=scale_locked, plot=True, \
                                     plotname=namestr + '_k' + str(n) + '_posteriors')
@@ -395,6 +387,14 @@ class BurstModel(object):
                 postmean = np.mean(sampler.flatchain, axis=0)
                 posterr = np.std(sampler.flatchain, axis=0)
 
+                print('Posterior means, k = ' + str(n) + ': \n')
+                for i,(p,e) in enumerate(zip(postmean, posterr)):
+                    if i == 0:
+                        print(' --- parameter ' + str(i) + ': ' + str(p) + ' +/- ' +  str(e) + "\n")
+                    if i == len(postmean)-1:
+                        print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)) + "\n")
+                    else:
+                        print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)))
 
                 burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(n))
 
@@ -461,8 +461,6 @@ class DictPosterior(object):
     
  
         skew, bkg, scale, theta_evt = unpack(theta)
-#        print('theta_evt in logprior: ' + str(theta_evt)) 
-#        print('theta in logprior: ' + str(theta))
 
         if  scale < self.Delta or scale > T or skew < np.exp(-1.5) or skew > np.exp(3.0) or \
                 bkg < 0 or bkg > saturation_countrate:
@@ -480,15 +478,9 @@ class DictPosterior(object):
     ## theta = [scale, skew, move1, amp1, move2, amp2]    
     def loglike(self, theta):
   
-#        print('theta in loglike: ' + str(theta))
 
         ### unpack theta:
         skew, bkg, scale, theta_evt = unpack(theta)
-        #print('theta_evt in loglike: ' + str(theta_evt))
-        #print('theta in loglike: ' + str(theta))
-
-
-
         lambdas = model_means(self.Delta, self.nbins_data, skew, bkg, scale, theta_evt, nbins=self.nbins)
 
         return log_likelihood(lambdas, self.counts)
@@ -566,13 +558,11 @@ def unpack(theta):
     bkg = np.exp(theta[1])
     scale = np.exp(theta[2])
 
-    #print('theta in unpack: ' + str(theta))
 
     theta = np.array(theta)
     theta_evt = copy.copy(theta[3:]).reshape((len(theta)-3)/2, 2)
 
     for i in range(len(theta_evt)):
-    #    print(theta_evt[i][1])
         theta_evt[i][1] = np.exp(theta_evt[i][1])
 
     return skew, bkg, scale, theta_evt

@@ -36,19 +36,19 @@ class Word(object):
 
         if npars is None:
             npars = self.npar
-            ## dummy variable to count numbers of parameter I have already iterated
+        ## dummy variable to count numbers of parameter I have already iterated
         ## through
         par_counter = 0
         if size(npars) == 1 and not depth(npars):
             npars = [npars]
             ## loop over all parameters
-        print('npars:' + str(npars))
         for n in npars:
             theta_new.append(theta_flat[par_counter:par_counter + n])
             par_counter = par_counter + n
 
         ### if there are more parameters than are in the words, append
         ### the rest at the end
+
         if np.sum(npars) < len(theta_flat):
             theta_new.extend(theta_flat[np.sum(npars):])
             ## theta_new will be a weird list with len(npars) elements and each
@@ -82,14 +82,11 @@ class TwoExp(Word, object):
 
     @staticmethod
     def _exp(theta_packed):
-#        print(theta_packed)
         d = depth(theta_packed)
-        #print('depth: ' + str(d))
         if d > 1:
             theta_temp = theta_packed[0]
         else:
             theta_temp = theta_packed
-        #print('theta_packed in _exp: ' + str(theta_temp))
         theta_exp = [theta_temp[0], np.exp(theta_temp[1]), np.exp(theta_temp[2]), np.exp(theta_temp[3])]
         if d > 1:
             theta_exp = [theta_exp]
@@ -127,7 +124,6 @@ class TwoExp(Word, object):
         return np.array(amp * y)
 
     def logprior(self, theta_packed):
-        print('theta_packed: ' + str(theta_packed))
         if depth(theta_packed) > 1:
             theta_flat = theta_packed[0]
         else:
@@ -139,7 +135,6 @@ class TwoExp(Word, object):
         amp = np.log(theta_flat[2])
         skew = np.log(theta_flat[3])
 
-        #print(np.log(self.T))
 
         if scale < np.log(self.Delta) or scale > np.log(self.T) or skew < -1.5 or skew > 3.0 or \
                 event_time < self.times[0] or event_time > self.times[-1] or \
@@ -149,9 +144,6 @@ class TwoExp(Word, object):
             return 0.0
 
     def __call__(self, theta_packed):
-        #print('theta_packed in __call__: ' + str(theta_packed))
-#        if not type(theta_packed) == list or not type(theta_packed) == np.array:
-#            theta_packed = [theta_packed]
         return self.model(*theta_packed)
 
 
@@ -201,7 +193,6 @@ class CombinedWords(Word, object):
 
 
     def logprior(self, theta_packed):
-#        print('theta_packed: ' + str(theta_packed))
 
         lprior = 0.0
         for t, w in zip(theta_packed[:len(self.wordlist)], self.wordlist):
@@ -211,8 +202,6 @@ class CombinedWords(Word, object):
 
 
     def __call__(self, theta_packed):
-        print('theta_packed: ' + str(theta_packed))
-    #        theta_packed = self._pack([w.npar for w in self.wordlist], theta_flat)
         return self.model(theta_packed)
 
 

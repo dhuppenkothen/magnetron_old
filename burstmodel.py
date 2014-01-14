@@ -286,9 +286,12 @@ class BurstModel(object):
 
         ### note to self: need to implement triangle package and make
         ### shiny triangle plots!
-    def mcmc(self, burstmodel, initial_theta, nwalker=500, niter=200, burnin=100, plot=True, plotname = 'test'):
+    def mcmc(self, burstmodel, initial_theta, nwalker=500, niter=200, burnin=100, scale_locked=False, plot=True, plotname = 'test'):
 
-            lpost = WordPosterior(self.times, self.counts, burstmodel)
+            if scale_locked:
+                lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
+            else:
+                lpost = WordPosterior(self.times, self.counts, burstmodel)
 
             if nwalker < 2*len(initial_theta):
                 print('Too few walkers! Resetting to 2*len(theta)')
@@ -321,7 +324,7 @@ class BurstModel(object):
 
 
     def find_spikes(self, model = word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=100, namestr='test', \
-                    scale_locked=True):
+                    scale_locked=False):
 
             all_burstdict = []
             all_sampler = []
@@ -331,14 +334,15 @@ class BurstModel(object):
             theta_init = [np.log(np.mean(self.counts))]
             print('n=0 theta_init : ' + str(theta_init))
             burstmodel = BurstDict(self.times, self.counts, [])
-            sampler = self.mcmc(burstmodel, theta_init)
+            sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin, \
+                                scale_locked=scale_locked, plot=True, plotname=namestr + '_k0_posteriors')
 
             postmean = np.mean(sampler.flatchain, axis=0)
             posterr = np.std(sampler.flatchain, axis=0)
 
             burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(0))
 
-            all_sampler.append(sampler.flatchain[:2000])
+            all_sampler.append(sampler.flatchain[-5000:])
             all_means.append(postmean)
             all_err.append(posterr)
             all_burstdict.append(burstmodel)
@@ -383,8 +387,9 @@ class BurstModel(object):
                 ## wiggle around parameters a bit
                 random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
                 theta_init *= 1.0 + random_shift
-                print('n = ' + str(n) + ',LENGTH theta_init: ' + str(len(theta_init)))
-                sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin, plot=True,\
+                #print('n = ' + str(n) + ',LENGTH theta_init: ' + str(len(theta_init)))
+                sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
+                                    scale_locked=scale_locked, plot=True, \
                                     plotname=namestr + '_k' + str(n) + '_posteriors')
 
                 postmean = np.mean(sampler.flatchain, axis=0)

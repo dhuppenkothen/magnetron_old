@@ -63,7 +63,10 @@ class Word(object):
         """
         theta_flat = []
         for t in theta:
-            theta_flat.extend(t)
+            if size(t) > 1 or type(t) is list:
+                theta_flat.extend(t)
+            else:
+                theta_flat.append(t)
         return np.array(theta_flat)
 
     def __call__(self, *theta_all):

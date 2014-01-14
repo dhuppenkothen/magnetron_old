@@ -323,8 +323,9 @@ class BurstModel(object):
             all_theta_init = []
 
             theta_init = [np.log(np.mean(self.counts))]
-            print('n=0 theta_init : ' + str(theta_init))
             burstmodel = BurstDict(self.times, self.counts, [])
+            print('k = 0, theta_init : ' + str(burstmodel.wordobject._exp(theta_init)))
+
             sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin, \
                                 scale_locked=scale_locked, plot=True, plotname=namestr + '_k0_posteriors')
 
@@ -380,6 +381,8 @@ class BurstModel(object):
                 ## wiggle around parameters a bit
                 random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
                 theta_init *= 1.0 + random_shift
+
+                print('n = ' + str(n) + ', theta_init = ' + str(theta_init))
                 sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
                                     scale_locked=scale_locked, plot=True, \
                                     plotname=namestr + '_k' + str(n) + '_posteriors')
@@ -387,14 +390,15 @@ class BurstModel(object):
                 postmean = np.mean(sampler.flatchain, axis=0)
                 posterr = np.std(sampler.flatchain, axis=0)
 
-                print('Posterior means, k = ' + str(n) + ': \n')
+                print('Posterior means, k = ' + str(n) + ': ')
                 for i,(p,e) in enumerate(zip(postmean, posterr)):
-                    if i == 0:
-                        print(' --- parameter ' + str(i) + ': ' + str(p) + ' +/- ' +  str(e) + "\n")
-                    if i == len(postmean)-1:
-                        print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)) + "\n")
-                    else:
-                        print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)))
+                    print('--- parameter ' + str(i) + ': ' + str(p) + ' +/- ' + str(e))
+                    #if i == 0:
+                    #    print(' --- parameter ' + str(i) + ': ' + str(p) + ' +/- ' +  str(e))
+                    #if i == len(postmean)-1:
+                    #    print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)) + "\n")
+                    #else:
+                    #    print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)))
 
                 burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(n))
 
@@ -413,19 +417,28 @@ class BurstModel(object):
                 ## append new posterior solution to old one 
     
 
-    def _unpack_all(self, all_means, model=word.TwoExp):
+    def _exp_all(self, all_means, model=word.TwoExp):
         all_means_exp = []
         for i,a in enumerate(all_means):
             if i == 0:
                 means_exp = np.exp(a)
+                all_means_exp.append(means_exp)
             else:
                 wordlist = [model for m in range(i)]
+                print('wordlist: ' + str(wordlist))
                 w = word.CombinedWords(self.times, wordlist)
                 means_pack = w._pack(a)
                 means_exp = w._exp(means_pack)
-            all_means_exp.append(np.array(means_exp).flatten())
+                all_means_exp.append(w._unpack(means_exp))
 
         return all_means_exp
+
+
+
+#############################################################################################################
+#############################################################################################################
+#############################################################################################################
+
 
 #######################################################################
 #### OLD IMPLEMENTATION! ##############################################

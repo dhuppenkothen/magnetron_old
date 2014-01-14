@@ -211,9 +211,9 @@ class WordPosterior(object):
 
 
     def logposterior(self, theta):
-        print('theta in logposterior: ' + str(theta))
-        print('logprior: ' + str(self.logprior(theta)))
-        print('loglike: ' + str(self.loglike(theta)))
+        #print('theta in logposterior: ' + str(theta))
+        #print('logprior: ' + str(self.logprior(theta)))
+        #print('loglike: ' + str(self.loglike(theta)))
         return self.logprior(theta) + self.loglike(theta)
 
     ## compute Bayesian Information Criterion
@@ -225,6 +225,50 @@ class WordPosterior(object):
     def __call__(self, theta):
         #print(theta)
         return self.logposterior(theta)
+
+
+class WordPosteriorSameScale(WordPosterior, object):
+
+    def __init__(self, times, counts, burstmodel):
+
+        WordPosterior.__init__(times, counts, burstmodel)
+        return
+
+    def _insert_scale(self, theta):
+
+        ## if wordlist is of type TwoExp, then theta should be of type:
+        ## [[event_time, skew, amp], ..., [event_time, skew, amp], scale, bkg]
+        theta_new = []
+        scale = theta[-2]
+        if self.wordlist[0] is word.TwoExp:
+            for t in theta:
+                t.insert(1, scale)
+                theta_new.append(t)
+            theta_new.append(theta[-1])
+
+        else:
+            raise Exception('Model not implemented! Daniela might fix that for you if you ask nicely!')
+
+        return theta_new
+
+    def logprior(self, theta):
+
+        theta_new = self._insert_scale(theta)
+        WordPosterior.logprior(theta_new)
+
+
+    def loglike(self, theta):
+
+        theta_new = self._insert_scale(theta)
+
+        WordPosterior.loglike(theta_new)
+
+
+    def logposterior(self, theta):
+
+        theta_new = self._insert_scale(theta)
+
+        WordPosterior.logposterior(theta_new)
 
 
 class BurstModel(object):
@@ -276,11 +320,13 @@ class BurstModel(object):
             return
 
 
-    def find_spikes(self, model = word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=100, namestr='test'):
+    def find_spikes(self, model = word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=100, namestr='test', \
+                    scale_locked=True):
 
             all_burstdict = []
             all_sampler = []
             all_means, all_err = [], []
+            all_theta_init = []
 
             theta_init = [np.log(np.mean(self.counts))]
             print('n=0 theta_init : ' + str(theta_init))
@@ -290,10 +336,13 @@ class BurstModel(object):
             postmean = np.mean(sampler.flatchain, axis=0)
             posterr = np.std(sampler.flatchain, axis=0)
 
+            burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(0))
+
             all_sampler.append(sampler.flatchain[:2000])
             all_means.append(postmean)
             all_err.append(posterr)
             all_burstdict.append(burstmodel)
+            all_theta_init.append(theta_init)
 
             ### test change for pushing to bitbucket
             for n in np.arange(nmax-1)+1:
@@ -348,8 +397,9 @@ class BurstModel(object):
                 all_means.append(postmean)
                 all_err.append(posterr)
                 all_burstdict.append(burstmodel)
+                all_theta_init.append(theta_init)
 
-            return all_sampler, all_means, all_err, all_burstdict
+            return all_sampler, all_means, all_err, all_burstdict, all_theta_init
 
                 ## now I need to: return count rate from previous model
                 ## then find highest data/model outlier
@@ -358,8 +408,19 @@ class BurstModel(object):
                 ## append new posterior solution to old one 
     
 
+    def _unpack_all(self, all_means, model=word.TwoExp):
+        all_means_exp = []
+        for i,a in enumerate(all_means):
+            if i == 0:
+                means_exp = np.exp(a)
+            else:
+                wordlist = [model for m in range(i)]
+                w = word.CombinedWords(self.times, wordlist)
+                means_pack = w._pack(a)
+                means_exp = w._exp(means_pack)
+            all_means_exp.append(np.array(means_exp).flatten())
 
-
+        return all_means_exp
 
 #######################################################################
 #### OLD IMPLEMENTATION! ##############################################

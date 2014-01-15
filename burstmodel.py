@@ -57,6 +57,8 @@ saturation_countrate = 3.5e5
 
 
 
+
+
 class BurstDict(object):
 
     def __init__(self, times, counts, wordlist):
@@ -134,11 +136,18 @@ class BurstDict(object):
 
         return rate_map_sum
 
-    def plot_model(self, theta_all, plotname='test'):
+    def plot_model(self, theta_all, postmax = None, plotname='test'):
         model_counts = self.model_means(theta_all, nbins=10)
+        if not postmax == None:
+            model_counts_postmax = self.model_means(postmax, nbins=10)
+
+
         fig = plt.figure(figsize=(10,8))
         plt.plot(self.times, self.counts, lw=1, color='black', label='input data')
-        plt.plot(self.times, model_counts, lw=2, color='red', label='model light curve')
+        plt.plot(self.times, model_counts, lw=2, color='red', label='model light curve: posterior mean')
+        if not postmax == None:
+            plt.plot(self.times, model_counts_postmax, lw=2, color='blue', label='model light curve: posterior max')
+        plt.legend()
         plt.xlabel('Time [s]', fontsize=18)
         plt.ylabel('Count Rate [counts/bin]', fontsize=18)
         plt.title('An awesome model light curve!')
@@ -306,6 +315,29 @@ class BurstModel(object):
 
 
     @staticmethod
+    def find_postmax(flatchain, nbins=100):
+
+        if np.shape(flatchain)[0] > np.shape(flatchain)[1]:
+            flatchain = np.transpose(flatchain)
+
+        postmax = np.zeros(shape(flatchain)[0])
+
+        for i,par in enumerate(flatchain):
+            min_par = np.min(par)
+            max_par = np.max(par)
+
+            counts, histbins = np.histogram(f, bins=nbins, range = [min_par, max_par])
+            dh = histbins[1] - histbins[0]
+
+            max_ind = np.argmax(counts)
+            max_loc = histbins[max_ind] + 0.5*dh
+            postmax[i] = max_loc
+            print('posterior maximum for parameter ' + str(i) + ': ' + str(max_loc))
+        return postmax
+
+
+
+    @staticmethod
     def plot_mcmc(data, plotname):
             figure = triangle.corner(data, labels= ['bla' for bla in range(np.shape(data)[1])], \
                                      truths = np.zeros(np.shape(data)[1]))
@@ -389,6 +421,8 @@ class BurstModel(object):
 
                 postmean = np.mean(sampler.flatchain, axis=0)
                 posterr = np.std(sampler.flatchain, axis=0)
+                postmax = self.find_postmax(sampler.flatchain[5000:])
+
 
                 print('Posterior means, k = ' + str(n) + ': ')
                 for i,(p,e) in enumerate(zip(postmean, posterr)):
@@ -400,9 +434,9 @@ class BurstModel(object):
                     #else:
                     #    print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)))
 
-                burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(n))
+                burstmodel.plot_model(postmean, postmax = postmax, plotname = namestr + '_k' + str(n))
 
-                all_sampler.append(sampler.flatchain[:2000])
+                all_sampler.append(sampler.flatchain[5000:])
                 all_means.append(postmean)
                 all_err.append(posterr)
                 all_burstdict.append(burstmodel)

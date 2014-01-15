@@ -24,7 +24,7 @@ def test_data():
 
     event_time3 = 0.7
     scale3 = np.log(0.005)
-    amp3 = np.log(20.0)
+    amp3 = np.log(40.0)
     skew3 = np.log(10)
 
     bkg = np.log(10)

@@ -78,6 +78,7 @@ class TwoExp(Word, object):
     corresponding to a rising exponential, followed by a falling exponential,
     with a sharp peak in the middle."""
 
+    parnames = ['t_0', 'log(scale)', 'log(amp)', 'log(skew)']
     def __init__(self, times):
         self.npar = 4
         Word.__init__(self, times)

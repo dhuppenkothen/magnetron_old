@@ -306,7 +306,14 @@ class BurstModel(object):
             sampler.run_mcmc(pos, niter, rstate0 = state)
 
             if plot:
-                self.plot_mcmc(sampler.flatchain, plotname = plotname)
+                if size(burstmodel.wordlist) == 0:
+                    plotlabels = ['log(bkg)']
+                else:
+                    plotlabels = []
+                    for i,w in enumerate(burstmodel.wordlist):
+                        plotlabels.extend([p + '_' + str(i) for p in w.parnames])
+                    plotlabels.append('log(bkg)')
+                self.plot_mcmc(sampler.flatchain[-5000:], plotname = plotname, plotlabels = plotlabels)
 
             print('Sampler autocorrelation length: ' + str(sampler.acor))
             print('Sampler mean acceptance fraction: ' + str(np.mean(sampler.acceptance_fraction)))
@@ -315,12 +322,15 @@ class BurstModel(object):
 
 
     @staticmethod
-    def find_postmax(flatchain, nbins=100):
+    def find_postmax(sampler, nbins=100):
+
+        ### first attempt: get maxima from marginalised posteriors
+        flatchain = sampler.flatchain[-10000:]
 
         if np.shape(flatchain)[0] > np.shape(flatchain)[1]:
             flatchain = np.transpose(flatchain)
 
-        postmax = np.zeros(shape(flatchain)[0])
+        marginalised_postmax = np.zeros(shape(flatchain)[0])
 
         for i,par in enumerate(flatchain):
             min_par = np.min(par)
@@ -331,15 +341,30 @@ class BurstModel(object):
 
             max_ind = np.argmax(counts)
             max_loc = histbins[max_ind] + 0.5*dh
-            postmax[i] = max_loc
-            print('posterior maximum for parameter ' + str(i) + ': ' + str(max_loc))
-        return postmax
+            marginalised_postmax[i] = max_loc
+            print('marginalised posterior maximum for parameter ' + str(i) + ': ' + str(max_loc))
+
+
+        ### second attempt: find maximum posterior probability, return corresponding parameter vector
+        postprob = sampler.lnprobability
+        maxi,maxj = np.unravel_index(postprob.argmax(), postprob.shape)
+        postmax = sampler.chain[maxi,maxj]
+
+        for i,p in enumerate(postmax):
+            print('posterior maximum for parameter ' + str(i) + ': ' + str(p))
+
+
+        return marginalised_postmax, postmax
 
 
 
     @staticmethod
-    def plot_mcmc(data, plotname):
-            figure = triangle.corner(data, labels= ['bla' for bla in range(np.shape(data)[1])], \
+    def plot_mcmc(data, plotname, plotlabels=None):
+            if plotlabels == None:
+                plotlabels = 'bla'
+            assert np.shape(data)[1] > np.shape(data)[0]
+
+            figure = triangle.corner(data, labels= [p for p in plotlabels], \
                                      truths = np.zeros(np.shape(data)[1]))
             figure.savefig(plotname + ".png")
             plt.close()
@@ -363,6 +388,8 @@ class BurstModel(object):
 
             postmean = np.mean(sampler.flatchain, axis=0)
             posterr = np.std(sampler.flatchain, axis=0)
+
+
 
             burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(0))
 
@@ -421,7 +448,7 @@ class BurstModel(object):
 
                 postmean = np.mean(sampler.flatchain, axis=0)
                 posterr = np.std(sampler.flatchain, axis=0)
-                postmax = self.find_postmax(sampler.flatchain[5000:])
+                marginalised_postmax, postmax = self.find_postmax(sampler)
 
 
                 print('Posterior means, k = ' + str(n) + ': ')

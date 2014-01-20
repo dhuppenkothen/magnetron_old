@@ -27,6 +27,19 @@ def whichWay(t,y):
         elif (gap_to_next > gap_to_prev): return 'left'
         return 'tied'
 
+def near_the_max(t,y, spread=5):
+        # is the nearest other maximum to the left or the right of the "global" maximum?
+        maxpoint = np.argmax(y)
+	if (maxpoint<spread) or (maxpoint>len(y)-spread):
+		return 'tied'
+	
+	lhs_mean = np.mean(y[maxpoint-spread:maxpoint])
+	rhs_mean = np.mean(y[maxpoint+1:maxpoint+spread+1])
+
+        if (rhs_mean < lhs_mean): return 'left'
+        elif (rhs_mean > lhs_mean): return 'right'
+        return 'tied'
+
 
 if __name__ == "__main__":
 
@@ -35,6 +48,8 @@ if __name__ == "__main__":
                       help="some number of data files to plot (default is all)")
     parser.add_option("-i",type = "int",dest = "index",
                       help="index (just in the file listing) of a specific file to plot")
+    parser.add_option("-s",type = "int",dest = "spread",
+                      help="the spread of data around the max that we are interested in")
     opts, args = parser.parse_args()
     if (opts.index is None) and (opts.numplots is None):
         parser.print_help()
@@ -57,6 +72,7 @@ if __name__ == "__main__":
     fig = pl.figure(figsize=(12,8))
     numrows = int(math.ceil(np.sqrt(numplots)))
     numcols = int(math.ceil(1.0*numplots/numrows))
+    R,L = 0,0
     for i,name in enumerate(names):
         pl.subplot(numrows,numcols,i+1)
         m = datafiles[name]
@@ -73,9 +89,15 @@ if __name__ == "__main__":
         # a really really really crude test of ANY kind of skew,
         # either in spike time, or skew-per-spike. Result: I don't see any.
         nearestMaxDirection = whichWay(t,y)
+
+        nearestMaxDirection = near_the_max(t,y,opts.spread)
         colour = 'black'
-        if nearestMaxDirection == 'right': colour='blue'
-        if nearestMaxDirection == 'left': colour='red'
+        if nearestMaxDirection == 'right': 
+		colour='blue'
+		R = R+1
+        if nearestMaxDirection == 'left': 
+		colour='red'
+		L = L+1
         pl.plot(t,y,'-',color=colour)
         pl.axis("off")
 
@@ -83,3 +105,4 @@ if __name__ == "__main__":
     outfile = 'transients'
     pl.savefig(outfile,dpi=150)
     print('Wrote %s.png'%(outfile))
+    print 'spread: %3d, \t L: %3d, \t R: %3d' %(opts.spread,L,R)

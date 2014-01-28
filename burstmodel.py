@@ -38,6 +38,8 @@ import numpy as np
 import scipy.special
 import emcee
 import triangle
+from scipy.stats.mstats import mquantiles as quantiles
+
 
 ### local scripts
 import word
@@ -275,7 +277,8 @@ class WordPosteriorSameScale(WordPosterior, object):
 class BurstModel(object):
 
     def __init__(self, times, counts):
-        self.times = times
+        self.times = times - times[0]
+        self.tstart = times[0]
         self.counts = counts
         # noinspection PyPep8Naming
         self.T = self.times[-1] - self.times[0]
@@ -298,7 +301,18 @@ class BurstModel(object):
                 print('Too few walkers! Resetting to 2*len(theta)')
                 nwalker = 2*len(initial_theta)
 
-            p0 = [initial_theta+np.random.rand(len(initial_theta))*1.0e-3 for t in range(nwalker)]
+            #p0 = [initial_theta+np.random.rand(len(initial_theta))*1.0e-3 for t in range(nwalker)]
+
+            p0 = []
+            for t in range(nwalker):
+                lpost_theta_init = -np.inf
+                while np.isinf(lpost_theta_init):
+                    p0_temp = initial_theta+np.random.rand(len(initial_theta))*1.0e-3
+                    lpost_theta_init = lpost(p0_temp)
+                    print(str(lpost_theta_init))
+                p0.append(p0_temp)
+                print('Final: ' + str(lpost(p0_temp)))
+
 
             sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
             pos, prob, state = sampler.run_mcmc(p0, burnin)
@@ -330,20 +344,24 @@ class BurstModel(object):
         if np.shape(flatchain)[0] > np.shape(flatchain)[1]:
             flatchain = np.transpose(flatchain)
 
-        marginalised_postmax = np.zeros(shape(flatchain)[0])
 
-        for i,par in enumerate(flatchain):
-            min_par = np.min(par)
-            max_par = np.max(par)
+### THIS CODE IS NOT AS GOOD AS SOME ALTERNATIVES TO COMPUTE POSTERIOR MAXIMA! DEPRECATED!
+#        marginalised_postmax = np.zeros(shape(flatchain)[0])
 
-            counts, histbins = np.histogram(f, bins=nbins, range = [min_par, max_par])
-            dh = histbins[1] - histbins[0]
+#         for i,par in enumerate(flatchain):
+#            min_par = np.min(par)
+#            max_par = np.max(par)
 
-            max_ind = np.argmax(counts)
-            max_loc = histbins[max_ind] + 0.5*dh
-            marginalised_postmax[i] = max_loc
-            print('marginalised posterior maximum for parameter ' + str(i) + ': ' + str(max_loc))
+#            counts, histbins = np.histogram(f, bins=nbins, range = [min_par, max_par])
+#            dh = histbins[1] - histbins[0]
 
+#            max_ind = np.argmax(counts)
+#            max_loc = histbins[max_ind] + 0.5*dh
+#            marginalised_postmax[i] = max_loc
+#            print('marginalised posterior maximum for parameter ' + str(i) + ': ' + str(max_loc))
+
+
+        quants = BurstModel._quantiles(flatchain)
 
         ### second attempt: find maximum posterior probability, return corresponding parameter vector
         postprob = sampler.lnprobability
@@ -354,21 +372,58 @@ class BurstModel(object):
             print('posterior maximum for parameter ' + str(i) + ': ' + str(p))
 
 
-        return marginalised_postmax, postmax
+        return quants, postmax
 
 
 
     @staticmethod
-    def plot_mcmc(data, plotname, plotlabels=None):
+    def plot_mcmc(sample, plotname, plotlabels=None):
             if plotlabels == None:
-                plotlabels = 'bla'
-            assert np.shape(data)[1] > np.shape(data)[0]
+                plotlabels = ['bla' for s in range(np.shape(sample)[1])]
 
-            figure = triangle.corner(data, labels= [p for p in plotlabels], \
-                                     truths = np.zeros(np.shape(data)[1]))
+            #try:
+            #    assert np.shape(sample)[1] > np.shape(sample)[0]
+            #except AssertionError:
+            #    sample = np.transpose(sample)
+            #    sample = np.transpose(sample)
+
+            print('shape sample: ' + str(np.shape(sample)))
+
+            figure = triangle.corner(sample, labels= [p for p in plotlabels], \
+                                     truths = np.zeros(np.shape(sample)[1]))
             figure.savefig(plotname + ".png")
             plt.close()
             return
+
+    @staticmethod
+    def _quantiles(sample, interval=0.9):
+
+        all_intervals = [0.5-interval/2.0, 0.5, 0.5+interval/2.0]
+
+        ### empty lists for quantiles
+        ci_lower, cmean, ci_upper = [], [], []
+
+        try:
+            assert np.shape(sample)[1] > np.shape(sample)[0]
+        except AssertionError:
+            sample = np.transpose(sample)
+
+        ### loop over the parameters ###
+        for i,k in enumerate(sample):
+
+            print("I am on parameter: " + str(i))
+
+            q = quantiles(k, all_intervals)
+
+            ci_lower.append(q[0])
+            cmean.append(q[1])
+            ci_upper.append(q[2])
+
+        quants = {'lower ci': ci_lower, 'mean':cmean, 'upper ci': ci_upper, 'interval':interval}
+
+        return quants
+
+
 
 
     def find_spikes(self, model = word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=100, namestr='test', \
@@ -378,6 +433,7 @@ class BurstModel(object):
             all_sampler = []
             all_means, all_err = [], []
             all_theta_init = []
+            all_quants = []
 
             theta_init = [np.log(np.mean(self.counts))]
             burstmodel = BurstDict(self.times, self.counts, [])
@@ -388,14 +444,16 @@ class BurstModel(object):
 
             postmean = np.mean(sampler.flatchain, axis=0)
             posterr = np.std(sampler.flatchain, axis=0)
+            quants, postmax = self.find_postmax(sampler)
 
 
 
             burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(0))
 
-            all_sampler.append(sampler.flatchain[-5000:])
+            all_sampler.append(sampler.flatchain[-50000:])
             all_means.append(postmean)
             all_err.append(posterr)
+            all_quants.append(quants)
             all_burstdict.append(burstmodel)
             all_theta_init.append(theta_init)
             print('posterior means, k = 0: ')
@@ -403,7 +461,7 @@ class BurstModel(object):
 
 
             ### test change for pushing to bitbucket
-            for n in np.arange(nmax-1)+1:
+            for n in np.arange(nmax)+1:
                 
                 ## define burst model   
                 wordlist = [model for m in range(n)]
@@ -417,8 +475,9 @@ class BurstModel(object):
 
                 datamodel_ratio = self.counts/model_counts
                 max_diff = max(datamodel_ratio)
-                max_ind = np.where(datamodel_ratio == max_diff)[0]
+                max_ind = np.argmax(datamodel_ratio)
                 max_loc = self.times[max_ind]
+                print('max_loc:' + str(max_loc))
 
                 if model == word.TwoExp:
                    new_event_time = max_loc
@@ -438,8 +497,8 @@ class BurstModel(object):
                 theta_init[-1] = np.log(np.mean(datamodel_ratio))
 
                 ## wiggle around parameters a bit
-                random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
-                theta_init *= 1.0 + random_shift
+                #random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
+                #theta_init *= 1.0 + random_shift
 
                 print('n = ' + str(n) + ', theta_init = ' + str(theta_init))
                 sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
@@ -448,7 +507,7 @@ class BurstModel(object):
 
                 postmean = np.mean(sampler.flatchain, axis=0)
                 posterr = np.std(sampler.flatchain, axis=0)
-                marginalised_postmax, postmax = self.find_postmax(sampler)
+                quants, postmax = self.find_postmax(sampler)
 
 
                 print('Posterior means, k = ' + str(n) + ': ')
@@ -463,13 +522,14 @@ class BurstModel(object):
 
                 burstmodel.plot_model(postmean, postmax = postmax, plotname = namestr + '_k' + str(n))
 
-                all_sampler.append(sampler.flatchain[5000:])
+                all_sampler.append(sampler.flatchain[-50000:])
                 all_means.append(postmean)
                 all_err.append(posterr)
+                all_quants.append(quants)
                 all_burstdict.append(burstmodel)
                 all_theta_init.append(theta_init)
 
-            return all_sampler, all_means, all_err, all_burstdict, all_theta_init
+            return all_sampler, all_means, all_err, all_quants, all_theta_init
 
                 ## now I need to: return count rate from previous model
                 ## then find highest data/model outlier
@@ -477,6 +537,28 @@ class BurstModel(object):
                 ## run mcmc
                 ## append new posterior solution to old one 
     
+    @staticmethod
+    def plot_quants(postmax, quants, model=word.TwoExp):
+
+
+        npar = model.npar
+        nspikes = len(postmax)
+        allmax = np.zeros(nspikes, npar)
+        all_cl = np.zeros(nspikes, npar)
+        all_cu = np.zeros(nspikes, npar)
+
+        for i,(p,q) in enumerate(zip(postmax, quants)):
+            allmax[i,:] = p
+            all_cl[i,:] = q['lower ci']
+            all_cu[i,:] = q['upper ci']
+
+        for n in npar:
+            fig = plt.figure()
+            ## I AM HERE
+
+
+
+        return
 
     def _exp_all(self, all_means, model=word.TwoExp):
         all_means_exp = []
@@ -493,6 +575,91 @@ class BurstModel(object):
                 all_means_exp.append(w._unpack(means_exp))
 
         return all_means_exp
+
+
+
+
+def __main__():
+
+    for f in filenames:
+        filecomponents = f.split("/")
+        fname = filecomponents[-1]
+        froot = fname[:-9]
+
+        lc = conversion(f)
+        times = np.array([float(t) for t in lc[0]])
+        counts = np.array([float(t) for t in lc[1]])
+
+        bm = BurstModel(times, counts)
+
+        all_sampler, all_means, all_err, all_quants, all_theta_init = \
+            bm.find_spikes(nmax=10, nwalker=500, niter=200, burnin=200, namestr=froot)
+
+        posterior_dict = {'samples':all_sampler, 'means':all_means, 'err':all_err, 'quants':all_quants,
+                          'theta_init':all_theta_init}
+
+        posterior_file = open(froot + '_posteriors.dat', 'w')
+        pickle.dump(posterior_dict, posterior_file)
+        posterior_file.close()
+
+    return
+
+
+
+    return
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Model magnetar bursts with spikes!')
+
+    modechoice = parser.add_mutually_exclusive_group(required = True)
+    modechoice.add_argument('-a', '--all', action='store_true', dest='all', help='run on all files in the directory')
+    modechoice.add_argument('-s', '--single', action='store_true', dest='single', help='run on a single file')
+
+    parser.add_argument('-w', '--nwalker', action='store', dest='nwalker', required=False,\
+                        type='int', default=500, help='Number of emcee walkers')
+    parser.add_argument('-i', '--niter', action="store", dest='niter', required=False,\
+                        type='int', default=200, help='number of emcee iterations')
+    parser.add_argument('--instrument', action='store', dest='instrument', default='gbm', required=False,\
+                        help = "Instrument data was taken with")
+
+
+    singleparser = parser.add_argument_group('single file', 'options for running script on a single file')
+    singleparser.add_argument('-f', '--filename', action='store', dest='filename', help='file with data')
+
+    allparser = parser.add_argument_group('all bursts', 'options for running script on all bursts')
+    allparser.add_argument("-d", "--dir", dest="dir", action="store", default='./', help='directory with data files')
+
+
+    clargs = parser.parse_args()
+
+    nwalker = int(clargs.nwalkers)
+    niter = int(clargs.niter)
+
+    if clargs.single and not clargs.all:
+        mode = 'single'
+        filenames = [clargs.filename]
+
+    elif clargs.all and not clargs.single:
+        mode = 'all'
+        filenames = glob.glob(dir + '*_data.dat')
+
+
+    if clargs.instrument.lower() in ["fermi", "fermigbm", "gbm"]:
+        instrument="gbm"
+        bid_index = 9
+        bst_index = [10, 17]
+    elif clargs.instrument.lower() in ["rxte", "rossi", "xte"]:
+        instrument="rxte"
+
+    else:
+        print("Instrument not recognised! Using filename as root")
+        instrument=None
+
+    main()
+
+
 
 
 
@@ -805,18 +972,18 @@ def main():
     return
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Script to play around with Fermi/GBM magnetar data')
-    parser.add_argument('-f', '--filename', action='store', dest ='filename', help='input filename')
-    parser.add_argument('-n', '--namestr', action='store', dest='namestr', help='Output filename string')
-    parser.add_argument('--nwalkers', action='store', default='32', help='Number of emcee walkers')
+#    parser = argparse.ArgumentParser(description='Script to play around with Fermi/GBM magnetar data')
+#    parser.add_argument('-f', '--filename', action='store', dest ='filename', help='input filename')
+#    parser.add_argument('-n', '--namestr', action='store', dest='namestr', help='Output filename string')
+#    parser.add_argument('--nwalkers', action='store', default='32', help='Number of emcee walkers')
  
 
-    clargs = parser.parse_args()
+#    clargs = parser.parse_args()
     
-    nwalkers = int(clargs.nwalkers)
-    filename = clargs.filename
-    namestr = clargs.namestr
+#    nwalkers = int(clargs.nwalkers)
+#    filename = clargs.filename
+#    namestr = clargs.namestr
 
-    main()
+#    main()

@@ -77,10 +77,9 @@ class TwoExp(Word, object):
     """ This class contains the definitions for a simple word shape
     corresponding to a rising exponential, followed by a falling exponential,
     with a sharp peak in the middle."""
-
+    npar = 4
     parnames = ['t_0', 'log(scale)', 'log(amp)', 'log(skew)']
     def __init__(self, times):
-        self.npar = 4
         Word.__init__(self, times)
         return
 

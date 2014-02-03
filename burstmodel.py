@@ -31,9 +31,12 @@
 from collections import defaultdict
 import cPickle as pickle
 import argparse
+import glob
 
 ### third party modules
 from pylab import *
+import matplotlib.cm as cm
+
 import numpy as np
 import scipy.special
 import emcee
@@ -45,17 +48,32 @@ from scipy.stats.mstats import mquantiles as quantiles
 import word
 
 saturation_countrate = 3.5e5
-#### DEPRECATED: USE WORD CLASS INSTEAD #####
-#def word(time, scale, skew = 2.0):
 
-#    t = np.array(time)/scale
-#    y = np.zeros_like(t)
-#    y[t<=0] = np.exp(t[t<=0])
-#    y[t>0] = np.exp(-t[t>0]/skew)
 
-#    return y
-#######
-
+#### READ ASCII DATA FROM FILE #############
+#
+# This is a useful little function that reads
+# data from file and stores it in a dictionary
+# with as many lists as the file had columns.
+# The dictionary has the following architecture
+# (e.g. for a file with three columns):
+#
+# {'0':[1st column data], '1':[2nd column data], '2':[3rd column data]}
+#
+#
+# NOTE: Each element of the lists is still a *STRING*, because
+# the function doesn't make an assumption about what type of data
+# you're trying to read! Numbers need to be converted before using them!
+#
+def conversion(filename):
+    f=open(filename, 'r')
+    output_lists=defaultdict(list)
+    for line in f:
+        if not line.startswith('#'):
+             line=[value for value in line.split()]
+             for col, data in enumerate(line):
+                 output_lists[col].append(data)
+    return output_lists
 
 
 
@@ -309,9 +327,9 @@ class BurstModel(object):
                 while np.isinf(lpost_theta_init):
                     p0_temp = initial_theta+np.random.rand(len(initial_theta))*1.0e-3
                     lpost_theta_init = lpost(p0_temp)
-                    print(str(lpost_theta_init))
+                    #print(str(lpost_theta_init))
                 p0.append(p0_temp)
-                print('Final: ' + str(lpost(p0_temp)))
+                #print('Final: ' + str(lpost(p0_temp)))
 
 
             sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
@@ -433,7 +451,7 @@ class BurstModel(object):
             all_sampler = []
             all_means, all_err = [], []
             all_theta_init = []
-            all_quants = []
+            all_quants, all_postmax= [], []
 
             theta_init = [np.log(np.mean(self.counts))]
             burstmodel = BurstDict(self.times, self.counts, [])
@@ -454,6 +472,7 @@ class BurstModel(object):
             all_means.append(postmean)
             all_err.append(posterr)
             all_quants.append(quants)
+            all_postmax.append(postmax)
             all_burstdict.append(burstmodel)
             all_theta_init.append(theta_init)
             print('posterior means, k = 0: ')
@@ -526,10 +545,11 @@ class BurstModel(object):
                 all_means.append(postmean)
                 all_err.append(posterr)
                 all_quants.append(quants)
+                all_postmax.append(postmax)
                 all_burstdict.append(burstmodel)
                 all_theta_init.append(theta_init)
 
-            return all_sampler, all_means, all_err, all_quants, all_theta_init
+            return all_sampler, all_means, all_err, all_postmax, all_quants, all_theta_init
 
                 ## now I need to: return count rate from previous model
                 ## then find highest data/model outlier
@@ -538,25 +558,36 @@ class BurstModel(object):
                 ## append new posterior solution to old one 
     
     @staticmethod
-    def plot_quants(postmax, quants, model=word.TwoExp):
-
+    def plot_quants(postmax, all_quants, model=word.TwoExp, namestr='test'):
 
         npar = model.npar
-        nspikes = len(postmax)
-        allmax = np.zeros(nspikes, npar)
-        all_cl = np.zeros(nspikes, npar)
-        all_cu = np.zeros(nspikes, npar)
+        nspikes = len(postmax)-1
+        allmax = np.zeros((nspikes, nspikes*npar+1))
+        all_cl = np.zeros((nspikes, nspikes*npar+1))
+        all_cu = np.zeros((nspikes, nspikes*npar+1))
 
-        for i,(p,q) in enumerate(zip(postmax, quants)):
-            allmax[i,:] = p
-            all_cl[i,:] = q['lower ci']
-            all_cu[i,:] = q['upper ci']
+        for i,(p,q) in enumerate(zip(postmax[1:], all_quants[1:])):
+            allmax[i,:len(p)-1] = p[:-1]
+            all_cl[i,:len(p)-1] = q['lower ci'][:-1]
+            all_cu[i,:len(p)-1] = q['upper ci'][:-1]
 
-        for n in npar:
+        for n in xrange(npar):
             fig = plt.figure()
             ## I AM HERE
-
-
+            ymin, ymax = [], []
+            for s in xrange(nspikes):
+                print(allmax[s:, n+s*npar])
+                ymin.append(np.min(all_cl[s:,n+s*npar]))
+                ymax.append(np.max(all_cu[s:,n+s*npar]))
+                plt.errorbar(np.arange(nspikes-s)+s+1.0+0.1*s, allmax[s:, n+s*npar],
+                             yerr=[allmax[s:, n+s*npar]- all_cl[s:,n+s*npar],all_cu[s:,n+s*npar]-allmax[s:, n+s*npar]],
+                             fmt='--o', lw=2, label="spike " + str(s), color=cm.hsv(s*30))
+            plt.axis([0.0, nspikes+5, min(ymin), max(ymax)])
+            plt.legend()
+            plt.xlabel("Number of spikes in the model", fontsize=16)
+            plt.ylabel(model.parnames[n], fontsize="16")
+            plt.savefig(namestr + '_par' + str(n) + '.png', format='png')
+            plt.close()
 
         return
 
@@ -579,7 +610,7 @@ class BurstModel(object):
 
 
 
-def __main__():
+def main():
 
     for f in filenames:
         filecomponents = f.split("/")
@@ -592,8 +623,11 @@ def __main__():
 
         bm = BurstModel(times, counts)
 
-        all_sampler, all_means, all_err, all_quants, all_theta_init = \
+        all_sampler, all_means, all_err, all_postmax, all_quants, all_theta_init = \
             bm.find_spikes(nmax=10, nwalker=500, niter=200, burnin=200, namestr=froot)
+
+
+        bm.plot_quants(all_postmax, all_quants, namestr=froot)
 
         posterior_dict = {'samples':all_sampler, 'means':all_means, 'err':all_err, 'quants':all_quants,
                           'theta_init':all_theta_init}
@@ -606,8 +640,6 @@ def __main__():
 
 
 
-    return
-
 
 if __name__ == '__main__':
 
@@ -617,11 +649,11 @@ if __name__ == '__main__':
     modechoice.add_argument('-a', '--all', action='store_true', dest='all', help='run on all files in the directory')
     modechoice.add_argument('-s', '--single', action='store_true', dest='single', help='run on a single file')
 
-    parser.add_argument('-w', '--nwalker', action='store', dest='nwalker', required=False,\
-                        type='int', default=500, help='Number of emcee walkers')
-    parser.add_argument('-i', '--niter', action="store", dest='niter', required=False,\
-                        type='int', default=200, help='number of emcee iterations')
-    parser.add_argument('--instrument', action='store', dest='instrument', default='gbm', required=False,\
+    parser.add_argument('-w', '--nwalker', action='store', dest='nwalker', required=False,
+                        type=int, default=500, help='Number of emcee walkers')
+    parser.add_argument('-i', '--niter', action="store", dest='niter', required=False,
+                        type=int, default=200, help='number of emcee iterations')
+    parser.add_argument('--instrument', action='store', dest='instrument', default='gbm', required=False,
                         help = "Instrument data was taken with")
 
 
@@ -634,7 +666,7 @@ if __name__ == '__main__':
 
     clargs = parser.parse_args()
 
-    nwalker = int(clargs.nwalkers)
+    nwalker = int(clargs.nwalker)
     niter = int(clargs.niter)
 
     if clargs.single and not clargs.all:
@@ -961,15 +993,15 @@ def conversion(filename):
                  output_lists[col].append(data)
     return output_lists
 
-def main(): 
+#def main():
 
-    data = conversion(filename)
-    times = np.array([float(t) for t in data[0]])    
-    counts = np.array([float(c) for c in data[1]])
+#    data = conversion(filename)
+#    times = np.array([float(t) for t in data[0]])
+#    counts = np.array([float(c) for c in data[1]])
 
-    test_burst(times, counts, namestr = namestr, nwalker=nwalkers)
+#    test_burst(times, counts, namestr = namestr, nwalker=nwalkers)
    
-    return
+#    return
 
 
 #if __name__ == '__main__':

@@ -675,7 +675,7 @@ if __name__ == '__main__':
 
     elif clargs.all and not clargs.single:
         mode = 'all'
-        filenames = glob.glob(dir + '*_data.dat')
+        filenames = glob.glob(clargs.dir + '*_data.dat')
 
 
     if clargs.instrument.lower() in ["fermi", "fermigbm", "gbm"]:

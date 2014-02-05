@@ -34,7 +34,10 @@ import argparse
 import glob
 
 ### third party modules
-from pylab import *
+import matplotlib
+matplotlib.use("PS")
+import matplotlib.pyplot as plt
+#from pylab import *
 import matplotlib.cm as cm
 
 import numpy as np
@@ -94,9 +97,9 @@ class BurstDict(object):
 
     def _create_model(self):
 
-        if size(self.wordlist) > 1 or type(self.wordlist) is list:
+        if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
             wordmodel = word.CombinedWords(self.times, self.wordlist)
-        elif size(self.wordlist) == 1:
+        elif np.size(self.wordlist) == 1:
             if word.depth(self.wordlist) > 1:
                 wordmodel = self.wordlist[0](self.times)
             else:
@@ -111,10 +114,10 @@ class BurstDict(object):
             
             ### last element must be background counts!
             bkg = theta_exp[-1]
-            if size(self.wordlist) > 1 or type(self.wordlist) is list:
+            if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
                 y = wordmodel(theta_exp[:-1]) + bkg
-            elif size(self.wordlist) == 1:
+            elif np.size(self.wordlist) == 1:
                 if word.depth(self.wordlist) > 1:
                     wordmodel = self.wordlist[0](model_times)
                 else:
@@ -138,7 +141,7 @@ class BurstDict(object):
         ## make a high-resolution time array 
         times_small = np.arange(nsmall)*delta
 
-        if size(self.wordlist) >= 1:
+        if np.size(self.wordlist) >= 1:
             # noinspection PyProtectedMember
             # noinspection PyProtectedMember
             theta_all_packed= self.wordobject._pack(theta_all)
@@ -189,7 +192,7 @@ class WordPosterior(object):
 
     def logprior(self, theta):
 
-        if size(theta[-1]) > 1:
+        if np.size(theta[-1]) > 1:
             print('No background parameter specified')
             bkg = 0.0
         else:
@@ -338,7 +341,7 @@ class BurstModel(object):
             sampler.run_mcmc(pos, niter, rstate0 = state)
 
             if plot:
-                if size(burstmodel.wordlist) == 0:
+                if np.size(burstmodel.wordlist) == 0:
                     plotlabels = ['log(bkg)']
                 else:
                     plotlabels = []

@@ -615,6 +615,9 @@ class BurstModel(object):
 
 def main():
 
+    if len(filenames) == 0:
+        raise Exception("No files in directory!")
+
     for f in filenames:
         filecomponents = f.split("/")
         fname = filecomponents[-1]
@@ -678,6 +681,8 @@ if __name__ == '__main__':
 
     elif clargs.all and not clargs.single:
         mode = 'all'
+        if not clargs.dir[-1] == "/":
+            clargs.dir = clargs.dir + "/"
         filenames = glob.glob(clargs.dir + '*_data.dat')
 
 

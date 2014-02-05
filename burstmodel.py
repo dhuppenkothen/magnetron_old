@@ -35,7 +35,7 @@ import glob
 
 ### third party modules
 import matplotlib
-matplotlib.use("PS")
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
 #from pylab import *
 import matplotlib.cm as cm

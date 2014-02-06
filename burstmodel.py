@@ -78,7 +78,13 @@ def conversion(filename):
                  output_lists[col].append(data)
     return output_lists
 
+def read_gbm_lightcurves(filename):
 
+    data = conversion(filename)
+    times = np.array([float(t) for t in data[0]])
+    counts = np.array([float(c) for c in data[1]])
+
+    return times, counts
 
 
 
@@ -370,22 +376,6 @@ class BurstModel(object):
             flatchain = np.transpose(flatchain)
 
 
-### THIS CODE IS NOT AS GOOD AS SOME ALTERNATIVES TO COMPUTE POSTERIOR MAXIMA! DEPRECATED!
-#        marginalised_postmax = np.zeros(shape(flatchain)[0])
-
-#         for i,par in enumerate(flatchain):
-#            min_par = np.min(par)
-#            max_par = np.max(par)
-
-#            counts, histbins = np.histogram(f, bins=nbins, range = [min_par, max_par])
-#            dh = histbins[1] - histbins[0]
-
-#            max_ind = np.argmax(counts)
-#            max_loc = histbins[max_ind] + 0.5*dh
-#            marginalised_postmax[i] = max_loc
-#            print('marginalised posterior maximum for parameter ' + str(i) + ': ' + str(max_loc))
-
-
         quants = BurstModel._quantiles(flatchain)
 
         ### second attempt: find maximum posterior probability, return corresponding parameter vector
@@ -423,30 +413,30 @@ class BurstModel(object):
     @staticmethod
     def _quantiles(sample, interval=0.9):
 
-        all_intervals = [0.5-interval/2.0, 0.5, 0.5+interval/2.0]
+            all_intervals = [0.5-interval/2.0, 0.5, 0.5+interval/2.0]
 
-        ### empty lists for quantiles
-        ci_lower, cmean, ci_upper = [], [], []
+            ### empty lists for quantiles
+            ci_lower, cmean, ci_upper = [], [], []
 
-        try:
-            assert np.shape(sample)[1] > np.shape(sample)[0]
-        except AssertionError:
-            sample = np.transpose(sample)
+            try:
+                assert np.shape(sample)[1] > np.shape(sample)[0]
+            except AssertionError:
+                sample = np.transpose(sample)
 
-        ### loop over the parameters ###
-        for i,k in enumerate(sample):
+            ### loop over the parameters ###
+            for i,k in enumerate(sample):
 
-            print("I am on parameter: " + str(i))
+                print("I am on parameter: " + str(i))
 
-            q = quantiles(k, all_intervals)
+                q = quantiles(k, all_intervals)
 
-            ci_lower.append(q[0])
-            cmean.append(q[1])
-            ci_upper.append(q[2])
+                ci_lower.append(q[0])
+                cmean.append(q[1])
+                ci_upper.append(q[2])
 
-        quants = {'lower ci': ci_lower, 'mean':cmean, 'upper ci': ci_upper, 'interval':interval}
+            quants = {'lower ci': ci_lower, 'mean':cmean, 'upper ci': ci_upper, 'interval':interval}
 
-        return quants
+            return quants
 
 
 
@@ -485,7 +475,7 @@ class BurstModel(object):
             print('posterior means, k = 0: ')
             print(' --- background parameter: ' + str(np.exp(postmean[0])) + ' +/- ' +  str(np.exp(posterr[0])) + "\n")
 
-            all_results = {'sampler': sampler.flatchain[-50000:], 'means':postmean, 'err':posterr, 'quants':quants, 'max':postmax,
+            all_results = {'sampler': sampler.flatchain[-10000:], 'means':postmean, 'err':posterr, 'quants':quants, 'max':postmax,
                            'init':theta_init}
 
             sampler_file= open(namestr + '_k0_posterior.dat','w')
@@ -563,7 +553,7 @@ class BurstModel(object):
                 all_burstdict.append(burstmodel)
                 all_theta_init.append(theta_init)
 
-                all_results = {'sampler': sampler.flatchain[-50000:], 'means':postmean, 'err':posterr, 'quants':quants, 'max':postmax,
+                all_results = {'sampler': sampler.flatchain[-10000:], 'means':postmean, 'err':posterr, 'quants':quants, 'max':postmax,
                             'init':theta_init}
 
                 sampler_file= open(namestr + '_k' + str(n) + '_posterior.dat','w')
@@ -643,9 +633,11 @@ def main():
         fname = filecomponents[-1]
         froot = fname[:-9]
 
-        lc = conversion(f)
-        times = np.array([float(t) for t in lc[0]])
-        counts = np.array([float(t) for t in lc[1]])
+
+        if instrument == 'gbm':
+            times, counts = read_gbm_lightcurves(f)
+        else:
+            raise Exception("Instrument not known!")
 
         bm = BurstModel(times, counts)
 

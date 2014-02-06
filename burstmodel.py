@@ -327,9 +327,13 @@ class BurstModel(object):
             p0 = []
             for t in range(nwalker):
                 lpost_theta_init = -np.inf
+                counter = 0
                 while np.isinf(lpost_theta_init):
+                    if counter > 1000:
+                        raise Exception("Can't find initial theta inside prior!")
                     p0_temp = initial_theta+np.random.rand(len(initial_theta))*1.0e-3
                     lpost_theta_init = lpost(p0_temp)
+                    counter =+ 1
                     #print(str(lpost_theta_init))
                 p0.append(p0_temp)
                 #print('Final: ' + str(lpost(p0_temp)))
@@ -471,7 +475,7 @@ class BurstModel(object):
 
             burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(0))
 
-            all_sampler.append(sampler.flatchain[-50000:])
+            #all_sampler.append(sampler.flatchain[-50000:])
             all_means.append(postmean)
             all_err.append(posterr)
             all_quants.append(quants)
@@ -480,6 +484,13 @@ class BurstModel(object):
             all_theta_init.append(theta_init)
             print('posterior means, k = 0: ')
             print(' --- background parameter: ' + str(np.exp(postmean[0])) + ' +/- ' +  str(np.exp(posterr[0])) + "\n")
+
+            all_results = {'sampler': sampler.flatchain[-50000:], 'means':postmean, 'err':posterr, 'quants':quants, 'max':postmax,
+                           'init':theta_init}
+
+            sampler_file= open(namestr + '_k0_posterior.dat','w')
+            pickle.dump(all_results, sampler_file)
+            sampler_file.close()
 
 
             ### test change for pushing to bitbucket
@@ -544,7 +555,7 @@ class BurstModel(object):
 
                 burstmodel.plot_model(postmean, postmax = postmax, plotname = namestr + '_k' + str(n))
 
-                all_sampler.append(sampler.flatchain[-50000:])
+                #all_sampler.append(sampler.flatchain[-50000:])
                 all_means.append(postmean)
                 all_err.append(posterr)
                 all_quants.append(quants)
@@ -552,7 +563,16 @@ class BurstModel(object):
                 all_burstdict.append(burstmodel)
                 all_theta_init.append(theta_init)
 
-            return all_sampler, all_means, all_err, all_postmax, all_quants, all_theta_init
+                all_results = {'sampler': sampler.flatchain[-50000:], 'means':postmean, 'err':posterr, 'quants':quants, 'max':postmax,
+                            'init':theta_init}
+
+                sampler_file= open(namestr + '_k' + str(n) + '_posterior.dat','w')
+                pickle.dump(all_results, sampler_file)
+                sampler_file.close()
+
+
+
+            return all_means, all_err, all_postmax, all_quants, all_theta_init
 
                 ## now I need to: return count rate from previous model
                 ## then find highest data/model outlier
@@ -629,18 +649,18 @@ def main():
 
         bm = BurstModel(times, counts)
 
-        all_sampler, all_means, all_err, all_postmax, all_quants, all_theta_init = \
+        all_means, all_err, all_postmax, all_quants, all_theta_init = \
             bm.find_spikes(nmax=10, nwalker=500, niter=200, burnin=200, namestr=froot)
 
 
         bm.plot_quants(all_postmax, all_quants, namestr=froot)
 
-        posterior_dict = {'samples':all_sampler, 'means':all_means, 'err':all_err, 'quants':all_quants,
-                          'theta_init':all_theta_init}
+        #posterior_dict = {'samples':all_sampler, 'means':all_means, 'err':all_err, 'quants':all_quants,
+        #                 'theta_init':all_theta_init}
 
-        posterior_file = open(froot + '_posteriors.dat', 'w')
-        pickle.dump(posterior_dict, posterior_file)
-        posterior_file.close()
+        #posterior_file = open(froot + '_posteriors.dat', 'w')
+        #pickle.dump(posterior_dict, posterior_file)
+        #posterior_file.close()
 
     return
 

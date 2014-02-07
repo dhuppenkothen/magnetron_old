@@ -247,6 +247,8 @@ class WordPosterior(object):
         return
 
     def __call__(self, theta):
+        print(theta)
+        print(self.logposterior(theta))
         return self.logposterior(theta)
 
 
@@ -330,6 +332,9 @@ class BurstModel(object):
 
             #p0 = [initial_theta+np.random.rand(len(initial_theta))*1.0e-3 for t in range(nwalker)]
 
+            #nwalker_burnin = np.max([2*len(initial_theta), 40])
+
+
             p0 = []
             for t in range(nwalker):
                 lpost_theta_init = -np.inf
@@ -344,11 +349,32 @@ class BurstModel(object):
                 p0.append(p0_temp)
                 #print('Final: ' + str(lpost(p0_temp)))
 
+            ### test code: run burnin with a few, long chains, then the actual sampler with the results
+            ### from the burnin phase
+
+            #sampler_burnin = emcee.EnsembleSampler(nwalker_burnin, len(initial_theta), lpost)
+            #pos, prob, state = sampler_burnin.run_mcmc(p0_burnin, burnin)
+
+            #niter_burnin = int(np.round(np.mean(sampler_burnin.acor))*nwalker/nwalker_burnin)
+            #sampler_burnin.reset()
+
+            #sampler_burnin.run_mcmc(pos, niter_burnin , rstate0 = state)
+
+            #p0 = np.random.choice(sampler_burnin.flatchain, size=nwalker, replace=False,
+            #                      p=sampler_burnin.flatlnprobability)
 
             sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
             pos, prob, state = sampler.run_mcmc(p0, burnin)
             sampler.reset()
             sampler.run_mcmc(pos, niter, rstate0 = state)
+
+
+
+
+            #sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
+            #pos, prob, state = sampler.run_mcmc(p0, burnin)
+            #sampler.reset()
+            #sampler.run_mcmc(pos, niter, rstate0 = state)
 
             if plot:
                 if np.size(burstmodel.wordlist) == 0:
@@ -379,16 +405,17 @@ class BurstModel(object):
         quants = BurstModel._quantiles(flatchain)
 
         ### second attempt: find maximum posterior probability, return corresponding parameter vector
-        postprob = sampler.lnprobability
-        maxi,maxj = np.unravel_index(postprob.argmax(), postprob.shape)
-        postmax = sampler.chain[maxi,maxj]
+        postprob = sampler.flatlnprobability
+        #maxi,maxj = np.unravel_index(postprob.argmax(), postprob.shape)
+        #postmax = sampler.chain[maxi,maxj]
+        maxi = postprob.argmax()
+        postmax = sampler.flatchain[maxi]
 
         for i,p in enumerate(postmax):
             print('posterior maximum for parameter ' + str(i) + ': ' + str(p))
 
 
         return quants, postmax
-
 
 
     @staticmethod

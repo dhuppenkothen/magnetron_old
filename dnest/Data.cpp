@@ -1,6 +1,7 @@
 #include "Data.h"
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -11,7 +12,6 @@ Data::Data()
 
 void Data::load(const char* filename)
 {
-
 	fstream fin(filename, ios::in);
 	if(!fin)
 	{
@@ -34,5 +34,19 @@ void Data::load(const char* filename)
 		cout<<"# Found "<<t.size()<<" points in file "<<filename<<"."<<endl;
 	else
 		cerr<<"# There is a problem with the data in file "<<filename<<"."<<endl;
+
+	compute_summaries();
+}
+
+void Data::compute_summaries()
+{
+	t_min = *min_element(t.begin(), t.end());
+	t_max = *max_element(t.begin(), t.end());
+	t_range = t_max - t_min;
+
+	y_mean = 0;
+	for(size_t i=0; i<y.size(); i++)
+		y_mean += y[i];
+	y_mean /= y.size();
 }
 

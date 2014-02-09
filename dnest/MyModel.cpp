@@ -52,9 +52,10 @@ void MyModel::death()
 
 	int i = randInt(num);
 	position.erase(position.begin() + i);
+	amplitude.erase(amplitude.begin() + i);
+	width.erase(width.begin() + i);
 
-
-	num++;
+	num--;
 }
 
 

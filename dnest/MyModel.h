@@ -28,7 +28,7 @@ class MyModel:public DNest3::Model
 {
 	private:
 		// Reference to the data
-		const Data& data;
+		static const Data& data;
 
 		int num;
 		std::vector<double> position, amplitude, width;

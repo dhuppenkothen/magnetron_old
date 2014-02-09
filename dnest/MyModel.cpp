@@ -26,29 +26,43 @@
 using namespace std;
 using namespace DNest3;
 
+const Data& MyModel::data = Data::get_instance();
+
 MyModel::MyModel()
-:data(Data::get_instance())
 {
 
 }
 
 void MyModel::birth()
 {
+	if(num >= 10)
+		return;
 
+	position.push_back(data.get_t_min() + data.get_t_range()*randomU());
+	amplitude.push_back(exp(log(1E-3) + log(1E3)*randomU()));
+	width.push_back(log(1E-3*data.get_t_range()) + log(1E3)*randomU());
+
+	num++;
 }
+
+void MyModel::death()
+{
+	if(num <= 0)
+		return;
+
+	int i = randInt(num);
+	position.erase(position.begin() + i);
+
+
+	num++;
+}
+
 
 void MyModel::fromPrior()
 {
-	num = randInt(10);
-	position.resize(num);
-	amplitude.resize(num);
-	width.resize(num);
-	for(int i=0; i<num; i++)
-	{
-		position[i] = data.get_t_min() + data.get_t_range()*randomU();
-		amplitude[i] = exp(log(1E-3) + log(1E3)*randomU());
-		width[i] = log(1E-3*data.t_range()) + log(1E3)*randomU();
-	}
+	int n = randInt(10);
+	for(int i=0; i<n; i++)
+		birth();
 }
 
 double MyModel::perturb()

@@ -22,6 +22,8 @@
 
 #include "Model.h"
 #include "Data.h"
+#include "RJObject.h"
+#include "ClassicMassInf1D.h"
 #include <vector>
 
 class MyModel:public DNest3::Model
@@ -30,12 +32,7 @@ class MyModel:public DNest3::Model
 		// Reference to the data
 		static const Data& data;
 
-		int num;
-		std::vector<double> position, amplitude, width;
-
-		void birth();
-		void death();
-		void move();
+		RJObject<ClassicMassInf1D> bursts;
 
 	public:
 		MyModel();

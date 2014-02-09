@@ -29,46 +29,24 @@ using namespace DNest3;
 const Data& MyModel::data = Data::get_instance();
 
 MyModel::MyModel()
+:bursts(2, 10, false, ClassicMassInf1D(data.get_t_min(), data.get_t_max(),
+				1E-3*data.get_y_mean(), 1E3*data.get_y_mean()))
 {
 
 }
-
-void MyModel::birth()
-{
-	if(num >= 10)
-		return;
-
-	position.push_back(data.get_t_min() + data.get_t_range()*randomU());
-	amplitude.push_back(exp(log(1E-3) + log(1E3)*randomU()));
-	width.push_back(log(1E-3*data.get_t_range()) + log(1E3)*randomU());
-
-	num++;
-}
-
-void MyModel::death()
-{
-	if(num <= 0)
-		return;
-
-	int i = randInt(num);
-	position.erase(position.begin() + i);
-	amplitude.erase(amplitude.begin() + i);
-	width.erase(width.begin() + i);
-
-	num--;
-}
-
 
 void MyModel::fromPrior()
 {
-	int n = randInt(10);
-	for(int i=0; i<n; i++)
-		birth();
+	bursts.fromPrior();
 }
 
 double MyModel::perturb()
 {
-	return 0.;
+	double logH = 0.;
+
+	logH += bursts.perturb();
+
+	return logH;
 }
 
 double MyModel::logLikelihood() const
@@ -78,7 +56,7 @@ double MyModel::logLikelihood() const
 
 void MyModel::print(std::ostream& out) const
 {
-
+	bursts.print(out);
 }
 
 string MyModel::description() const

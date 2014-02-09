@@ -21,11 +21,21 @@
 #define _MyModel_
 
 #include "Model.h"
+#include "Data.h"
 #include <vector>
 
 class MyModel:public DNest3::Model
 {
 	private:
+		// Reference to the data
+		const Data& data;
+
+		int num;
+		std::vector<double> position, amplitude, width;
+
+		void birth();
+		void death();
+		void move();
 
 	public:
 		MyModel();

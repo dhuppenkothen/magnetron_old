@@ -20,19 +20,35 @@
 #include "MyModel.h"
 #include "RandomNumberGenerator.h"
 #include "Utils.h"
+#include "Data.h"
 #include <cmath>
 
 using namespace std;
 using namespace DNest3;
 
 MyModel::MyModel()
+:data(Data::get_instance())
+{
+
+}
+
+void MyModel::birth()
 {
 
 }
 
 void MyModel::fromPrior()
 {
-
+	num = randInt(10);
+	position.resize(num);
+	amplitude.resize(num);
+	width.resize(num);
+	for(int i=0; i<num; i++)
+	{
+		position[i] = data.get_t_min() + data.get_t_range()*randomU();
+		amplitude[i] = exp(log(1E-3) + log(1E3)*randomU());
+		width[i] = log(1E-3*data.t_range()) + log(1E3)*randomU();
+	}
 }
 
 double MyModel::perturb()

@@ -24,11 +24,11 @@ void Data::load(const char* filename)
 	t.clear();
 	y.clear();
 
-	double temp1; int temp2;
+	double temp1, temp2;
 	while(fin>>temp1 && fin>>temp2)
 	{
 		t.push_back(temp1);
-		y.push_back(temp2);
+		y.push_back(static_cast<int>(temp2));
 	}
 	fin.close();
 

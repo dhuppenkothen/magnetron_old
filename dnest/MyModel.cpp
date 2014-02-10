@@ -31,13 +31,31 @@ const Data& MyModel::data = Data::get_instance();
 MyModel::MyModel()
 :bursts(2, 10, false, ClassicMassInf1D(data.get_t_min(), data.get_t_max(),
 				1E-3*data.get_y_mean(), 1E3*data.get_y_mean()))
+,mu(data.get_t().size())
 {
 
+}
+
+void MyModel::calculate_mu()
+{
+	const vector< vector<double> >& components = bursts.get_components();
+	const vector<double>& t = data.get_t();
+
+	for(size_t i=0; i<mu.size(); i++)
+	{
+		mu[i] = 0.;
+		for(size_t j=0; j<components.size(); j++)
+		{
+			mu[i] += components[j][1]
+					*exp(-abs(t[i] - components[j][0])/10.);
+		}
+	}
 }
 
 void MyModel::fromPrior()
 {
 	bursts.fromPrior();
+	calculate_mu();
 }
 
 double MyModel::perturb()
@@ -45,6 +63,7 @@ double MyModel::perturb()
 	double logH = 0.;
 
 	logH += bursts.perturb();
+	calculate_mu();
 
 	return logH;
 }
@@ -56,7 +75,9 @@ double MyModel::logLikelihood() const
 
 void MyModel::print(std::ostream& out) const
 {
-	bursts.print(out);
+	for(size_t i=0; i<mu.size(); i++)
+		out<<mu[i]<<' ';
+	//bursts.print(out);
 }
 
 string MyModel::description() const

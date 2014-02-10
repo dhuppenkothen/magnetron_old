@@ -32,7 +32,14 @@ class MyModel:public DNest3::Model
 		// Reference to the data
 		static const Data& data;
 
+		// The bursts
 		RJObject<ClassicMassInf1D> bursts;
+
+		// Poisson mean
+		std::vector<double> mu;
+
+		// Calculates mu from scratch
+		void calculate_mu();
 
 	public:
 		MyModel();

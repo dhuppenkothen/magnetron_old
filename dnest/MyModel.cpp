@@ -30,7 +30,7 @@ using namespace DNest3;
 const Data& MyModel::data = Data::get_instance();
 
 MyModel::MyModel()
-:bursts(2, 10, false, ClassicMassInf1D(data.get_t_min(), data.get_t_max(),
+:bursts(3, 10, false, ClassicMassInf1D(data.get_t_min(), data.get_t_max(),
 				1E-3*data.get_y_mean(), 1E3*data.get_y_mean()))
 ,mu(data.get_t().size())
 {
@@ -48,7 +48,8 @@ void MyModel::calculate_mu()
 		for(size_t j=0; j<components.size(); j++)
 		{
 			mu[i] += components[j][1]
-					*exp(-abs(t[i] - components[j][0])/10.);
+					*exp(-abs(t[i] - components[j][0])/
+						components[j][2]);
 		}
 	}
 }

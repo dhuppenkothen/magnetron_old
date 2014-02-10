@@ -10,9 +10,8 @@ class ClassicMassInf1D:public Distribution
 		double x_min, x_max;
 		double mu_min, mu_max;
 
-		// Mean of exponential distribution for masses
-		double mu;
-
+		// Mean of amplitudes and widths
+		double mu, mu_widths;
 		double perturb_parameters();
 
 	public:

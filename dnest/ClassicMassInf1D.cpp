@@ -19,6 +19,10 @@ void ClassicMassInf1D::fromPrior()
 {
 	mu = exp(log(mu_min) + log(mu_max/mu_min)*randomU());
 	mu_widths = exp(log(1E-3*(x_max - x_min)) + log(1E3)*randomU());
+
+	b = 10.*randomU();
+	k = randomU();
+	a = k*b;
 }
 
 double ClassicMassInf1D::perturb_parameters()
@@ -35,15 +39,23 @@ double ClassicMassInf1D::perturb_parameters()
 	mu_widths = mod(mu_widths - log(1E-3), log(1E3)) + log(1E-3);
 	mu_widths = exp(mu_widths);
 
+	b += 10.*pow(10., 1.5 - 6.*randomU())*randn();
+	b = mod(b, 10.);
+	k += pow(10., 1.5 - 6.*randomU())*randn();
+	k = mod(k, 1.);
+	a = k*b;
+
 	return logH;
 }
 
 double ClassicMassInf1D::log_pdf(const std::vector<double>& vec) const
 {
-	if(vec[0] < x_min || vec[0] > x_max || vec[1] < 0. || vec[2] < 0.)
+	if(vec[0] < x_min || vec[0] > x_max || vec[1] < 0. || vec[2] < 0.
+		|| vec[3] < a || vec[3] > b)
 		return -1E300;
 
-	return -log(mu) - vec[1]/mu - log(mu_widths) - vec[2]/mu_widths;
+	return -log(mu) - vec[1]/mu - log(mu_widths) - vec[2]/mu_widths
+			- log(b - a);
 }
 
 void ClassicMassInf1D::from_uniform(std::vector<double>& vec) const
@@ -51,6 +63,7 @@ void ClassicMassInf1D::from_uniform(std::vector<double>& vec) const
 	vec[0] = x_min + (x_max - x_min)*vec[0];
 	vec[1] = -mu*log(1. - vec[1]);
 	vec[2] = -mu_widths*log(1. - vec[2]);
+	vec[3] = a + (b-a)*vec[3];
 }
 
 void ClassicMassInf1D::to_uniform(std::vector<double>& vec) const
@@ -58,6 +71,7 @@ void ClassicMassInf1D::to_uniform(std::vector<double>& vec) const
 	vec[0] = (vec[0] - x_min)/(x_max - x_min);
 	vec[1] = 1. - exp(-vec[1]/mu);
 	vec[2] = 1. - exp(-vec[2]/mu_widths);
+	vec[3] = (vec[3] - a)/(b - a);
 }
 
 void ClassicMassInf1D::print(std::ostream& out) const

@@ -12,6 +12,10 @@ class ClassicMassInf1D:public Distribution
 
 		// Mean of amplitudes and widths
 		double mu, mu_widths;
+
+		// Uniform for skews
+		double a, b, k; // Endpoints are (a, b), parameterise with (b, k=a/b)
+
 		double perturb_parameters();
 
 	public:

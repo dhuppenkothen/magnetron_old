@@ -55,7 +55,7 @@ void MyModel::calculate_mu()
 
 void MyModel::fromPrior()
 {
-	background = 10.;
+	background = exp(log(1E-3) + log(1E3)*randomU())*data.get_y_mean();
 	bursts.fromPrior();
 	calculate_mu();
 }
@@ -64,7 +64,18 @@ double MyModel::perturb()
 {
 	double logH = 0.;
 
-	logH += bursts.perturb();
+	if(randomU() <= 0.2)
+	{
+		background = log(background/data.get_y_mean());
+		background += log(1E3)*pow(10., 1.5 - 6.*randomU())*randn();
+		background = mod(background - log(1E-3), log(1E3)) + log(1E-3);
+		background = exp(background)*data.get_y_mean();
+	}
+	else
+	{
+		logH += bursts.perturb();
+	}
+
 	calculate_mu();
 
 	return logH;
@@ -83,6 +94,7 @@ double MyModel::logLikelihood() const
 
 void MyModel::print(std::ostream& out) const
 {
+	out<<background<<' ';
 	bursts.print(out);
 	for(size_t i=0; i<mu.size(); i++)
 		out<<mu[i]<<' ';

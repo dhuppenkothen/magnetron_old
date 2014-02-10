@@ -22,6 +22,7 @@
 #include "Utils.h"
 #include "Data.h"
 #include <cmath>
+#include <gsl/gsl_sf_gamma.h>
 
 using namespace std;
 using namespace DNest3;
@@ -70,14 +71,20 @@ double MyModel::perturb()
 
 double MyModel::logLikelihood() const
 {
-	return 0.;
+	const vector<int>& y = data.get_y();
+
+	double logl = 0.;
+	for(size_t i=0; i<y.size(); i++)
+		logl += -mu[i] + y[i]*log(mu[i]) - gsl_sf_lngamma(y[i] + 1.);
+
+	return logl;
 }
 
 void MyModel::print(std::ostream& out) const
 {
+	bursts.print(out);
 	for(size_t i=0; i<mu.size(); i++)
 		out<<mu[i]<<' ';
-	//bursts.print(out);
 }
 
 string MyModel::description() const

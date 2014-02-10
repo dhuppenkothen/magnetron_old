@@ -32,6 +32,9 @@ class MyModel:public DNest3::Model
 		// Reference to the data
 		static const Data& data;
 
+		// A flat background level
+		double background;
+
 		// The bursts
 		RJObject<ClassicMassInf1D> bursts;
 

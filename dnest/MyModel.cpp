@@ -44,7 +44,7 @@ void MyModel::calculate_mu()
 
 	for(size_t i=0; i<mu.size(); i++)
 	{
-		mu[i] = 0.;
+		mu[i] = background;
 		for(size_t j=0; j<components.size(); j++)
 		{
 			mu[i] += components[j][1]
@@ -55,6 +55,7 @@ void MyModel::calculate_mu()
 
 void MyModel::fromPrior()
 {
+	background = 10.;
 	bursts.fromPrior();
 	calculate_mu();
 }

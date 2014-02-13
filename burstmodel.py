@@ -256,7 +256,7 @@ class WordPosteriorSameScale(WordPosterior, object):
 
     def __init__(self, times, counts, burstmodel):
 
-        WordPosterior.__init__(times, counts, burstmodel)
+        WordPosterior.__init__(self, times, counts, burstmodel)
         return
 
     def _insert_scale(self, theta):
@@ -277,11 +277,13 @@ class WordPosteriorSameScale(WordPosterior, object):
         return theta_new
 
 
+
     def logprior(self, theta):
         """
         Logprior is defined in subclass for explicit calls to the prior.
         This is *not* used in logposterior, in order to avoid excessive calls to _insert_scale.
         """
+
         theta_new = self._insert_scale(theta)
         WordPosterior.logprior(theta_new)
         return
@@ -303,6 +305,69 @@ class WordPosteriorSameScale(WordPosterior, object):
         return WordPosterior.logprior(theta_new) + WordPosterior.loglike(theta_new)
 
 
+class WordPosteriorSameScaleSameSkew(WordPosteriorSameScale, object):
+
+
+    def __init__(self, times, counts, burstmodel):
+
+        WordPosterior.__init__(self, times, counts, burstmodel)
+        return
+
+    def _insert_skew(self, theta):
+
+        ## if wordlist is of type TwoExp, then theta should be of type:
+        ## [[event_time, scale, amp], ..., [event_time, scale, amp],skew, scale, bkg]
+        theta_new = []
+        skew = theta[-3]
+        if self.wordlist[0] is word.TwoExp:
+            for t in theta:
+                t.insert(2,skew)
+                theta_new.append(t)
+            theta_new.append(theta[-1])
+
+        else:
+            raise Exception('Model not implemented! Daniela might fix that for you if you ask nicely!')
+
+        return theta_new
+
+    def _insert_params(self, theta, scale, skew):
+
+        theta_withscale = self._insert_scale(theta)
+
+        theta_withskew = self._insert_skew(theta_withscale)
+
+        return theta_withskew
+
+
+    def logprior(self, theta):
+        """
+        Logprior is defined in subclass for explicit calls to the prior.
+        This is *not* used in logposterior, in order to avoid excessive calls to _insert_scale.
+        """
+
+        theta_new = self._insert_params(theta)
+        WordPosterior.logprior(theta_new)
+        return
+
+    def loglike(self, theta):
+        """
+        Loglike is defined in subclass for explicit calls to the likelihood function.
+        This is *not* used in logposterior, in order to avoid excessive calls to _insert_scale.
+        """
+        theta_new = self._insert_params(theta)
+        WordPosterior.loglike(theta_new)
+        return
+
+    def logposterior(self, theta):
+
+        theta_new = self._insert_params(theta)
+        ## since we have changed the input parameters such that they are in the right format
+        ## for the standard methods in WordPosterior, use those to avoid excessive calls to _insert_scale
+        return WordPosterior.logprior(theta_new) + WordPosterior.loglike(theta_new)
+
+
+
+
 class BurstModel(object):
 
     def __init__(self, times, counts):
@@ -319,10 +384,12 @@ class BurstModel(object):
 
         ### note to self: need to implement triangle package and make
         ### shiny triangle plots!
-    def mcmc(self, burstmodel, initial_theta, nwalker=500, niter=200, burnin=100, scale_locked=False, plot=True, plotname = 'test'):
+    def mcmc(self, burstmodel, initial_theta, nwalker=500, niter=200, burnin=100, scale_locked=False, skew_locked=False, plot=True, plotname = 'test'):
 
-            if scale_locked:
+            if scale_locked and not skew_locked:
                 lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
+            elif scale_locked and skew_locked:
+                lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
             else:
                 lpost = WordPosterior(self.times, self.counts, burstmodel)
 
@@ -469,7 +536,7 @@ class BurstModel(object):
 
 
     def find_spikes(self, model = word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=100, namestr='test', \
-                    scale_locked=False):
+                    scale_locked=False, skew_locked=False):
 
             all_burstdict = []
             all_sampler = []
@@ -479,10 +546,14 @@ class BurstModel(object):
 
             theta_init = [np.log(np.mean(self.counts))]
             burstmodel = BurstDict(self.times, self.counts, [])
+
+
+            
             print('k = 0, theta_init : ' + str(burstmodel.wordobject._exp(theta_init)))
 
-            sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin, \
-                                scale_locked=scale_locked, plot=True, plotname=namestr + '_k0_posteriors')
+            sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
+                                scale_locked=scale_locked, skew_locked=skew_locked, plot=True,
+                                plotname=namestr + '_k0_posteriors')
 
             postmean = np.mean(sampler.flatchain, axis=0)
             posterr = np.std(sampler.flatchain, axis=0)

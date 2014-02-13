@@ -27,7 +27,7 @@ using namespace DNest3;
 
 int main(int argc, char** argv)
 {
-	Data::get_instance().load("data.txt");
+	Data::get_instance().load("../data/090122194_58.7635_data.dat");
 	MTSampler<MyModel> sampler = setup_mt<MyModel>(argc, argv);
 	sampler.run();
 	return 0;

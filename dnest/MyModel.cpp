@@ -30,7 +30,7 @@ using namespace DNest3;
 const Data& MyModel::data = Data::get_instance();
 
 MyModel::MyModel()
-:bursts(4, 10, false, ClassicMassInf1D(data.get_t_min(), data.get_t_max(),
+:bursts(4, 100, false, ClassicMassInf1D(data.get_t_min(), data.get_t_max(),
 				1E-3*data.get_y_mean(), 1E3*data.get_y_mean()))
 ,mu(data.get_t().size())
 {

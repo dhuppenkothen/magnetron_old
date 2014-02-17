@@ -117,11 +117,14 @@ class BurstDict(object):
         ### create a model definition that includes the background!
         ### theta_all is flat and has non-log parameters
         def event_rate(model_times, theta_exp):
-            
+
+            #print("theta_exp in event_rate: "+ str(theta_exp))
             ### last element must be background counts!
             bkg = theta_exp[-1]
             if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
+                #print("theta_exp[:-1]: " + str(theta_exp[:-1]))
+                #print("bkg: " + str(bkg))
                 y = wordmodel(theta_exp[:-1]) + bkg
             elif np.size(self.wordlist) == 1:
                 if word.depth(self.wordlist) > 1:
@@ -140,6 +143,7 @@ class BurstDict(object):
     ### likelihood functions
     def model_means(self, theta_all, nbins=10):
 
+        #print("theta in model_means: " + str(theta_all))
         ## small time bin size delta
         delta = self.Delta/nbins
         ## number of small time bins
@@ -155,6 +159,8 @@ class BurstDict(object):
             theta_exp = self.wordobject._exp(theta_all_packed)
         else:
             theta_exp = np.exp(theta_all)
+
+        #print("theta_exp in model_means: " + str(theta_exp))
 
         ## compute high-resolution count rate
         rate_small = self.wordmodel(times_small, theta_exp)
@@ -232,6 +238,7 @@ class WordPosterior(object):
 
     ### theta is flat and in log-space
     def loglike(self, theta):
+        #print('theta in loglike: ' + str(theta))
         lambdas = self.burstmodel.model_means(theta) 
 
         return self._log_likelihood(lambdas, self.counts)
@@ -247,8 +254,8 @@ class WordPosterior(object):
         return
 
     def __call__(self, theta):
-        print(theta)
-        print(self.logposterior(theta))
+        #print(theta)
+        #print(self.logposterior(theta))
         return self.logposterior(theta)
 
 
@@ -265,14 +272,28 @@ class WordPosteriorSameScale(WordPosterior, object):
         ## [[event_time, skew, amp], ..., [event_time, skew, amp], scale, bkg]
         theta_new = []
         scale = theta[-2]
-        if self.wordlist[0] is word.TwoExp:
-            for t in theta:
-                t.insert(1, scale)
-                theta_new.append(t)
-            theta_new.append(theta[-1])
 
-        else:
-            raise Exception('Model not implemented! Daniela might fix that for you if you ask nicely!')
+        npar = int(len(theta[:-2])/np.float(len(self.burstmodel.wordlist)))
+        #print('npar:' + str(npar))
+
+        for i,w in enumerate(self.burstmodel.wordlist):
+            if w == word.TwoExp:
+
+                t_old = theta[i*npar:i*npar+npar]
+                t_new = [t_old[0], scale]
+                t_new.extend(t_old[1:])
+                theta_new.extend(t_new)
+
+        #if self.burstmodel.wordlist[0] is word.TwoExp:
+        #    for t in theta:
+        #        t.insert(1, scale)
+        #        theta_new.append(t)
+        #    theta_new.append(theta[-1])
+
+            else:
+                raise Exception('Model not implemented! Daniela might fix that for you if you ask nicely!')
+        theta_new.extend(theta[(npar)*len(self.burstmodel.wordlist):])
+        #print('theta_new in insert_scale: ' + str(theta_new))
 
         return theta_new
 
@@ -283,8 +304,10 @@ class WordPosteriorSameScale(WordPosterior, object):
         Logprior is defined in subclass for explicit calls to the prior.
         This is *not* used in logposterior, in order to avoid excessive calls to _insert_scale.
         """
-
-        theta_new = self._insert_scale(theta)
+        if np.size(theta) > 1:
+            theta_new = self._insert_scale(theta)
+        else:
+            theta_new = theta
         WordPosterior.logprior(theta_new)
         return
 
@@ -293,16 +316,22 @@ class WordPosteriorSameScale(WordPosterior, object):
         Loglike is defined in subclass for explicit calls to the likelihood function.
         This is *not* used in logposterior, in order to avoid excessive calls to _insert_scale.
         """
-        theta_new = self._insert_scale(theta)
+        if np.size(theta) > 1:
+            theta_new = self._insert_scale(theta)
+        else:
+            theta_new = theta
         WordPosterior.loglike(theta_new)
         return
 
     def logposterior(self, theta):
 
-        theta_new = self._insert_scale(theta)
+        if np.size(theta) > 1:
+            theta_new = self._insert_scale(theta)
+        else:
+            theta_new = theta
         ## since we have changed the input parameters such that they are in the right format
         ## for the standard methods in WordPosterior, use those to avoid excessive calls to _insert_scale
-        return WordPosterior.logprior(theta_new) + WordPosterior.loglike(theta_new)
+        return WordPosterior.logprior(self, theta_new) + WordPosterior.loglike(self, theta_new)
 
 
 class WordPosteriorSameScaleSameSkew(WordPosteriorSameScale, object):
@@ -319,18 +348,33 @@ class WordPosteriorSameScaleSameSkew(WordPosteriorSameScale, object):
         ## [[event_time, scale, amp], ..., [event_time, scale, amp],skew, scale, bkg]
         theta_new = []
         skew = theta[-3]
-        if self.wordlist[0] is word.TwoExp:
-            for t in theta:
-                t.insert(2,skew)
-                theta_new.append(t)
-            theta_new.append(theta[-1])
+        #if self.burstmodel.wordlist[0] is word.TwoExp:
+        #    for t in theta:
+        #        t.insert(2,skew)
+        #        theta_new.append(t)
+        #    theta_new.append(theta[-1])
 
-        else:
-            raise Exception('Model not implemented! Daniela might fix that for you if you ask nicely!')
+        npar = int(len(theta[:-2])/np.float(len(self.burstmodel.wordlist)))
+        #print("npar: " + str(npar))
 
+        for i,w in enumerate(self.burstmodel.wordlist):
+            if w == word.TwoExp:
+                t_old = theta[i*npar:i*npar+npar]
+                t_new = t_old
+                #print("t_new: " + str(t_new))
+                #print('type tnew: ' + str(type(t_new)))
+                t_new.insert(len(t_new), skew)
+                theta_new.extend(t_new)
+
+
+            else:
+                raise Exception('Model not implemented! Daniela might fix that for you if you ask nicely!')
+
+        theta_new.append(theta[-1])
         return theta_new
 
-    def _insert_params(self, theta, scale, skew):
+    def _insert_params(self, theta):
+
 
         theta_withscale = self._insert_scale(theta)
 
@@ -345,7 +389,10 @@ class WordPosteriorSameScaleSameSkew(WordPosteriorSameScale, object):
         This is *not* used in logposterior, in order to avoid excessive calls to _insert_scale.
         """
 
-        theta_new = self._insert_params(theta)
+        if np.size(theta) > 1:
+            theta_new = self._insert_params(theta)
+        else:
+            theta_new = theta
         WordPosterior.logprior(theta_new)
         return
 
@@ -354,16 +401,23 @@ class WordPosteriorSameScaleSameSkew(WordPosteriorSameScale, object):
         Loglike is defined in subclass for explicit calls to the likelihood function.
         This is *not* used in logposterior, in order to avoid excessive calls to _insert_scale.
         """
-        theta_new = self._insert_params(theta)
+        if np.size(theta) > 1:
+            theta_new = self._insert_params(theta)
+        else:
+            theta_new = theta
         WordPosterior.loglike(theta_new)
         return
 
     def logposterior(self, theta):
 
-        theta_new = self._insert_params(theta)
+        if np.size(theta) > 1:
+            theta_new = self._insert_params(theta)
+        else:
+            theta_new = theta
+        #print('theta_new in logposterior: ' + str(theta_new))
         ## since we have changed the input parameters such that they are in the right format
         ## for the standard methods in WordPosterior, use those to avoid excessive calls to _insert_scale
-        return WordPosterior.logprior(theta_new) + WordPosterior.loglike(theta_new)
+        return WordPosterior.logprior(self, theta_new) + WordPosterior.loglike(self, theta_new)
 
 
 
@@ -384,23 +438,27 @@ class BurstModel(object):
 
         ### note to self: need to implement triangle package and make
         ### shiny triangle plots!
-    def mcmc(self, burstmodel, initial_theta, nwalker=500, niter=200, burnin=100, scale_locked=False, skew_locked=False, plot=True, plotname = 'test'):
+    def mcmc(self, burstmodel, initial_theta, nwalker=500, niter=200, burnin=100, scale_locked=False,
+             skew_locked=False, plot=True, plotname = 'test'):
 
             if scale_locked and not skew_locked:
+                #print('I am in scale_locked only!')
                 lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
             elif scale_locked and skew_locked:
+                #print('I am in scale_locked and skew_locked')
                 lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
             else:
                 lpost = WordPosterior(self.times, self.counts, burstmodel)
 
             if nwalker < 2*len(initial_theta):
-                print('Too few walkers! Resetting to 2*len(theta)')
+                #print('Too few walkers! Resetting to 2*len(theta)')
                 nwalker = 2*len(initial_theta)
 
             #p0 = [initial_theta+np.random.rand(len(initial_theta))*1.0e-3 for t in range(nwalker)]
 
             #nwalker_burnin = np.max([2*len(initial_theta), 40])
 
+            #print('type theta_init: ' + str(type(initial_theta)))
 
             p0 = []
             for t in range(nwalker):
@@ -410,6 +468,7 @@ class BurstModel(object):
                     if counter > 1000:
                         raise Exception("Can't find initial theta inside prior!")
                     p0_temp = initial_theta+np.random.rand(len(initial_theta))*1.0e-3
+                    #print(type(lpost))
                     lpost_theta_init = lpost(p0_temp)
                     counter =+ 1
                     #print(str(lpost_theta_init))
@@ -496,7 +555,7 @@ class BurstModel(object):
             #    sample = np.transpose(sample)
             #    sample = np.transpose(sample)
 
-            print('shape sample: ' + str(np.shape(sample)))
+            #print('shape sample: ' + str(np.shape(sample)))
 
             figure = triangle.corner(sample, labels= [p for p in plotlabels], \
                                      truths = np.zeros(np.shape(sample)[1]))
@@ -535,8 +594,9 @@ class BurstModel(object):
 
 
 
-    def find_spikes(self, model = word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=100, namestr='test', \
+    def find_spikes(self, model = word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=200, namestr='test', \
                     scale_locked=False, skew_locked=False):
+
 
             all_burstdict = []
             all_sampler = []
@@ -583,16 +643,23 @@ class BurstModel(object):
 
             ### test change for pushing to bitbucket
             for n in np.arange(nmax)+1:
-                
-                ## define burst model   
-                wordlist = [model for m in range(n)]
-                burstmodel = BurstDict(self.times, self.counts, wordlist) 
+                ## define burst model
+                old_postmeans = all_means[-1]
+                old_burstdict = all_burstdict[-1]
+
+                if scale_locked and not skew_locked and n>1:
+                    lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
+                    old_means = lpost._insert_scale(old_postmeans)
+                elif scale_locked and skew_locked and n > 1:
+                    lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
+                    old_means = lpost._insert_params(old_postmeans)
+                else:
+                    lpost = WordPosterior(self.times, self.counts, burstmodel)
+                    old_means = old_postmeans
 
 
                 ## extract posterior means from last model run
-                old_postmeans = all_means[-1]
-                old_burstdict = all_burstdict[-1]
-                model_counts = old_burstdict.model_means(old_postmeans, nbins=10)
+                model_counts = old_burstdict.model_means(old_means, nbins=10)
 
                 datamodel_ratio = self.counts/model_counts
                 max_diff = max(datamodel_ratio)
@@ -600,12 +667,35 @@ class BurstModel(object):
                 max_loc = self.times[max_ind]
                 print('max_loc:' + str(max_loc))
 
+                wordlist = [model for m in range(n)]
+                burstmodel = BurstDict(self.times, self.counts, wordlist)
+
+
+
                 if model == word.TwoExp:
-                   new_event_time = max_loc
-                   new_scale = np.log(0.1*self.T)
-                   new_amp = np.log(max_diff)
-                   new_skew = np.log(1.0)
-                   theta_new_init = [new_event_time, new_scale, new_amp, new_skew]
+                    new_event_time = max_loc
+
+                    if scale_locked and n > 1:
+                        new_scale = old_postmeans[-2]
+                    else:
+                        new_scale = np.log(0.1*self.T)
+
+                    if skew_locked and n > 1:
+                        new_skew = old_postmeans[-3]
+                    else:
+                        new_skew = np.log(1.0)
+
+
+                    #new_scale = np.log(0.1*self.T)
+                    new_amp = np.log(max_diff)
+                    #new_skew = np.log(1.0)
+                    if scale_locked and not skew_locked:
+                        theta_new_init = [new_event_time, new_amp, new_skew]
+
+                    elif scale_locked and skew_locked:
+                        theta_new_init = [new_event_time, new_amp]
+                    else:
+                        theta_new_init = [new_event_time, new_scale, new_amp, new_skew]
                 else:
                     ### no other models defined!
                     print('Your preferred model is not part of the code yet! Complain to Daniela and offer\
@@ -613,17 +703,50 @@ class BurstModel(object):
                     theta_new_init = np.ones(len(old_postmeans))
                  
                 theta_init = np.zeros(len(old_postmeans)+len(theta_new_init))
-                theta_init[:len(old_postmeans)-1] = old_postmeans[:-1]
-                theta_init[len(old_postmeans)-1:-1] = theta_new_init
+                if scale_locked and not skew_locked:
+                    #print("Scale is locked, skew is not!")
+                    if n == 1:
+                        #print("n = 1")
+                        #print("theta_new_init: " + str(theta_new_init))
+                        theta_new_init.extend([new_scale, 0])
+                        theta_init = theta_new_init
+                        #print('theta_init: ' + str(theta_init))
+                    else:
+                        #print("n > 1")
+                        theta_init[:len(old_postmeans)-2] = old_postmeans[:-2]
+                        theta_init[len(old_postmeans-1):-2] = theta_new_init
+                        theta_init[-2] = old_postmeans[-2]
+                        #print('theta_init: ' + str(theta_init))
+                elif scale_locked and skew_locked:
+                    #print("Scale and skew are both locked")
+                    if n == 1:
+                        #print("n = 1")
+                        theta_new_init.extend([new_skew, new_scale, 0])
+                        theta_init = theta_new_init
+                        #print('theta_init: ' + str(theta_init))
+                    else:
+                        #print("n > 1")
+                        theta_init[:len(old_postmeans)-3] = old_postmeans[:-3]
+                        theta_init[len(old_postmeans)-3:-3] = theta_new_init
+                        theta_init[-3:-1] = old_postmeans[-3:-1]
+                        #print('theta_init: ' + str(theta_init))
+                else:
+                    #print("Neither scale nor skew are locked")
+                    theta_init[:len(old_postmeans)-1] = old_postmeans[:-1]
+                    theta_init[len(old_postmeans)-1:-1] = theta_new_init
+                    #print('theta_init: ' + str(theta_init))
+
                 theta_init[-1] = np.log(np.mean(datamodel_ratio))
+                #print('theta_init: ' + str(theta_init))
 
                 ## wiggle around parameters a bit
                 #random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
                 #theta_init *= 1.0 + random_shift
+                theta_init = np.array(theta_init)
 
-                print('n = ' + str(n) + ', theta_init = ' + str(theta_init))
+                #print('n = ' + str(n) + ', theta_init = ' + str(theta_init))
                 sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
-                                    scale_locked=scale_locked, plot=True, \
+                                    scale_locked=scale_locked, skew_locked=skew_locked, plot=True, \
                                     plotname=namestr + '_k' + str(n) + '_posteriors')
 
                 postmean = np.mean(sampler.flatchain, axis=0)
@@ -641,7 +764,24 @@ class BurstModel(object):
                     #else:
                     #    print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)))
 
-                burstmodel.plot_model(postmean, postmax = postmax, plotname = namestr + '_k' + str(n))
+
+                if scale_locked and not skew_locked and n>1:
+                    lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
+                    new_postmean = lpost._insert_scale(postmean)
+                    new_postmax = lpost._insert_scale(postmax)
+                elif scale_locked and skew_locked and n > 1:
+                    lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
+                    new_postmean = lpost._insert_params(postmean)
+                    new_postmax = lpost._insert_params(postmax)
+                else:
+                    lpost = WordPosterior(self.times, self.counts, burstmodel)
+                    new_postmean = postmean
+                    new_postmax = postmax
+
+
+
+
+                burstmodel.plot_model(new_postmean, postmax = new_postmax, plotname = namestr + '_k' + str(n))
 
                 #all_sampler.append(sampler.flatchain[-50000:])
                 all_means.append(postmean)
@@ -734,8 +874,16 @@ def main():
 
         if instrument == 'gbm':
             times, counts = read_gbm_lightcurves(f)
+            ### check for saturation
+            tres = times[1] - times[0]
+            countrate = counts/np.float(tres)
+            if np.max(countrate) >= saturation_countrate:
+                print("Burst is saturated. Excluding ...")
+                continue
         else:
             raise Exception("Instrument not known!")
+
+
 
         bm = BurstModel(times, counts)
 

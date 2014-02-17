@@ -23,8 +23,9 @@ def main():
 
         bm = burstmodel.BurstModel(times, counts)
 
+
         all_means, all_err, all_postmax, all_quants, all_theta_init = \
-            bm.find_spikes(nmax=10, nwalker=500, niter=200, burnin=200, namestr=froot, scale_locked=scale,
+            bm.find_spikes(nmax=10, nwalker=nwalker, niter=niter, burnin=100, namestr=froot, scale_locked=scale,
                            skew_locked=skew)
 
 
@@ -53,9 +54,9 @@ if __name__ == '__main__':
                         type=int, default=200, help='number of emcee iterations')
     parser.add_argument('--instrument', action='store', dest='instrument', default='gbm', required=False,
                         help = "Instrument data was taken with")
-    parser.add_argument('--scale', action='store', dest='scale', required=False, default='False', type=bool,
+    parser.add_argument('--lock-scale', action='store_true', dest='scale', required=False,
                         help="If true, scale will be the same for all words")
-    parser.add_argument('--skew', action='store', dest='skew', required=False, default='False', type=bool,
+    parser.add_argument('--lock-skew', action='store_true', dest='skew', required=False,
                         help="If true, skew will be the same for all words")
 
     singleparser = parser.add_argument_group('single file', 'options for running script on a single file')
@@ -91,6 +92,7 @@ if __name__ == '__main__':
     else:
         print("Instrument not recognised! Using filename as root")
         instrument=None
+
 
     scale = clargs.scale
     skew = clargs.skew

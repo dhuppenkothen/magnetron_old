@@ -294,7 +294,7 @@ class WordPosteriorSameScale(WordPosterior, object):
                 raise Exception('Model not implemented! Daniela might fix that for you if you ask nicely!')
         theta_new.extend(theta[(npar)*len(self.burstmodel.wordlist):])
         #print('theta_new in insert_scale: ' + str(theta_new))
-
+        #print(theta_new)
         return theta_new
 
 
@@ -354,10 +354,11 @@ class WordPosteriorSameScaleSameSkew(WordPosteriorSameScale, object):
         #        theta_new.append(t)
         #    theta_new.append(theta[-1])
 
-        npar = int(len(theta[:-2])/np.float(len(self.burstmodel.wordlist)))
+        npar = int(len(theta[:-3])/np.float(len(self.burstmodel.wordlist)))
         #print("npar: " + str(npar))
 
         for i,w in enumerate(self.burstmodel.wordlist):
+
             if w == word.TwoExp:
                 t_old = theta[i*npar:i*npar+npar]
                 t_new = t_old
@@ -575,11 +576,16 @@ class BurstModel(object):
                 assert np.shape(sample)[1] > np.shape(sample)[0]
             except AssertionError:
                 sample = np.transpose(sample)
+            except IndexError:
+                #print("Single-dimension array")
+                q = quantiles(sample, all_intervals)
+                quants = {'lower ci':q[0], 'mean': q[1], 'upper ci':q[2], 'interval':interval}
+                return quants
 
             ### loop over the parameters ###
             for i,k in enumerate(sample):
 
-                print("I am on parameter: " + str(i))
+                #print("I am on parameter: " + str(i))
 
                 q = quantiles(k, all_intervals)
 
@@ -609,7 +615,7 @@ class BurstModel(object):
 
 
             
-            print('k = 0, theta_init : ' + str(burstmodel.wordobject._exp(theta_init)))
+            #print('k = 0, theta_init : ' + str(burstmodel.wordobject._exp(theta_init)))
 
             sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
                                 scale_locked=scale_locked, skew_locked=skew_locked, plot=True,
@@ -765,11 +771,11 @@ class BurstModel(object):
                     #    print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)))
 
 
-                if scale_locked and not skew_locked and n>1:
+                if scale_locked and not skew_locked:# and n>1:
                     lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
                     new_postmean = lpost._insert_scale(postmean)
                     new_postmax = lpost._insert_scale(postmax)
-                elif scale_locked and skew_locked and n > 1:
+                elif scale_locked and skew_locked:# and n > 1:
                     lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
                     new_postmean = lpost._insert_params(postmean)
                     new_postmax = lpost._insert_params(postmax)
@@ -827,7 +833,7 @@ class BurstModel(object):
             ## I AM HERE
             ymin, ymax = [], []
             for s in xrange(nspikes):
-                print(allmax[s:, n+s*npar])
+                #print(allmax[s:, n+s*npar])
                 ymin.append(np.min(all_cl[s:,n+s*npar]))
                 ymax.append(np.max(all_cu[s:,n+s*npar]))
                 plt.errorbar(np.arange(nspikes-s)+s+1.0+0.1*s, allmax[s:, n+s*npar],
@@ -850,7 +856,7 @@ class BurstModel(object):
                 all_means_exp.append(means_exp)
             else:
                 wordlist = [model for m in range(i)]
-                print('wordlist: ' + str(wordlist))
+                #print('wordlist: ' + str(wordlist))
                 w = word.CombinedWords(self.times, wordlist)
                 means_pack = w._pack(a)
                 means_exp = w._exp(means_pack)

@@ -236,6 +236,12 @@ class WordPosterior(object):
 
 
 
+#    def _unbinned_log_likelihood(lambdas, data):
+
+#        return -np.sum()
+
+
+
     ### theta is flat and in log-space
     def loglike(self, theta):
         #print('theta in loglike: ' + str(theta))

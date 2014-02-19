@@ -84,7 +84,7 @@ class AllPosteriorSamples(object):
 
 
         all_models_sorted = sorted(all_models, key=lambda models: models.k)
-        print("a: " + str([a.k for a in all_models_sorted]))
+        #print("a: " + str([a.k for a in all_models_sorted]))
 
         return all_models_sorted
 
@@ -99,7 +99,7 @@ class AllPosteriorSamples(object):
     def quants(self, samples, interval = 0.9):
 
         all_quants = []
-        print('samples: ' + str(samples))
+        #print('samples: ' + str(samples))
         for s in samples:
             if np.shape(s)[0] > np.shape(s)[1]:
                 s = np.transpose(s)
@@ -253,14 +253,28 @@ class AllPosteriorSamples(object):
         #print("allmax: " + str(allmax))
         #print("all_cl: " + str(all_cl))
 
-
+        allmax_scale, all_cl_scale, all_cu_scale = [], [], []
+        allmax_skew, all_cl_skew, all_cu_skew = [], [], []
         for n in xrange(npar):
             #print('n: ' + str(n))
             fig = plt.figure()
             ## I AM HERE
             ymin, ymax = [], []
+            if scale_locked and n == 1:
+                nplot = n+1
+            else:
+                nplot = n
+
             for s in xrange(nspikes):
-                print(allmax[s:, n+s*npar])
+                #print(allmax[s:, n+s*npar])
+                if nplot == 1:
+                    allmax_scale.append(allmax[s:, n+s*npar])
+                    all_cl_scale.append(all_cl[s:,n+s*npar])
+                    all_cu_scale.append(all_cu[s:,n+s*npar])
+                if nplot == 3:
+                    allmax_skew.append(allmax[s:, n+s*npar])
+                    all_cl_skew.append(all_cl[s:,n+s*npar])
+                    all_cu_skew.append(all_cu[s:,n+s*npar])
 
                 ymin.append(np.min(all_cl[s:,n+s*npar]))
                 ymax.append(np.max(all_cu[s:,n+s*npar]))
@@ -270,10 +284,6 @@ class AllPosteriorSamples(object):
             plt.axis([0.0, nspikes+5, min(ymin), max(ymax)])
             plt.legend()
             plt.xlabel("Number of spikes in the model", fontsize=16)
-            if scale_locked and n == 1:
-                nplot = n+1
-            else:
-                nplot = n
             plt.ylabel(model.parnames[nplot], fontsize="16")
             plt.savefig(self.bid + "_" + str(self.bst) + '_par' + str(nplot) + '.png', format='png')
             plt.close()
@@ -317,7 +327,7 @@ class AllPosteriorSamples(object):
             plt.ylabel(model.parnames[3], fontsize='16')
             plt.savefig(self.bid + "_" + str(self.bst) + "_par3.png")
             plt.close()
-        return
+        return allmax_scale, all_cl_scale, all_cu_scale, allmax_skew, all_cl_skew, all_cu_skew
 
 
 
@@ -346,6 +356,9 @@ def plot_all_bursts(scale_locked = False, skew_locked = False):
 
     print(filenames)
 
+    scale_postmax, scale_cl, scale_cu = [], [], []
+    skew_postmax, skew_cl, skew_cu = [], [], []
+
     for i in bids:
         for j in bsts:
             print('bid: ' + str(i))
@@ -359,22 +372,35 @@ def plot_all_bursts(scale_locked = False, skew_locked = False):
                 print("... done. Making quantiles ...")
                 all_quants = burst.quants(samples, interval=0.9)
                 print("... done. Now plotting parameters.")
-                print("scale_locked: " + str(scale_locked))
-                print("skew_locked: " + str(skew_locked))
-                print('bid: ' + str(burst.bid))
-                print('bst: ' + str(burst.bst))
-                print("bid after making quantiles: " + str(bid))
-                burst.plot_quants(all_quants, scale_locked = scale_locked, skew_locked = skew_locked)
-                print("bid after plotting quantiles: " + str(bid))
+                #print("scale_locked: " + str(scale_locked))
+                #print("skew_locked: " + str(skew_locked))
+                #print('bid: ' + str(burst.bid))
+                #print('bst: ' + str(burst.bst))
+                #print("bid after making quantiles: " + str(bid))
+                allmax_scale, all_cl_scale, all_cu_scale, allmax_skew, all_cl_skew, all_cu_skew = \
+                        burst.plot_quants(all_quants, scale_locked = scale_locked, skew_locked = skew_locked)
+
+                scale_postmax.append(allmax_scale)
+                skew_postmax.append(allmax_skew)
+                scale_cl.append(all_cl_scale)
+                scale_cu.append(all_cu_scale)
+                skew_cl.append(all_cl_skew)
+                skew_cu.append(all_cu_skew)
+                #print("bid after plotting quantiles: " + str(bid))
                 print("Plotting light curves:")
                 burst.read_data(dir=data_dir + "/")
-                print("shape(samples): " + str(np.shape(samples)))
+                #print("shape(samples): " + str(np.shape(samples)))
                 print("bid after reading in data: " + str(bid))
                 for (s,p) in zip(samples[1:], postmax[1:]):
-                    burst.plot_model(s, postmax =p, nsamples = 1000, scale_locked=scale_locked,
+                    burst.plot_model(s, postmax =p, nsamples = nsamples, scale_locked=scale_locked,
                                      skew_locked=skew_locked, model = word.TwoExp)
                 print("And all done! Hoorah!")
                 print("bid at the end: " + str(bid))
+    all_limits = {'scale_max': scale_postmax, 'skew_max':skew_postmax, 'scale_cl':scale_cl, 'scale_cu':scale_cu,
+                  'skew_cl':skew_cl, 'skew_cu':skew_cu}
+    f = open('allbursts_postparas.dat', 'w')
+    pickle.dump(all_limits, f)
+    f.close()
 
     return
 
@@ -398,10 +424,14 @@ if __name__ == "__main__":
     parser.add_argument('-b', "--bid", action="store", dest="bid", required=False, default="None",
                         help="Pick specific burst ID to run on")
 
+    parser.add_argument('-n', '--nsamples', action="store", dest="nsamples", required=False, default=1000,
+                        type=int, help="Number of samples to be used in average light curve.")
+
     clargs = parser.parse_args()
     scale = clargs.scale
     skew = clargs.skew
     data_dir = clargs.data_dir
     bid = clargs.bid
+    nsamples = clargs.nsamples
 
     main()

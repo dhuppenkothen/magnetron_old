@@ -1,5 +1,5 @@
+import numpy as np
 
-import word
 
 class Parameters(object):
 
@@ -13,6 +13,7 @@ class TwoExpParameters(Parameters, object):
 
     def __init__(self, t0 = None, scale = None, amp = None, skew = None, log=True):
 
+        self.npar = 4
         self.t0 = t0
         if log:
             self.log_scale = scale
@@ -66,7 +67,8 @@ class TwoExpCombined(object):
         self.bkg = par[-1]
 
 
-        npar = model.npar
+        npar = parclass.npar
+        self.npar_all = np.sum([npar for p in xrange(ncomp)])
         if ncomp >=1:
             if scale_locked:
                 npar -= 1

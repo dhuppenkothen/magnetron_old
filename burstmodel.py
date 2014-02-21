@@ -99,6 +99,8 @@ class BurstDict(object):
         # noinspection PyPep8Naming
         self.Delta = self.times[1] - self.times[0]
         self.nbins_data = len(self.times)
+        self.countrate = np.array(counts)/self.Delta
+
         return
 
     def _create_model(self):
@@ -178,7 +180,7 @@ class BurstDict(object):
 
 
         fig = plt.figure(figsize=(10,8))
-        plt.plot(self.times, self.counts, lw=1, color='black', label='input data')
+        plt.plot(self.times, self.countrate, lw=1, color='black', label='input data')
         plt.plot(self.times, model_counts, lw=2, color='red', label='model light curve: posterior mean')
         if not postmax == None:
             plt.plot(self.times, model_counts_postmax, lw=2, color='blue', label='model light curve: posterior max')
@@ -201,6 +203,8 @@ class WordPosterior(object):
         self.times = times
         self.counts = counts
         self.burstmodel = burstmodel
+        self.Delta = self.times[1] - self.times[0]
+        self.countrate = self.counts/self.Delta
 
     def logprior(self, theta):
 
@@ -228,10 +232,10 @@ class WordPosterior(object):
 
     ### lambdas: numpy array of Poisson rates: mean expected integrated in a bin
     ### Poisson likelihood for data and a given model
-    @staticmethod
-    def _log_likelihood(lambdas, data):
 
-        return -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
+    def _log_likelihood(self, lambdas, data):
+
+        return -np.sum(lambdas*self.Delta) + np.sum(data*np.log(lambdas*self.Delta))\
             -np.sum(scipy.special.gammaln(data + 1))
 
 
@@ -314,8 +318,8 @@ class WordPosteriorSameScale(WordPosterior, object):
             theta_new = self._insert_scale(theta)
         else:
             theta_new = theta
-        WordPosterior.logprior(theta_new)
-        return
+
+        return WordPosterior.logprior(self, theta_new)
 
     def loglike(self, theta):
         """
@@ -326,8 +330,8 @@ class WordPosteriorSameScale(WordPosterior, object):
             theta_new = self._insert_scale(theta)
         else:
             theta_new = theta
-        WordPosterior.loglike(theta_new)
-        return
+
+        return WordPosterior.loglike(self, theta_new)
 
     def logposterior(self, theta):
 
@@ -400,8 +404,8 @@ class WordPosteriorSameScaleSameSkew(WordPosteriorSameScale, object):
             theta_new = self._insert_params(theta)
         else:
             theta_new = theta
-        WordPosterior.logprior(theta_new)
-        return
+
+        return WordPosterior.logprior(self, theta_new)
 
     def loglike(self, theta):
         """
@@ -412,8 +416,8 @@ class WordPosteriorSameScaleSameSkew(WordPosteriorSameScale, object):
             theta_new = self._insert_params(theta)
         else:
             theta_new = theta
-        WordPosterior.loglike(theta_new)
-        return
+
+        return WordPosterior.loglike(self, theta_new)
 
     def logposterior(self, theta):
 
@@ -435,6 +439,7 @@ class BurstModel(object):
         self.times = times - times[0]
         self.tstart = times[0]
         self.counts = counts
+
         # noinspection PyPep8Naming
         self.T = self.times[-1] - self.times[0]
         self.Delta = self.times[1] - self.times[0]
@@ -643,7 +648,7 @@ class BurstModel(object):
             all_burstdict.append(burstmodel)
             all_theta_init.append(theta_init)
             print('posterior means, k = 0: ')
-            print(' --- background parameter: ' + str(np.exp(postmean[0])) + ' +/- ' +  str(np.exp(posterr[0])) + "\n")
+            print(' --- background parameter: ' + str(postmean[0]) + ' +/- ' +  str(np.exp(posterr[0])) + "\n")
 
             all_results = {'sampler': sampler.flatchain[-10000:], 'means':postmean, 'err':posterr, 'quants':quants, 'max':postmax,
                            'init':theta_init}

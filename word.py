@@ -29,7 +29,7 @@ class Word(object):
 
         """ General pack method:
             Requires
-            npars = list of numbers of parameters for each element in new packed                    array
+            npars = list of numbers of parameters for each element in new packed array
             theta_flat = simple list or numpy 1D array with parameters
         """
         theta_new = []

@@ -3,6 +3,9 @@
 ### Tests for new parameter class
 import matplotlib.pyplot as plt
 from pylab import *
+# Foreman-Mackey's taste in figures
+#rc("font", size=20, family="serif", serif="Computer Sans")
+#rc("text", usetex=True)
 
 import numpy as np
 
@@ -145,7 +148,70 @@ def word_tests():
     print("This should be inf, log_skew < -1.5: " + str(w.logprior(theta)))
 
     theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=log_amp, skew=4.0, log=True)
-    print("This should be inf, log_skew > log(3): " + str(w.logprior(theta)))
+    print("This should be inf, log_skew > log(3): " + str(w.logprior(theta)) + "\n")
+
+
+    print("Now testing with more than one word ...")
+
+    ### testing Combined Words
+    w = word.CombinedWords(times, [word.TwoExp, word.TwoExp])
+
+    t0_2 = 0.5
+    log_scale_2 = -6.0
+    log_skew_2 = -1.0
+    log_amp_2 = 4.0
+
+    theta = parameters.TwoExpCombined([t0, log_scale, log_amp, log_skew, t0_2, log_scale_2, log_amp_2, log_skew_2], 2, log=True)
+
+    model_counts = w(theta)
+
+    fig = plt.figure()
+    plt.plot(times, model_counts)
+    plt.xlabel("Time [s]", fontsize=18)
+    plt.ylabel("Counts [cts/bin]", fontsize=18)
+    plt.title(r"Word test 2: $t_0 = 0.1,0.5$, $\log{(scale)} = -4,-6$, $\log{(amp)} = 5,4$, $\log{(skew)} = 2,-1$")
+    plt.savefig("parclass_word_test2.png", format="png")
+    plt.close()
+
+    theta = parameters.TwoExpCombined([t0, log_amp, log_skew, t0_2, log_amp_2, log_skew_2, log_scale], 2, scale_locked=True, log=True)
+
+    model_counts = w(theta)
+
+    fig = plt.figure()
+    plt.plot(times, model_counts)
+    plt.xlabel("Time [s]", fontsize=18)
+    plt.ylabel("Counts [cts/bin]", fontsize=18)
+    plt.title(r"Word test 3, same scale: $t_0 = 0.1,0.5$, $\log{(scale)} = -4$, $\log{(amp)} = 5,4$, "
+              r"$\log{(skew)} = 2,-1$", fontsize=12)
+    plt.savefig("parclass_word_test3.png", format="png")
+    plt.close()
+
+
+    theta = parameters.TwoExpCombined([t0, log_scale, log_amp, t0_2, log_scale_2, log_amp_2, log_skew], 2, skew_locked=True, log=True)
+
+    model_counts = w(theta)
+
+    fig = plt.figure()
+    plt.plot(times, model_counts)
+    plt.xlabel("Time [s]", fontsize=18)
+    plt.ylabel("Counts [cts/bin]", fontsize=18)
+    plt.title(r"Word test 3, same skew: $t_0 = 0.1,0.5$, $\log{(scale)} = -4,-6$, $\log{(amp)} = 5,4$, "
+              r"$\log{(skew)} = 2$", fontsize=12)
+    plt.savefig("parclass_word_test4.png", format="png")
+    plt.close()
+
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_skew, log_scale], 2, scale_locked=True, skew_locked=True, log=True)
+
+    model_counts = w(theta)
+
+    fig = plt.figure()
+    plt.plot(times, model_counts)
+    plt.xlabel("Time [s]", fontsize=18)
+    plt.ylabel("Counts [cts/bin]", fontsize=18)
+    plt.title(r"Word test 5, same scale + skew: $t_0 = 0.1,0.5$, $\log{(scale)} = -4$, $\log{(amp)} = 5,4$, "
+              r"$\log{(skew)} = 2,-1$", fontsize=12)
+    plt.savefig("parclass_word_test5.png", format="png")
+    plt.close()
 
     return
 

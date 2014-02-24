@@ -364,84 +364,114 @@ class BurstModel(object):
 
         ### note to self: need to implement triangle package and make
         ### shiny triangle plots!
-    def mcmc(self, burstmodel, initial_theta, nwalker=500, niter=200, burnin=100, scale_locked=False,
-             skew_locked=False, plot=True, plotname = 'test'):
+    def mcmc(self, model, initial_theta, nwalker=500, niter=200, burnin=100, scale_locked=False,
+             skew_locked=False, log=True, bkg=True, plot=True, plotname = 'test'):
 
-            if scale_locked and not skew_locked:
-                #print('I am in scale_locked only!')
-                lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
-            elif scale_locked and skew_locked:
-                #print('I am in scale_locked and skew_locked')
-                lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
-            else:
-                lpost = WordPosterior(self.times, self.counts, burstmodel)
+#            if scale_locked and not skew_locked:
+#                #print('I am in scale_locked only!')
+#                lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
+#            elif scale_locked and skew_locked:
+#                #print('I am in scale_locked and skew_locked')
+#                lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
+#            else:
+#                lpost = WordPosterior(self.times, self.counts, burstmodel)
+#
 
-            if nwalker < 2*len(initial_theta):
-                #print('Too few walkers! Resetting to 2*len(theta)')
-                nwalker = 2*len(initial_theta)
+        lpost = WordPosterior(self.times, self.counts, model, scale_locked=scale_locked, skew_locked=skew_locked,
+                              log=log, bkg=bkg)
 
-            #p0 = [initial_theta+np.random.rand(len(initial_theta))*1.0e-3 for t in range(nwalker)]
+        if nwalker < 2*len(initial_theta):
+            print('Too few walkers! Resetting to 2*len(theta)')
+            nwalker = 2*len(initial_theta)
 
-            #nwalker_burnin = np.max([2*len(initial_theta), 40])
 
-            #print('type theta_init: ' + str(type(initial_theta)))
+        p0 = []
+        for t in range(nwalker):
+            lpost_theta_init = -np.inf
+            counter = 0
+            while np.isinf(lpost_theta_init):
+                if counter > 1000:
+                    raise Exception("Can't find initial theta inside prior!")
+                p0_temp = initial_theta+np.random.rand(len(initial_theta))*1.0e-3
+                lpost_theta_init = lpost(p0_temp)
+                counter =+ 1
+            p0.append(p0_temp)
 
-            p0 = []
-            for t in range(nwalker):
-                lpost_theta_init = -np.inf
-                counter = 0
-                while np.isinf(lpost_theta_init):
-                    if counter > 1000:
-                        raise Exception("Can't find initial theta inside prior!")
-                    p0_temp = initial_theta+np.random.rand(len(initial_theta))*1.0e-3
-                    #print(type(lpost))
-                    lpost_theta_init = lpost(p0_temp)
-                    counter =+ 1
-                    #print(str(lpost_theta_init))
-                p0.append(p0_temp)
-                #print('Final: ' + str(lpost(p0_temp)))
+        ### test code: run burnin with a few, long chains, then the actual sampler with the results
+        ### from the burnin phase
 
-            ### test code: run burnin with a few, long chains, then the actual sampler with the results
-            ### from the burnin phase
+        #sampler_burnin = emcee.EnsembleSampler(nwalker_burnin, len(initial_theta), lpost)
+        #pos, prob, state = sampler_burnin.run_mcmc(p0_burnin, burnin)
 
-            #sampler_burnin = emcee.EnsembleSampler(nwalker_burnin, len(initial_theta), lpost)
-            #pos, prob, state = sampler_burnin.run_mcmc(p0_burnin, burnin)
+        #niter_burnin = int(np.round(np.mean(sampler_burnin.acor))*nwalker/nwalker_burnin)
+        #sampler_burnin.reset()
 
-            #niter_burnin = int(np.round(np.mean(sampler_burnin.acor))*nwalker/nwalker_burnin)
-            #sampler_burnin.reset()
+        #sampler_burnin.run_mcmc(pos, niter_burnin , rstate0 = state)
 
-            #sampler_burnin.run_mcmc(pos, niter_burnin , rstate0 = state)
+        #p0 = np.random.choice(sampler_burnin.flatchain, size=nwalker, replace=False,
+        #                      p=sampler_burnin.flatlnprobability)
 
-            #p0 = np.random.choice(sampler_burnin.flatchain, size=nwalker, replace=False,
-            #                      p=sampler_burnin.flatlnprobability)
-
-            sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
-            pos, prob, state = sampler.run_mcmc(p0, burnin)
-            sampler.reset()
-            sampler.run_mcmc(pos, niter, rstate0 = state)
+        sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
+        pos, prob, state = sampler.run_mcmc(p0, burnin)
+        sampler.reset()
+        sampler.run_mcmc(pos, niter, rstate0 = state)
 
 
 
 
-            #sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
-            #pos, prob, state = sampler.run_mcmc(p0, burnin)
-            #sampler.reset()
-            #sampler.run_mcmc(pos, niter, rstate0 = state)
+        #sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
+        #pos, prob, state = sampler.run_mcmc(p0, burnin)
+        #sampler.reset()
+        #sampler.run_mcmc(pos, niter, rstate0 = state)
 
-            if plot:
-                if np.size(burstmodel.wordlist) == 0:
-                    plotlabels = ['log(bkg)']
+        if plot:
+            if np.size(model.wordlist) == 0:
+                if log:
+                    plotlabels = ["log(bkg)"]
                 else:
-                    plotlabels = []
-                    for i,w in enumerate(burstmodel.wordlist):
-                        plotlabels.extend([p + '_' + str(i) for p in w.parnames])
-                    plotlabels.append('log(bkg)')
-                self.plot_mcmc(sampler.flatchain[-5000:], plotname = plotname, plotlabels = plotlabels)
+                    plotlabels = ["bkg"]
+            else:
+                if lpost.wordmodel is word.TwoExp:
+                    if log:
+                        plotlabels = np.array([parameters.TwoExpParameters.parnames_log for n in range(lpost.ncomp)])
+                        plotlabels = plotlabels.flatten()
+                    else:
+                        plotlabels = np.array([parameters.TwoExpParameters.parnames for n in range(lpost.ncomp)])
+                        plotlabels = plotlabels.flatten()
 
-            print('Sampler autocorrelation length: ' + str(sampler.acor))
-            print('Sampler mean acceptance fraction: ' + str(np.mean(sampler.acceptance_fraction)))
+                    par_scale = plotlabels[1]
+                    par_skew = plotlabels[3]
 
-            return sampler
+                    if skew_locked:
+                        plotlabels = np.delete(plotlabels, np.where(plotlabels == par_skew))
+                        plotlabels = np.append(plotlabels, par_skew)
+
+                    if scale_locked:
+                        parnames = np.delete(plotlabels, np.where(plotlabels == par_scale))
+                        plotlabels = np.append(plotlabels, par_scale)
+
+                    if bkg:
+                        if log:
+                            plotlabels = np.append(plotlabels, "log(bkg)")
+                        else:
+                            plotlabels = np.append(plotlabels, "bkg")
+
+
+
+#        if plot:
+#            if np.size(model.wordlist) == 0:
+#                plotlabels = ['log(bkg)']
+#            else:
+#                plotlabels = []
+#                for i,w in enumerate(model.wordlist):
+#                    plotlabels.extend([p + '_' + str(i) for p in w.parnames])
+#                plotlabels.append('log(bkg)')
+            self.plot_mcmc(sampler.flatchain[-5000:], plotname=plotname, plotlabels=plotlabels)
+
+        print('Sampler autocorrelation length: ' + str(sampler.acor))
+        print('Sampler mean acceptance fraction: ' + str(np.mean(sampler.acceptance_fraction)))
+
+        return sampler
 
 
     @staticmethod

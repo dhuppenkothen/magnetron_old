@@ -51,9 +51,7 @@ class TwoExp(Word, object):
         scale = horizontal scale parameter to stretch/compress word
         skew = skewness parameter: how much faster is the rise than the decay?
         """
-        #print("theta:" + str(theta))
-        #print("t0: " + str(theta.t0))
-        #print("scale: " + str(theta.scale))
+
         t = (self.times - theta.t0) / theta.scale
         y = np.zeros_like(t)
         y[t <= 0] = np.exp(t[t <= 0])

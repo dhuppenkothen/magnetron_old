@@ -83,7 +83,7 @@ def two_exp_parameter_tests():
     print("log(skew) log_skew_2 = 2 : \t ... \t " + str(theta.all[1].log_skew) + "\n")
 
     ### test with both scale_locked and skew_locked:
-    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_skew, log_scale], 2, scale_locked=True, skew_locked=True, log=True)
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew], 2, scale_locked=True, skew_locked=True, log=True)
     print("Does TwoExpCombined store parameters correctly when scale_locked=True and skew_locked = True ?")
     print("peak time t0 = 0.1 : \t ... \t " + str(theta.all[0].t0))
     print("log(scale) log_scale = -4 : \t ... \t " + str(theta.all[0].log_scale))
@@ -96,7 +96,7 @@ def two_exp_parameter_tests():
 
     ### test with both scale_locked and skew_locked:
     log_bkg = 2.0
-    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_skew, log_scale, log_bkg], 2, scale_locked=True, skew_locked=True, log=True, bkg = True)
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg], 2, scale_locked=True, skew_locked=True, log=True, bkg = True)
     print("Does TwoExpCombined store parameters correctly when including a background parameter??")
     print("peak time t0 = 0.1 : \t ... \t " + str(theta.all[0].t0))
     print("log(scale) log_scale = -4 : \t ... \t " + str(theta.all[0].log_scale))
@@ -226,7 +226,7 @@ def word_tests():
     plt.close()
 
     ### Test 5: Both scale and skew the same for both words
-    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_skew, log_scale], 2, scale_locked=True, skew_locked=True, log=True)
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew], 2, scale_locked=True, skew_locked=True, log=True)
 
     model_counts = w(theta)
 
@@ -236,14 +236,14 @@ def word_tests():
     plt.xlabel("Time [s]", fontsize=18)
     plt.ylabel("Counts [cts/bin]", fontsize=18)
     plt.title(r"Word test 5, same scale + skew: $t_0 = 0.1,0.5$, $\log{(scale)} = -4$, $\log{(amp)} = 5,4$, "
-              r"$\log{(skew)} = 2,-1$", fontsize=12)
+              r"$\log{(skew)} = 2$", fontsize=12)
     plt.savefig("parclass_word_test5.png", format="png")
     plt.close()
 
 
     ### Test 6: Adding a background parameter
     log_bkg = 3.0
-    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_skew, log_scale, log_bkg], 2, scale_locked=True, skew_locked=True, log=True, bkg=True)
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg], 2, scale_locked=True, skew_locked=True, log=True, bkg=True)
 
     model_counts = w(theta)
 
@@ -253,7 +253,7 @@ def word_tests():
     plt.xlabel("Time [s]", fontsize=18)
     plt.ylabel("Counts [cts/bin]", fontsize=18)
     plt.title(r"Word test 5: $t_0 = 0.1,0.5$, $\log{(scale)} = -4$, $\log{(amp)} = 5,4$, "
-              r"$\log{(skew)} = 2,-1$, $\log{(bkg)} = 3$", fontsize=12)
+              r"$\log{(skew)} = 2$, $\log{(bkg)} = 3$", fontsize=12)
     plt.savefig("parclass_word_test6.png", format="png")
     plt.close()
 
@@ -321,7 +321,7 @@ def burstdict_tests():
 
     t0_2 = 0.5
     log_amp_2 = 4.0
-    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_skew, log_scale, log_bkg], 2, log=True,
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg], 2, log=True,
                                       scale_locked=True, skew_locked=True, bkg=True)
 
     model_counts = bd.model_means(theta)
@@ -345,7 +345,7 @@ def burstdict_tests():
 
     print("Adding dummy posterior maximum to the plot ...")
 
-    postmax = parameters.TwoExpCombined([t0+0.03, np.log(bd.countrate[0])+1.8, t0_2+0.05, np.log(bd.countrate[0])+1.5, log_skew-0.4, log_scale-1, log_bkg], 2, log=True,
+    postmax = parameters.TwoExpCombined([t0+0.03, np.log(bd.countrate[0])+1.8, t0_2+0.05, np.log(bd.countrate[0])+1.5, log_scale-1, log_skew-0.4, log_bkg], 2, log=True,
                                       scale_locked=True, skew_locked=True, bkg=True)
 
     bd.plot_model(theta, postmax, "parclass_burstdict_test5")
@@ -353,7 +353,7 @@ def burstdict_tests():
     print("Test poissonify function ...")
 
     bd = burstmodel.BurstDict(times, counts*1000.0, [word.TwoExp, word.TwoExp])
-    theta = parameters.TwoExpCombined([t0, np.log(bd.countrate[0])+2, t0_2, np.log(bd.countrate[0])+1, log_skew, log_scale, log_bkg], 2, log=True,
+    theta = parameters.TwoExpCombined([t0, np.log(bd.countrate[0])+2, t0_2, np.log(bd.countrate[0])+1, log_scale, log_skew, log_bkg], 2, log=True,
                                       scale_locked=True, skew_locked=True, bkg=True)
 
     poisson_countrate = bd.poissonify(theta)
@@ -409,7 +409,7 @@ def word_posterior_tests():
     log_bkg = 2.0
 
 
-    theta_list = [t0, log_amp, t0+0.3, log_amp+1, log_skew, log_scale, log_bkg]
+    theta_list = [t0, log_amp, t0+0.3, log_amp+1, log_scale, log_skew, log_bkg]
 
 
     print("Log-Prior probability: " + str(lpost.logprior(theta_list)))

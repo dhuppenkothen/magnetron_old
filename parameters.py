@@ -11,9 +11,12 @@ class Parameters(object):
 
 class TwoExpParameters(Parameters, object):
 
+
+    npar = 4
+
     def __init__(self, t0 = None, scale = None, amp = None, skew = None, log=True):
 
-        self.npar = 4
+
         self.t0 = t0
         if log:
             self.log_scale = scale
@@ -60,7 +63,7 @@ class TwoExpCombined(object):
     '''
 
 
-    def __init__(self, par, ncomp, parclass=TwoExpParameters, scale_locked=False, skew_locked=True, log=True):
+    def __init__(self, par, ncomp, parclass=TwoExpParameters, scale_locked=False, skew_locked=False, log=True):
 
 
         self.all = []
@@ -71,13 +74,18 @@ class TwoExpCombined(object):
         self.npar_all = np.sum([npar for p in xrange(ncomp)])
         if ncomp >=1:
             if scale_locked:
+                print("I am in scale_locked")
                 npar -= 1
-                self.scale = par[-2]
+                self.scale = par[-1]
             if skew_locked:
+                print("I am in skew_locked")
                 npar -= 1
-                self.skew = par[-3]
+                if scale_locked:
+                    self.skew = par[-2]
+                else:
+                    self.skew = par[-1]
 
-
+            print("npar: " + str(npar))
             for n in xrange(ncomp):
                 par_temp = par[n*npar:(n*npar)+npar]
                 t0 = par_temp[0]
@@ -92,11 +100,8 @@ class TwoExpCombined(object):
                 else:
                     skew = par_temp[-1]
 
-                    p = parclass(t0=t0, scale=scale, amp=amp, skew=skew, log=log)
-
-                    self.all.append(p)
-
-
+                p = parclass(t0=t0, scale=scale, amp=amp, skew=skew, log=log)
+                self.all.append(p)
 
 
         return

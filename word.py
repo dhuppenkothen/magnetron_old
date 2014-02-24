@@ -199,6 +199,11 @@ class CombinedWords(Word, object):
 
             y = y + w(t) ## add word to output array
 
+        if hasattr(theta, "bkg"):
+            print("I am in bkg")
+            print("theta.bkg: " + str(theta.bkg))
+            y = y + np.ones(len(self.times))*theta.bkg
+
         return y
 
 

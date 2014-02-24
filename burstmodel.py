@@ -79,6 +79,19 @@ def conversion(filename):
                  output_lists[col].append(data)
     return output_lists
 
+######################################################################
+
+###### READ GBM LIGHT CURVES FROM FILE
+#
+# Light curves are stored in ASCII files
+# with two columns, where
+#
+# column 1 : time stamps (middle of time bin)
+# column 2 : the number of counts *per bin*
+#
+# Takes a filename as string and returns two numpy-arrays
+# with time stamps and counts per bin
+#
 def read_gbm_lightcurves(filename):
 
     data = conversion(filename)
@@ -87,10 +100,7 @@ def read_gbm_lightcurves(filename):
 
     return times, counts
 
-
-def _poisson(x):
-
-    return np.random.poisson(x)
+#######################################################################
 
 
 
@@ -124,7 +134,6 @@ class BurstDict(object):
 
 
         ### create a model definition that includes the background!
-        ### theta_all is flat and has non-log parameters
         def event_rate(model_times, theta, log=True, bkg=True):
 
             assert isinstance(theta, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
@@ -132,8 +141,6 @@ class BurstDict(object):
 
             if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
                 wordobject  = word.CombinedWords(model_times, self.wordlist)
-                #print("theta_exp[:-1]: " + str(theta_exp[:-1]))
-                #print("bkg: " + str(bkg))
                 y = wordobject(theta)
             elif np.size(self.wordlist) == 1:
                 if word.depth(self.wordlist) > 1:
@@ -182,7 +189,7 @@ class BurstDict(object):
 
         model_countrate = self.model_means(theta)
         model_counts = model_countrate*self.Delta
-        poisson = np.vectorize(_poisson)
+        poisson = np.vectorize(lambda x: np.random.poisson(x))
         return poisson(model_counts)/self.Delta
 
 
@@ -221,7 +228,14 @@ class WordPosterior(object):
 
     """
     WordPosterior class for making a word model posterior
-    note: burstmodel is of type BurstDict
+
+    times: input time stamps of time series
+    counts: corresponding counts per bin
+    model: BurstDict instance with word model
+    scale_locked: is the scale the same for all words?
+    skew_locked: is the skew the same for all words?
+    log: are parameters going to be input as logs?
+    bkg: is there a background parameter?
 
     """
     def __init__(self, times, counts, model, scale_locked=False, skew_locked=False, log=True, bkg=True):
@@ -264,34 +278,12 @@ class WordPosterior(object):
             else:
                 raise Exception("Word class not known! Needs to be implemented!")
 
-        print("theta attributes: " + str(theta.__dict__))
 
         assert isinstance(theta, (parameters.TwoExpParameters, parameters.TwoExpCombined)),\
             "input parameters not an object of type TwoExpParameters"
 
         return self.model.wordobject.logprior(theta)
 
-
-#        if np.size(theta[-1]) > 1:
-#            print('No background parameter specified')
-#            bkg = 0.0
-#        else:
-#            bkg = theta[-1]
-#
-#        if word.depth(theta) == 1 and len(theta) == 1:
-#            lprior = 0
-#        else:
-#            lprior = 0
-#            # noinspection PyProtectedMember,PyProtectedMember
-#            theta_packed = self.burstmodel.wordobject._pack(theta)
-#            # noinspection PyProtectedMember,PyProtectedMember
-#            theta_exp = self.burstmodel.wordobject._exp(theta_packed)
-#            lprior = lprior + self.burstmodel.wordobject.logprior(theta_exp[:-1])
-
-#        if bkg > np.log(saturation_countrate) or np.isinf(lprior):
-#            return -np.inf
-#        else:
-#            return 0.0
 
 
     ### lambdas: numpy array of Poisson rates: mean expected integrated in a bin
@@ -322,7 +314,6 @@ class WordPosterior(object):
         assert isinstance(theta, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
             "input parameters not an object of type TwoExpParameters"
 
-        #print('theta in loglike: ' + str(theta))
         lambdas = self.model.model_means(theta)
 
         return self._log_likelihood(lambdas, self.countrate)
@@ -349,6 +340,10 @@ class WordPosterior(object):
 
     def __call__(self, theta):
         return self.logposterior(theta)
+
+###############################################################################
+###############################################################################
+###############################################################################
 
 
 

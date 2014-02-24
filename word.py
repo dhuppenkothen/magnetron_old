@@ -26,50 +26,7 @@ class Word(object):
         print('Superclass. No model definition for superclass Word')
         return
 
-#    def _pack(self, theta_flat, npars=None):
 
-#        """ General pack method:
-#            Requires
-#            npars = list of numbers of parameters for each element in new packed array
-#            theta_flat = simple list or numpy 1D array with parameters
-#        """
-#        theta_new = []
-
-#        if npars is None:
-#            npars = self.npar
-#        ## dummy variable to count numbers of parameter I have already iterated
-#        ## through
-#        par_counter = 0
-#        if size(npars) == 1 and not depth(npars):
-#            npars = [npars]
-#            ## loop over all parameters
-#        for n in npars:
-#            theta_new.append(theta_flat[par_counter:par_counter + n])
-#            par_counter = par_counter + n
-#
-#        ### if there are more parameters than are in the words, append
-#        ### the rest at the end
-#
-#        if np.sum(npars) < len(theta_flat):
-#            theta_new.extend(theta_flat[np.sum(npars):])
-#            ## theta_new will be a weird list with len(npars) elements and each
-#        ## element will have length n, for each n in npars
-#        return theta_new
-
-#    @staticmethod
-#    def _unpack(theta):
-#        """ General unpack function
-#        take a weirdly shaped list or numpy array in n dimensions
-#        and flatten array to 1d
-#        """
-#        theta_flat = []
-#        for t in theta:
-#            if size(t) > 1 or type(t) is list:
-#                theta_flat.extend(t)
-#            else:
-#                theta_flat.append(t)
-#        return np.array(theta_flat)
-#
     def __call__(self, theta):
         return self.model(theta)
 
@@ -85,33 +42,6 @@ class TwoExp(Word, object):
         Word.__init__(self, times)
         return
 
-#    @staticmethod
-#    def _exp(theta_packed):
-#        d = depth(theta_packed)
-#        if d > 1:
-#            theta_temp = theta_packed[0]
-#        else:
-#            theta_temp = theta_packed
-#        theta_exp = [theta_temp[0], np.exp(theta_temp[1]), np.exp(theta_temp[2]), np.exp(theta_temp[3])]
-#        if d > 1:
-#            theta_exp = [theta_exp]
-#            theta_exp.extend(np.exp(theta_packed[1:]))
-#        return theta_exp
-
-#    @staticmethod
-#    def _log(theta_packed):
-#
-#        d = depth(theta_packed)
-#        if d > 1:
-#            theta_temp = theta_packed[0]
-#        else:
-#            theta_temp = theta_packed
-#        theta_log = [theta_temp[0], np.log(theta_temp[1]), np.log(theta_temp[2]), np.log(theta_temp[3])]
-#        if d > 1:
-#            theta_log = [theta_log]
-#            theta_log.extend(np.log(theta_packed[1:]))
-
-#        return theta_log
 
     def model(self, theta):
         """ The model method contains the actual function definition.
@@ -184,23 +114,7 @@ class CombinedWords(Word, object):
         Word.__init__(self, times)
         return
 
-#    def _exp(self, theta_packed):
-#        theta_exp = [w._exp(t) for t, w in zip(theta_packed[:len(self.wordlist)], self.wordlist)]
-#        if len(theta_packed) > len(self.wordlist):
-#            theta_exp.extend(np.exp(theta_packed[len(self.wordlist):]))
-#        return theta_exp
 
-#    def _log(self, theta_packed):
-#        theta_log = [w._log(t) for t, w in zip(theta_packed[:len(self.wordlist)], self.wordlist)]
-#        if len(theta_packed) > len(self.wordlist):
-#            theta_log.extend(np.log(theta_packed[len(self.wordlist):]))
-#        return theta_log
-
-#    def _pack(self, theta_flat):
-#        return Word._pack(self, theta_flat, self.npar_list)
-
-
-    ### theta_all is packed
     def model(self, theta):
 
         assert isinstance(theta, parameters.TwoExpCombined), "At the moment, I only have TwoExp as model and parameter"\
@@ -213,8 +127,8 @@ class CombinedWords(Word, object):
             y = y + w(t) ## add word to output array
 
         if hasattr(theta, "bkg"):
-            print("I am in bkg")
-            print("theta.bkg: " + str(theta.bkg))
+            #print("I am in bkg")
+            #print("theta.bkg: " + str(theta.bkg))
             y = y + np.ones(len(self.times))*theta.bkg
 
         return y

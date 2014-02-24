@@ -1,6 +1,8 @@
 
 
 ### Tests for new parameter class
+import matplotlib.pyplot as plt
+from pylab import *
 
 import numpy as np
 
@@ -8,8 +10,9 @@ import parameters
 import word
 
 def two_exp_parameter_tests():
-
-    times = np.arange(1000)/1000.0
+    """
+    This function tests the new classes in parameters.py: TwoExpParameters and TwoExpCombined.
+    """
 
     ### single word parameters
     t0 = 0.1
@@ -34,7 +37,7 @@ def two_exp_parameter_tests():
     ### Combined parameter object with two words, scale and skew individually defined
     t0_2 = 0.5
     log_scale_2 = -6.0
-    log_skew_2 = -3.0
+    log_skew_2 = -1.0
     log_amp_2 = 3.0
 
     theta = parameters.TwoExpCombined([t0, log_scale, log_amp, log_skew, t0_2, log_scale_2, log_amp_2, log_skew_2], 2, log=True)
@@ -47,7 +50,7 @@ def two_exp_parameter_tests():
     print("peak time t0_2 = 0.5 : \t ... \t " + str(theta.all[1].t0))
     print("peak time log_scale_2 = -6 : \t ... \t " + str(theta.all[1].log_scale))
     print("peak time log_amp_2 = 3 : \t ... \t " + str(theta.all[1].log_amp))
-    print("peak time log_skew_2 = -3 : \t ... \t " + str(theta.all[1].log_skew) + "\n")
+    print("peak time log_skew_2 = -1 : \t ... \t " + str(theta.all[1].log_skew) + "\n")
 
 
     ### test with scale_locked only:
@@ -60,7 +63,7 @@ def two_exp_parameter_tests():
     print("peak time t0_2 = 0.5 : \t ... \t " + str(theta.all[1].t0))
     print("peak time log_scale_2 = -4 : \t ... \t " + str(theta.all[1].log_scale))
     print("peak time log_amp_2 = 3 : \t ... \t " + str(theta.all[1].log_amp))
-    print("peak time log_skew_2 = -3 : \t ... \t " + str(theta.all[1].log_skew) + "\n")
+    print("peak time log_skew_2 = -1 : \t ... \t " + str(theta.all[1].log_skew) + "\n")
 
     ### test with skew_locked only:
     theta = parameters.TwoExpCombined([t0, log_scale, log_amp, t0_2, log_scale_2, log_amp_2, log_skew], 2, skew_locked=True, log=True)
@@ -86,21 +89,71 @@ def two_exp_parameter_tests():
     print("peak time log_amp_2 = 3 : \t ... \t " + str(theta.all[1].log_amp))
     print("peak time log_skew_2 = 2 : \t ... \t " + str(theta.all[1].log_skew) + "\n")
 
-    ###
-
-    ###
-
     return
 
 
+def word_tests():
+    """
+     Tests for classes TwoExp and CombinedWords with the new parameter classes.
+    """
 
-def test_word():
+    times = np.arange(1000)/1000.0
+
+    ### single word parameters
+    t0 = 0.1
+    log_scale = -4.0
+    log_skew = 2.0
+    log_amp = 5.0
+
+    ### parameter object
+    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=log_amp, skew=log_skew, log=True)
+
+    ### word object
+    w = word.TwoExp(times)
+    model_counts = w(theta)
+
+    fig = plt.figure()
+    plt.plot(times, model_counts)
+    plt.xlabel("Time [s]", fontsize=18)
+    plt.ylabel("Counts [cts/bin]", fontsize=18)
+    plt.title(r"Word test 1: $t_0 = 0.1$, $\log{(scale)} = -4$, $\log{(amp)} = 5$, $\log{(skew)} = 2$")
+    plt.savefig("parclass_word_test1.png", format="png")
+    plt.close()
+
+    print("Testing whether the prior works ...")
+    print("This should be 0, all parameters in range: " + str(w.logprior(theta)))
+
+    theta = parameters.TwoExpParameters(t0=-0.1, scale=log_scale, amp=log_amp, skew=log_skew, log=True)
+    print("This should be inf, t0 < times[0]: " + str(w.logprior(theta)))
+
+    theta = parameters.TwoExpParameters(t0=2.0, scale=log_scale, amp=log_amp, skew=log_skew, log=True)
+    print("This should be inf, t0 > times[-1]: " + str(w.logprior(theta)))
+
+    theta = parameters.TwoExpParameters(t0=t0, scale=np.log(w.Delta/10.0), amp=log_amp, skew=log_skew, log=True)
+    print("This should be inf, log_scale < log(Delta): " + str(w.logprior(theta)))
+
+    theta = parameters.TwoExpParameters(t0=t0, scale=np.log(w.T*2.0), amp=log_amp, skew=log_skew, log=True)
+    print("This should be inf, log_scale > log(T): " + str(w.logprior(theta)))
+
+    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=-11, skew=log_skew, log=True)
+    print("This should be inf, log_amp < -10: " + str(w.logprior(theta)))
+
+    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=np.log(3.5e5*2.0), skew=log_skew, log=True)
+    print("This should be inf, log_amp > log(saturation_countrate = 3.5e5 cts/s): " + str(w.logprior(theta)))
+
+    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=log_amp, skew=-2.0, log=True)
+    print("This should be inf, log_skew < -1.5: " + str(w.logprior(theta)))
+
+    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=log_amp, skew=4.0, log=True)
+    print("This should be inf, log_skew > log(3): " + str(w.logprior(theta)))
 
     return
+
 
 def main():
 
     two_exp_parameter_tests()
+    word_tests()
 
     return
 

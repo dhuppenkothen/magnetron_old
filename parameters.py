@@ -13,9 +13,14 @@ class TwoExpParameters(Parameters, object):
 
 
     npar = 4
-
+    parnames_log = ['t_0', 'log(scale)', 'log(amp)', 'log(skew)']
+    parnames = ['t_0', 'scale', 'amp', 'skew']
     def __init__(self, t0 = None, scale = None, amp = None, skew = None, log=True):
 
+        if log:
+            self.parnames = TwoExpParameters.parnames_log
+        else:
+            self.parnames = TwoExpParameters.parnames
 
         self.t0 = t0
         if log:

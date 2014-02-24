@@ -70,8 +70,8 @@ class Word(object):
 #                theta_flat.append(t)
 #        return np.array(theta_flat)
 #
-    def __call__(self, *theta_all):
-        return self.model(*theta_all)
+    def __call__(self, theta_all):
+        return self.model(theta_all)
 
 
 class TwoExp(Word, object):
@@ -79,7 +79,7 @@ class TwoExp(Word, object):
     corresponding to a rising exponential, followed by a falling exponential,
     with a sharp peak in the middle."""
     npar = 4
-    parnames = ['t_0', 'log(scale)', 'log(amp)', 'log(skew)']
+
     def __init__(self, times):
         Word.__init__(self, times)
         return
@@ -150,8 +150,9 @@ class TwoExp(Word, object):
         else:
             return 0.0
 
-    def __call__(self, theta_packed):
-        return self.model(*theta_packed)
+    def __call__(self, theta):
+        assert isinstance(theta, parameters.TwoExpParameters), "input parameters not an object of type TwoExpParameters"
+        return self.model(theta)
 
 
 class CombinedWords(Word, object):

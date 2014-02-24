@@ -110,43 +110,44 @@ class BurstDict(object):
 
         return
 
-    def _create_model(self):
+    def _create_model(self,):
 
         if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
-            wordmodel = word.CombinedWords(self.times, self.wordlist)
+            wordobject = word.CombinedWords(self.times, self.wordlist)
         elif np.size(self.wordlist) == 1:
             if word.depth(self.wordlist) > 1:
-                wordmodel = self.wordlist[0](self.times)
+                wordobject = self.wordlist[0](self.times)
             else:
-                wordmodel = self.wordlist(self.times)
+                wordobject = self.wordlist(self.times)
         else:
-            wordmodel = None
+            wordobject = None
 
 
         ### create a model definition that includes the background!
         ### theta_all is flat and has non-log parameters
-        def event_rate(model_times, theta):
+        def event_rate(model_times, theta, log=True, bkg=True):
 
             assert isinstance(theta, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
                 "input parameters not an object of type TwoExpParameters"
 
             if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
-                wordmodel = word.CombinedWords(model_times, self.wordlist)
+                wordobject  = word.CombinedWords(model_times, self.wordlist)
                 #print("theta_exp[:-1]: " + str(theta_exp[:-1]))
                 #print("bkg: " + str(bkg))
-                y = wordmodel(theta)
+                y = wordobject(theta)
             elif np.size(self.wordlist) == 1:
                 if word.depth(self.wordlist) > 1:
-                    wordmodel = self.wordlist[0](model_times)
+                    wordobject = self.wordlist[0](model_times)
                 else:
-                    wordmodel = self.wordlist(model_times)
-                y = wordmodel(theta)
+                    wordobject = self.wordlist(model_times)
+                y = wordobject(theta)
             else:
-                y = np.ones(len(model_times))*theta.bkg
+                if bkg:
+                    y = np.ones(len(model_times))*theta.bkg
 
             return y
 
-        return event_rate, wordmodel
+        return event_rate, wordobject
 
 
     def model_means(self, theta, nbins=10):
@@ -223,35 +224,74 @@ class WordPosterior(object):
     note: burstmodel is of type BurstDict
 
     """
-    def __init__(self, times, counts, burstmodel):
+    def __init__(self, times, counts, model, scale_locked=False, skew_locked=False, log=True, bkg=True):
         self.times = times
         self.counts = counts
-        self.burstmodel = burstmodel
+        self.model = model
         self.Delta = self.times[1] - self.times[0]
         self.countrate = self.counts/self.Delta
 
+        self.log = log
+        self.bkg = bkg
+        self.scale_locked = scale_locked
+        self.skew_locked = skew_locked
+
+        if np.size(model.wordlist) > 1:
+            self.ncomp = len(model.wordlist)
+            self.wordmodel = model.wordlist[0]
+        elif np.size(model.wordlist) == 1:
+
+            if word.depth(model.wordlist) > 1:
+                self.wordmodel = model.wordlist[0]
+            else:
+                self.wordmodel = model.wordlist
+            self.ncomp = 1
+        else:
+            self.wordmodel = None
+            self.ncomp = 0
+
+        return
+
+
     def logprior(self, theta):
 
-        if np.size(theta[-1]) > 1:
-            print('No background parameter specified')
-            bkg = 0.0
-        else:
-            bkg = theta[-1]
+        if not isinstance(theta, parameters.Parameters):
+            if self.wordmodel is word.TwoExp or self.ncomp == 0:
+                theta = parameters.TwoExpCombined(theta, self.ncomp, parclass=parameters.TwoExpParameters,
+                                                  scale_locked=self.scale_locked, skew_locked=self.skew_locked,
+                                                  log=self.log, bkg=self.bkg)
 
-        if word.depth(theta) == 1 and len(theta) == 1:
-            lprior = 0
-        else:
-            lprior = 0
-            # noinspection PyProtectedMember,PyProtectedMember
-            theta_packed = self.burstmodel.wordobject._pack(theta)
-            # noinspection PyProtectedMember,PyProtectedMember
-            theta_exp = self.burstmodel.wordobject._exp(theta_packed)
-            lprior = lprior + self.burstmodel.wordobject.logprior(theta_exp[:-1])
+            else:
+                raise Exception("Word class not known! Needs to be implemented!")
 
-        if bkg > np.log(saturation_countrate) or np.isinf(lprior):
-            return -np.inf
-        else: 
-            return 0.0     
+        print("theta attributes: " + str(theta.__dict__))
+
+        assert isinstance(theta, (parameters.TwoExpParameters, parameters.TwoExpCombined)),\
+            "input parameters not an object of type TwoExpParameters"
+
+        return self.model.wordobject.logprior(theta)
+
+
+#        if np.size(theta[-1]) > 1:
+#            print('No background parameter specified')
+#            bkg = 0.0
+#        else:
+#            bkg = theta[-1]
+#
+#        if word.depth(theta) == 1 and len(theta) == 1:
+#            lprior = 0
+#        else:
+#            lprior = 0
+#            # noinspection PyProtectedMember,PyProtectedMember
+#            theta_packed = self.burstmodel.wordobject._pack(theta)
+#            # noinspection PyProtectedMember,PyProtectedMember
+#            theta_exp = self.burstmodel.wordobject._exp(theta_packed)
+#            lprior = lprior + self.burstmodel.wordobject.logprior(theta_exp[:-1])
+
+#        if bkg > np.log(saturation_countrate) or np.isinf(lprior):
+#            return -np.inf
+#        else:
+#            return 0.0
 
 
     ### lambdas: numpy array of Poisson rates: mean expected integrated in a bin
@@ -259,26 +299,46 @@ class WordPosterior(object):
 
     def _log_likelihood(self, lambdas, data):
 
+
         return -np.sum(lambdas*self.Delta) + np.sum(data*np.log(lambdas*self.Delta))\
             -np.sum(scipy.special.gammaln(data + 1))
 
 
 
-#    def _unbinned_log_likelihood(lambdas, data):
-
-#        return -np.sum()
-
-
-
     ### theta is flat and in log-space
     def loglike(self, theta):
-        #print('theta in loglike: ' + str(theta))
-        lambdas = self.burstmodel.model_means(theta) 
 
-        return self._log_likelihood(lambdas, self.counts)
+        if not isinstance(theta, parameters.Parameters):
+            if self.wordmodel is word.TwoExp or self.ncomp == 0:
+                theta = parameters.TwoExpCombined(theta, self.ncomp, parclass=parameters.TwoExpParameters,
+                                                  scale_locked=self.scale_locked, skew_locked=self.skew_locked,
+                                                  log=self.log, bkg=self.bkg)
+
+            else:
+                raise Exception("Word class not known! Needs to be implemented!")
+
+
+
+        assert isinstance(theta, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
+            "input parameters not an object of type TwoExpParameters"
+
+        #print('theta in loglike: ' + str(theta))
+        lambdas = self.model.model_means(theta)
+
+        return self._log_likelihood(lambdas, self.countrate)
 
 
     def logposterior(self, theta):
+
+        if not isinstance(theta, parameters.Parameters):
+            if self.wordmodel is word.TwoExp or self.ncomp == 0:
+                theta = parameters.TwoExpCombined(theta, self.ncomp, parclass=parameters.TwoExpParameters,
+                                                  scale_locked=self.scale_locked, skew_locked=self.skew_locked,
+                                                  log=self.log, bkg=self.bkg)
+
+            else:
+                raise Exception("Word class not known! Needs to be implemented!")
+
         return self.logprior(theta) + self.loglike(theta)
 
     ## compute Bayesian Information Criterion
@@ -288,8 +348,6 @@ class WordPosterior(object):
         return
 
     def __call__(self, theta):
-        #print(theta)
-        #print(self.logposterior(theta))
         return self.logposterior(theta)
 
 

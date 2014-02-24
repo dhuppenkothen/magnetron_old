@@ -372,12 +372,103 @@ def burstdict_tests():
     return
 
 
+def word_posterior_tests():
+
+    times = np.arange(1000)/1000.0
+
+    counts = np.ones(len(times))*5.0
+
+    ### First test: Flat light curve
+    bd = burstmodel.BurstDict(times, counts, [])
+
+    lpost = burstmodel.WordPosterior(times, counts, bd, scale_locked=False, skew_locked=False, log=True, bkg=True)
+
+    log_bkg = 2.0
+
+    print("Log-Prior probability: " + str(lpost.logprior([log_bkg])))
+    print("Log-Likelihood: " + str(lpost.loglike([log_bkg])))
+    print("Log-Posterior probability: " + str(lpost([log_bkg])) + "\n")
+
+    print("Make parameter exactly equal count rate:")
+    log_bkg = np.log(np.max(bd.countrate))
+    print("Log-Prior probability: " + str(lpost.logprior([log_bkg])))
+    print("Log-Likelihood: " + str(lpost.loglike([log_bkg])))
+    print("Log-Posterior probability: " + str(lpost([log_bkg])) + "\n")
+
+
+    bd = burstmodel.BurstDict(times, counts*1000.0, [word.TwoExp, word.TwoExp])
+
+    lpost = burstmodel.WordPosterior(times, counts, bd, scale_locked=True, skew_locked=True, log=True, bkg=True)
+
+
+    t0 = 0.1
+    log_scale = -4.0
+    log_skew = 2.0
+    log_amp = 3.0
+
+    log_bkg = 2.0
+
+
+    theta_list = [t0, log_amp, t0+0.3, log_amp+1, log_skew, log_scale, log_bkg]
+
+
+    print("Log-Prior probability: " + str(lpost.logprior(theta_list)))
+    print("Log-Likelihood: " + str(lpost.loglike(theta_list)))
+    print("Log-Posterior probability: " + str(lpost(theta_list)) + "\n")
+
+    print("Including a parameter outside the ranges allowed in the prior:")
+
+    theta_list[0] = -0.1
+    print("Log-Prior probability: " + str(lpost.logprior(theta_list)))
+    print("Log-Likelihood: " + str(lpost.loglike(theta_list)))
+    print("Log-Posterior probability: " + str(lpost(theta_list)) + "\n")
+
+    theta_list[0] = t0
+    theta_list[1] = 11
+    theta_list[3] = 9
+
+    print("Testing on a Poisson light curve of two spikes ...")
+    ### Make a Poissonified light curve of two spikes
+    theta = parameters.TwoExpCombined(theta_list, 2, log=True, scale_locked=True, skew_locked=True, bkg=True)
+
+    poisson_countrate = bd.poissonify(theta)
+    delta = times[1] - times[0]
+
+    bd = burstmodel.BurstDict(times, poisson_countrate*delta, [word.TwoExp, word.TwoExp])
+
+    lpost = burstmodel.WordPosterior(times, poisson_countrate*delta, bd, scale_locked=True,
+                                     skew_locked=True, log=True, bkg=True)
+
+    ### Compute probabilities for a vastly different test parameter set:
+    print("First test: test parameters vastly different from actual light curve parameters")
+    theta_test = [0.2, 11, 0.8, 10, -1, -1, 5]
+    print("Log-Prior probability: " + str(lpost.logprior(theta_test)))
+    print("Log-Likelihood: " + str(lpost.loglike(theta_test)))
+    print("Log-Posterior probability: " + str(lpost(theta_test)) + "\n")
+
+    theta =  parameters.TwoExpCombined(theta_list, 2, log=True, scale_locked=True, skew_locked=True, bkg=True)
+    postmax = parameters.TwoExpCombined(theta_test, 2, log=True, scale_locked=True, skew_locked=True, bkg=True)
+    bd.plot_model(theta, postmax=postmax, plotname="parclass_lpost_test1")
+    print("Saved corresponding light curve in parclass_lpost_test1_lc.png \n")
+
+    print("Second test: Test parameters same as input parameters")
+    print("Log-Prior probability: " + str(lpost.logprior(theta_list)))
+    print("Log-Likelihood: " + str(lpost.loglike(theta_list)))
+    print("Log-Posterior probability: " + str(lpost(theta_list)) + "\n")
+
+    postmax = parameters.TwoExpCombined(theta_list, 2, log=True, scale_locked=True, skew_locked=True, bkg=True)
+    bd.plot_model(theta, postmax=postmax, plotname="parclass_lpost_test2")
+    print("Saved corresponding light curve in parclass_lpost_test2_lc.png \n")
+
+    return
+
 def main():
 
     if clargs.all:
         two_exp_parameter_tests()
         word_tests()
         burstdict_tests()
+        word_posterior_tests()
         return
 
     if clargs.par_switch:
@@ -392,20 +483,24 @@ def main():
         burstdict_tests()
         return
 
-
+    if clargs.post_switch:
+        word_posterior_tests()
+        return
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Various tests for the classes defined in parameters.py, word.py and burstmodel.py")
 
     parser.add_argument("-p", "--parameters", action="store_true", required=False, dest="par_switch",
-                        help = "Run parameter class tests")
+                        help="Run parameter class tests")
     parser.add_argument("-w", "--word", action="store_true", required=False, dest="word_switch",
                         help="Run word class tests")
     parser.add_argument("-d", "--burstdict", action="store_true", required=False, dest="bd_switch",
                         help="Run burstdict class tests")
     parser.add_argument("-a", "--all", action="store_true", required=False, dest="all",
                         help="Run all tests at once!")
+    parser.add_argument("--post", action="store_true", required=False, dest="post_switch",
+                        help="Run tests on class WordPosterior with new parameter implementation")
 
     clargs = parser.parse_args()
 

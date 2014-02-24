@@ -8,7 +8,6 @@ class Parameters(object):
 
 
 
-
 class TwoExpParameters(Parameters, object):
 
 
@@ -63,7 +62,7 @@ class TwoExpParameters(Parameters, object):
 
         return
 
-class TwoExpCombined(object):
+class TwoExpCombined(Parameters, object):
     '''
     par: list of parameters
     ncomp: number of components
@@ -83,7 +82,7 @@ class TwoExpCombined(object):
         if ncomp >=1:
             n_ind = 0
             if bkg:
-                print("I am in bkg")
+                #print("I am in bkg")
                 if log:
                     self.log_bkg = par[-1]
                     self.bkg = np.exp(self.log_bkg)
@@ -92,19 +91,19 @@ class TwoExpCombined(object):
                     self.log_bkg = np.log(self.bkg)
                 n_ind -= 1
             if scale_locked:
-                print("I am in scale_locked")
+                #print("I am in scale_locked")
                 npar -= 1
-                print("scale index: " + str(-1+n_ind))
+                #print("scale index: " + str(-1+n_ind))
                 self.scale = par[-1+n_ind]
                 n_ind -= 1
             if skew_locked:
-                print("I am in skew_locked")
+                #print("I am in skew_locked")
                 npar -= 1
-                print('n_ind: ' + str(n_ind))
-                print("par[-1+n_ind]: " + str(par[-1+n_ind]))
+                #print('n_ind: ' + str(n_ind))
+                #print("par[-1+n_ind]: " + str(par[-1+n_ind]))
                 self.skew = par[-1+n_ind]
 
-            print("npar: " + str(npar))
+            #print("npar: " + str(npar))
             for n in xrange(ncomp):
                 par_temp = par[n*npar:(n*npar)+npar]
                 t0 = par_temp[0]

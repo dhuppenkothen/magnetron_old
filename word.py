@@ -70,8 +70,8 @@ class Word(object):
 #                theta_flat.append(t)
 #        return np.array(theta_flat)
 #
-    def __call__(self, theta_all):
-        return self.model(theta_all)
+    def __call__(self, theta):
+        return self.model(theta)
 
 
 class TwoExp(Word, object):
@@ -81,6 +81,7 @@ class TwoExp(Word, object):
     npar = 4
 
     def __init__(self, times):
+        self.parclass = parameters.TwoExpCombined
         Word.__init__(self, times)
         return
 
@@ -120,15 +121,20 @@ class TwoExp(Word, object):
         scale = horizontal scale parameter to stretch/compress word
         skew = skewness parameter: how much faster is the rise than the decay?
         """
-        print("theta:" + str(theta))
-        print("t0: " + str(theta.t0))
-        print("scale: " + str(theta.scale))
+        #print("theta:" + str(theta))
+        #print("t0: " + str(theta.t0))
+        #print("scale: " + str(theta.scale))
         t = (self.times - theta.t0) / theta.scale
         y = np.zeros_like(t)
         y[t <= 0] = np.exp(t[t <= 0])
         y[t > 0] = np.exp(-t[t > 0] / theta.skew)
 
-        return np.array(theta.amp * y)
+        y = np.array(y)*theta.amp
+
+        if hasattr(theta, "bkg"):
+            y = y + theta.bkg
+
+        return y
 
     def logprior(self, theta):
         #if depth(theta_packed) > 1:
@@ -146,9 +152,15 @@ class TwoExp(Word, object):
         if scale < np.log(self.Delta) or scale > np.log(self.T) or skew < -1.5 or skew > 3.0 or \
                 event_time < self.times[0] or event_time > self.times[-1] or \
                 amp < -10.0 or amp > np.log(saturation_countrate):
-            return -np.Inf
+            lprior =  -np.Inf
         else:
-            return 0.0
+            lprior = 0.0
+
+        if hasattr(theta, "bkg"):
+            if theta.bkg < 0 or theta.bkg > saturation.countrate:
+                lprior = -np.inf
+
+        return lprior
 
     def __call__(self, theta):
         assert isinstance(theta, parameters.TwoExpParameters), "input parameters not an object of type TwoExpParameters"
@@ -168,6 +180,7 @@ class CombinedWords(Word, object):
         self.wordlist = [w(times) for w in wordlist]
         self.npar_list = [w.npar for w in self.wordlist]
         self.npar = np.sum(self.npar_list)
+
         Word.__init__(self, times)
         return
 
@@ -214,7 +227,7 @@ class CombinedWords(Word, object):
 
         if hasattr(theta, "bkg"):
             if theta.bkg < 0 or theta.bkg > saturation_countrate:
-                lprior = -inf
+                lprior = -np.inf
         return lprior
 
 

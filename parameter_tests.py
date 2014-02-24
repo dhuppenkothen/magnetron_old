@@ -374,6 +374,11 @@ def burstdict_tests():
 
 def word_posterior_tests():
 
+    """
+    This function tests whether WordPosterior in burstmodel.py works properly.
+    """
+
+
     times = np.arange(1000)/1000.0
 
     counts = np.ones(len(times))*5.0
@@ -462,6 +467,72 @@ def word_posterior_tests():
 
     return
 
+def burstmodel_tests(long_run=True):
+    """
+    This model tests whether class BurstModel in burstmodel.py works properly
+    parameter long_run sets whether a long MCMC run is performed. Set False for quick and dirty tests.
+    """
+
+    ### Making some fake data ...
+    times = np.arange(1000)/1000.0
+
+    counts = np.ones(len(times))*5.0
+
+    t0 = 0.1
+    t0_2 = 0.4
+    log_scale = -4.0
+    log_skew = 2.0
+    log_amp = 9.0
+    log_amp_2 = 11.0
+
+    log_bkg = 5.0
+
+
+    theta_list = [t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg]
+
+    ### Make a Poissonified light curve of two spikes
+    bd = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp])
+    theta = parameters.TwoExpCombined(theta_list, 2, log=True, scale_locked=True, skew_locked=True, bkg=True)
+
+    poisson_countrate = bd.poissonify(theta)
+    delta = times[1] - times[0]
+    poisson_counts = poisson_countrate*delta
+
+    bm = burstmodel.BurstModel(times, poisson_counts)
+
+    print("First test: Does emcee run at all?")
+    bd = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp])
+    initial_theta = [0.05, 8, 0.6, 12, -5, 1.5, 4]
+    sampler = bm.mcmc(bd, initial_theta, nwalker=50, niter=50, burnin=50, scale_locked=True, skew_locked=True,
+                      log=True, bkg=True, plot=True, plotname="parclass_burstmodel_test1")
+
+
+    ### Do one without skew being the same:
+    initial_theta = [0.05, 8, 2, 0.6, 12, 1, -5, 4]
+    sampler = bm.mcmc(bd, initial_theta, nwalker=50, niter=50, burnin=50, scale_locked=True, skew_locked=False,
+                      log=True, bkg=True, plot=True, plotname="parclass_burstmodel_test2")
+
+
+    ### Do one without skew or scale being the same:
+    initial_theta = [0.05, -6, 8, 2, 0.6, -4, 12, 1, 4]
+    sampler = bm.mcmc(bd, initial_theta, nwalker=50, niter=50, burnin=50, scale_locked=False, skew_locked=False,
+                      log=True, bkg=True, plot=True, plotname="parclass_burstmodel_test3")
+
+
+    ### Test posterior maximum finding methods:
+    quants, postmax = bm.find_postmax(sampler)
+
+    for l,p,u in zip(quants["lower ci"], postmax, quants["upper ci"]):
+        print("lower quantile: \t" + str(l) + " \t, postmax: \t" + str(p) + "\t, upper quantile: \t" + str(u))
+
+
+
+    return
+
+
+
+
+
 def main():
 
     if clargs.all:
@@ -487,6 +558,9 @@ def main():
         word_posterior_tests()
         return
 
+    if clargs.model_switch:
+        burstmodel_tests(clargs.long_run)
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Various tests for the classes defined in parameters.py, word.py and burstmodel.py")
@@ -502,7 +576,13 @@ if __name__ == "__main__":
     parser.add_argument("--post", action="store_true", required=False, dest="post_switch",
                         help="Run tests on class WordPosterior with new parameter implementation")
 
+    parser.add_argument("-m", "--model", action="store_true", required=False, dest="model_switch",
+                        help="Run tests on class BurstModel with new parameter implementation")
+    parser.add_argument("-l", "--longrun", action="store_true", required=False, dest="long_run",
+                        help="When running BurstModel tests, do you want to perform a long MCMC run?")
+
     clargs = parser.parse_args()
+    print("clargs.longrun: " + str(clargs.long_run))
 
     main()
 

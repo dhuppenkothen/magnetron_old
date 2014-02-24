@@ -357,8 +357,7 @@ class BurstModel(object):
         # noinspection PyPep8Naming
         self.T = self.times[-1] - self.times[0]
         self.Delta = self.times[1] - self.times[0]
-        #self.burstdict = BurstDict(times, counts, wordlist)
-        #self.lpost = WordPosterior(times, counts, self.burstdict) 
+
         return
 
 
@@ -367,15 +366,6 @@ class BurstModel(object):
     def mcmc(self, model, initial_theta, nwalker=500, niter=200, burnin=100, scale_locked=False,
              skew_locked=False, log=True, bkg=True, plot=True, plotname = 'test'):
 
-#            if scale_locked and not skew_locked:
-#                #print('I am in scale_locked only!')
-#                lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
-#            elif scale_locked and skew_locked:
-#                #print('I am in scale_locked and skew_locked')
-#                lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
-#            else:
-#                lpost = WordPosterior(self.times, self.counts, burstmodel)
-#
 
         lpost = WordPosterior(self.times, self.counts, model, scale_locked=scale_locked, skew_locked=skew_locked,
                               log=log, bkg=bkg)
@@ -385,6 +375,7 @@ class BurstModel(object):
             nwalker = 2*len(initial_theta)
 
 
+        print("Finding initial walkers:")
         p0 = []
         for t in range(nwalker):
             lpost_theta_init = -np.inf
@@ -397,6 +388,7 @@ class BurstModel(object):
                 counter =+ 1
             p0.append(p0_temp)
 
+        print("Done. Starting the sampling.")
         ### test code: run burnin with a few, long chains, then the actual sampler with the results
         ### from the burnin phase
 
@@ -413,18 +405,14 @@ class BurstModel(object):
 
         sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
         pos, prob, state = sampler.run_mcmc(p0, burnin)
+        print("Burned in. Now doing real run ...")
         sampler.reset()
         sampler.run_mcmc(pos, niter, rstate0 = state)
 
-
-
-
-        #sampler = emcee.EnsembleSampler(nwalker, len(initial_theta), lpost)
-        #pos, prob, state = sampler.run_mcmc(p0, burnin)
-        #sampler.reset()
-        #sampler.run_mcmc(pos, niter, rstate0 = state)
+        print("...sampling done. Am I plotting?")
 
         if plot:
+            print("Yes, I'm plotting! Stay tuned for awesome plots")
             if np.size(model.wordlist) == 0:
                 if log:
                     plotlabels = ["log(bkg)"]
@@ -442,13 +430,13 @@ class BurstModel(object):
                     par_scale = plotlabels[1]
                     par_skew = plotlabels[3]
 
-                    if skew_locked:
-                        plotlabels = np.delete(plotlabels, np.where(plotlabels == par_skew))
-                        plotlabels = np.append(plotlabels, par_skew)
-
                     if scale_locked:
-                        parnames = np.delete(plotlabels, np.where(plotlabels == par_scale))
+                        plotlabels = np.delete(plotlabels, np.where(plotlabels == par_scale)[0])
                         plotlabels = np.append(plotlabels, par_scale)
+
+                    if skew_locked:
+                        plotlabels = np.delete(plotlabels, np.where(plotlabels == par_skew)[0])
+                        plotlabels = np.append(plotlabels, par_skew)
 
                     if bkg:
                         if log:
@@ -456,16 +444,7 @@ class BurstModel(object):
                         else:
                             plotlabels = np.append(plotlabels, "bkg")
 
-
-
-#        if plot:
-#            if np.size(model.wordlist) == 0:
-#                plotlabels = ['log(bkg)']
-#            else:
-#                plotlabels = []
-#                for i,w in enumerate(model.wordlist):
-#                    plotlabels.extend([p + '_' + str(i) for p in w.parnames])
-#                plotlabels.append('log(bkg)')
+            print("plotlabels: " + str(plotlabels))
             self.plot_mcmc(sampler.flatchain[-5000:], plotname=plotname, plotlabels=plotlabels)
 
         print('Sampler autocorrelation length: ' + str(sampler.acor))
@@ -475,7 +454,7 @@ class BurstModel(object):
 
 
     @staticmethod
-    def find_postmax(sampler, nbins=100):
+    def find_postmax(sampler):
 
         ### first attempt: get maxima from marginalised posteriors
         flatchain = sampler.flatchain[-10000:]
@@ -488,14 +467,12 @@ class BurstModel(object):
 
         ### second attempt: find maximum posterior probability, return corresponding parameter vector
         postprob = sampler.flatlnprobability
-        #maxi,maxj = np.unravel_index(postprob.argmax(), postprob.shape)
-        #postmax = sampler.chain[maxi,maxj]
+
         maxi = postprob.argmax()
         postmax = sampler.flatchain[maxi]
 
         for i,p in enumerate(postmax):
             print('posterior maximum for parameter ' + str(i) + ': ' + str(p))
-
 
         return quants, postmax
 
@@ -513,8 +490,7 @@ class BurstModel(object):
 
             #print('shape sample: ' + str(np.shape(sample)))
 
-            figure = triangle.corner(sample, labels= [p for p in plotlabels], \
-                                     truths = np.zeros(np.shape(sample)[1]))
+            figure = triangle.corner(sample, labels= [p for p in plotlabels])
             figure.savefig(plotname + ".png")
             plt.close()
             return

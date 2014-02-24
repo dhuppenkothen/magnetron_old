@@ -8,9 +8,11 @@ from pylab import *
 #rc("text", usetex=True)
 
 import numpy as np
+import argparse
 
 import parameters
 import word
+import burstmodel
 
 def two_exp_parameter_tests():
     """
@@ -130,7 +132,7 @@ def word_tests():
     w = word.TwoExp(times)
     model_counts = w(theta)
 
-    fig = plt.figure()
+    plt.figure()
     plt.plot(times, model_counts)
     plt.xlabel("Time [s]", fontsize=18)
     plt.ylabel("Counts [cts/bin]", fontsize=18)
@@ -182,7 +184,7 @@ def word_tests():
 
     model_counts = w(theta)
 
-    fig = plt.figure()
+    plt.figure()
     plt.plot(times, model_counts)
     plt.axis([times[0], times[-1], 0, max(model_counts)+10])
     plt.xlabel("Time [s]", fontsize=18)
@@ -197,7 +199,7 @@ def word_tests():
 
     model_counts = w(theta)
 
-    fig = plt.figure()
+    plt.figure()
     plt.plot(times, model_counts)
     plt.axis([times[0], times[-1], 0, max(model_counts)+10])
 
@@ -213,7 +215,7 @@ def word_tests():
 
     model_counts = w(theta)
 
-    fig = plt.figure()
+    plt.figure()
     plt.plot(times, model_counts)
     plt.axis([times[0], times[-1], 0, max(model_counts)+10])
     plt.xlabel("Time [s]", fontsize=18)
@@ -228,7 +230,7 @@ def word_tests():
 
     model_counts = w(theta)
 
-    fig = plt.figure()
+    plt.figure()
     plt.plot(times, model_counts)
     plt.axis([times[0], times[-1], 0, max(model_counts)+10])
     plt.xlabel("Time [s]", fontsize=18)
@@ -245,7 +247,7 @@ def word_tests():
 
     model_counts = w(theta)
 
-    fig = plt.figure()
+    plt.figure()
     plt.plot(times, model_counts)
     plt.axis([times[0], times[-1], 0, max(model_counts)+10])
     plt.xlabel("Time [s]", fontsize=18)
@@ -258,14 +260,155 @@ def word_tests():
     return
 
 
-def main():
+def burstdict_tests():
+    """
+    Testing BurstDict class in burstmodel.py for the new parameter class
+    """
 
-    two_exp_parameter_tests()
-    word_tests()
+    times = np.arange(1000)/1000.0
+    counts = np.ones(len(times))*0.005
+
+    ### single word parameters
+    t0 = 0.1
+    log_scale = -4.0
+    log_skew = 2.0
+    log_amp = 3.0
+
+    log_bkg = 2.0
+
+    print("Testing background only ...")
+    bd = burstmodel.BurstDict(times, counts, [])
+
+    ## theta needs to be a parameter object:
+    theta = parameters.TwoExpCombined([log_bkg], 0, bkg=True, log=True)
+    model_counts = bd.model_means(theta)
+
+    plt.figure()
+    plt.plot(times, bd.countrate, lw=2, color='black', label="Simulated light curve")
+    plt.plot(times, model_counts, lw=2, color='red', label='Model light curve')
+    plt.axis([times[0], times[-1], 0, np.max([np.max(bd.countrate), np.max(model_counts)])+10])
+    plt.legend()
+    plt.xlabel("Time [s]", fontsize=18)
+    plt.ylabel("Count rate [cts/s]", fontsize=18)
+    plt.title(r"Background only, $\log{(bkg)} = 2$", fontsize=12)
+    plt.savefig("parclass_burstdict_test1.png", format="png")
+    plt.close()
+
+    print("... saved in parclass_burstdict_test1.png. \n")
+
+    print("One word model: ")
+    bd = burstmodel.BurstDict(times, counts, word.TwoExp)
+
+    ## theta needs to be a parameter object:
+    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, skew=log_skew, amp=log_amp, log=True)
+    model_counts = bd.model_means(theta)
+
+    plt.figure()
+    plt.plot(times, bd.countrate, lw=2, color='black', label="Simulated light curve")
+    plt.plot(times, model_counts, lw=2, color='red', label='Model light curve')
+    plt.axis([times[0], times[-1], 0, np.max([np.max(bd.countrate), np.max(model_counts)])+10])
+    plt.legend()
+    plt.xlabel("Time [s]", fontsize=18)
+    plt.ylabel("Count rate [cts/s]", fontsize=18)
+    plt.title(r"One word: $t_0 = 0.1$, $\log{(scale)} = -4$, $\log{(amp)} = 3$, $\log{(skew)} = 2$", fontsize=12)
+    plt.savefig("parclass_burstdict_test2.png", format="png")
+    plt.close()
+
+    print("... saved in parclass_burstdict_test2.png \n")
+
+    print("Two words next:")
+    bd = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp])
+
+    t0_2 = 0.5
+    log_amp_2 = 4.0
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_skew, log_scale, log_bkg], 2, log=True,
+                                      scale_locked=True, skew_locked=True, bkg=True)
+
+    model_counts = bd.model_means(theta)
+
+    plt.figure()
+    plt.plot(times, bd.countrate, lw=2, color='black', label="Simulated light curve")
+    plt.plot(times, model_counts, lw=2, color='red', label='Model light curve')
+    plt.axis([times[0], times[-1], 0, np.max([np.max(bd.countrate), np.max(model_counts)])+10])
+    plt.legend()
+    plt.xlabel("Time [s]", fontsize=18)
+    plt.ylabel("Count rate [cts/s]", fontsize=18)
+    plt.title(r"Two words + bkg: $t_0 = 0.1,0.5$, $\log{(scale)} = -4$, $\log{(amp)} = 3,4$, $\log{(skew)} = 2$,"
+              r"$log{(bkg)} = 2.0$", fontsize=12)
+    plt.savefig("parclass_burstdict_test3.png", format="png")
+    plt.close()
+
+    print("... saved in parclass_burstdict_test3.png. \n")
+
+    print("Testing method plot_model in class BurstDict ...")
+    bd.plot_model(theta, plotname="parclass_burstdict_test4")
+
+    print("Adding dummy posterior maximum to the plot ...")
+
+    postmax = parameters.TwoExpCombined([t0+0.03, np.log(bd.countrate[0])+1.8, t0_2+0.05, np.log(bd.countrate[0])+1.5, log_skew-0.4, log_scale-1, log_bkg], 2, log=True,
+                                      scale_locked=True, skew_locked=True, bkg=True)
+
+    bd.plot_model(theta, postmax, "parclass_burstdict_test5")
+
+    print("Test poissonify function ...")
+
+    bd = burstmodel.BurstDict(times, counts*1000.0, [word.TwoExp, word.TwoExp])
+    theta = parameters.TwoExpCombined([t0, np.log(bd.countrate[0])+2, t0_2, np.log(bd.countrate[0])+1, log_skew, log_scale, log_bkg], 2, log=True,
+                                      scale_locked=True, skew_locked=True, bkg=True)
+
+    poisson_countrate = bd.poissonify(theta)
+
+    plt.figure()
+    plt.plot(times, bd.countrate, lw=2, color='black', label="Simulated light curve")
+    plt.plot(times, poisson_countrate, lw=1, color='red', label='Model light curve, poissonified')
+    plt.axis([times[0], times[-1], 0, np.max([np.max(bd.countrate), np.max(poisson_countrate)])+10])
+    plt.legend()
+    plt.xlabel("Time [s]", fontsize=18)
+    plt.ylabel("Count rate [cts/s]", fontsize=18)
+    plt.title(r"Two words + bkg, poissonified!", fontsize=12)
+    plt.savefig("parclass_burstdict_test6.png", format="png")
+    plt.close()
 
     return
 
+
+def main():
+
+    if clargs.all:
+        two_exp_parameter_tests()
+        word_tests()
+        burstdict_tests()
+        return
+
+    if clargs.par_switch:
+        two_exp_parameter_tests()
+        return
+
+    if clargs.word_switch:
+        word_tests()
+        return
+
+    if clargs.bd_switch:
+        burstdict_tests()
+        return
+
+
+
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(description="Various tests for the classes defined in parameters.py, word.py and burstmodel.py")
+
+    parser.add_argument("-p", "--parameters", action="store_true", required=False, dest="par_switch",
+                        help = "Run parameter class tests")
+    parser.add_argument("-w", "--word", action="store_true", required=False, dest="word_switch",
+                        help="Run word class tests")
+    parser.add_argument("-d", "--burstdict", action="store_true", required=False, dest="bd_switch",
+                        help="Run burstdict class tests")
+    parser.add_argument("-a", "--all", action="store_true", required=False, dest="all",
+                        help="Run all tests at once!")
+
+    clargs = parser.parse_args()
+
     main()
+
 

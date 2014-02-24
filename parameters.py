@@ -122,5 +122,12 @@ class TwoExpCombined(object):
                 p = parclass(t0=t0, scale=scale, amp=amp, skew=skew, log=log, bkg=None)
                 self.all.append(p)
 
+        elif ncomp == 0:
+            self.all = []
+            self.bkg = par[0]
+
+        else:
+            raise Exception("Something went horribly, horribly wrong. Try again!")
+
         return
 

@@ -49,6 +49,7 @@ from scipy.stats.mstats import mquantiles as quantiles
 
 ### local scripts
 import word
+import parameters
 
 saturation_countrate = 3.5e5
 
@@ -70,7 +71,7 @@ saturation_countrate = 3.5e5
 #
 def conversion(filename):
     f=open(filename, 'r')
-    output_lists=defaultdict(list)
+    output_lists = defaultdict(list)
     for line in f:
         if not line.startswith('#'):
              line=[value for value in line.split()]
@@ -85,6 +86,12 @@ def read_gbm_lightcurves(filename):
     counts = np.array([float(c) for c in data[1]])
 
     return times, counts
+
+
+def _poisson(x):
+
+    return np.random.poisson(x)
+
 
 
 
@@ -118,34 +125,35 @@ class BurstDict(object):
 
         ### create a model definition that includes the background!
         ### theta_all is flat and has non-log parameters
-        def event_rate(model_times, theta_exp):
+        def event_rate(model_times, theta):
 
-            #print("theta_exp in event_rate: "+ str(theta_exp))
-            ### last element must be background counts!
-            bkg = theta_exp[-1]
+            assert isinstance(theta, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
+                "input parameters not an object of type TwoExpParameters"
+
             if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
                 wordmodel = word.CombinedWords(model_times, self.wordlist)
                 #print("theta_exp[:-1]: " + str(theta_exp[:-1]))
                 #print("bkg: " + str(bkg))
-                y = wordmodel(theta_exp[:-1]) + bkg
+                y = wordmodel(theta)
             elif np.size(self.wordlist) == 1:
                 if word.depth(self.wordlist) > 1:
                     wordmodel = self.wordlist[0](model_times)
                 else:
                     wordmodel = self.wordlist(model_times)
-                y = wordmodel(theta_exp[:-1][0]) + bkg
+                y = wordmodel(theta)
             else:
-                y = np.zeros(len(model_times)) + bkg
+                y = np.ones(len(model_times))*theta.bkg
 
             return y
 
         return event_rate, wordmodel
 
-    ### theta_all is flat and takes log parameters to be consistent with
-    ### likelihood functions
-    def model_means(self, theta_all, nbins=10):
 
-        #print("theta in model_means: " + str(theta_all))
+    def model_means(self, theta, nbins=10):
+
+        assert isinstance(theta, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
+            "input parameters not an object of type TwoExpParameters"
+
         ## small time bin size delta
         delta = self.Delta/nbins
         ## number of small time bins
@@ -153,19 +161,7 @@ class BurstDict(object):
         ## make a high-resolution time array 
         times_small = np.arange(nsmall)*delta
 
-        if np.size(self.wordlist) >= 1:
-            # noinspection PyProtectedMember
-            # noinspection PyProtectedMember
-            theta_all_packed= self.wordobject._pack(theta_all)
-            # noinspection PyProtectedMember,PyProtectedMember
-            theta_exp = self.wordobject._exp(theta_all_packed)
-        else:
-            theta_exp = np.exp(theta_all)
-
-        #print("theta_exp in model_means: " + str(theta_exp))
-
-        ## compute high-resolution count rate
-        rate_small = self.wordmodel(times_small, theta_exp)
+        rate_small = self.wordmodel(times_small, theta)
 
         ## add together nbins neighbouring counts
         rate_map = rate_small.reshape(self.nbins_data, nbins)
@@ -173,16 +169,40 @@ class BurstDict(object):
 
         return rate_map_sum
 
-    def plot_model(self, theta_all, postmax = None, plotname='test'):
-        model_counts = self.model_means(theta_all, nbins=10)
-        if not postmax == None:
+
+    def poissonify(self, theta):
+
+        """
+        Make a Poisson light curve out of a model with parameters theta.
+        Takes the parameters, makes a light curve with model count rate,
+        then calculates the counts per bin x_i, and picks from a Poisson
+        distribution with the mean x_i in every bin.
+        """
+
+        model_countrate = self.model_means(theta)
+        model_counts = model_countrate*self.Delta
+        poisson = np.vectorize(_poisson)
+        return poisson(model_counts)/self.Delta
+
+
+
+    def plot_model(self, theta, postmax = None, plotname='test'):
+
+        assert isinstance(theta, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
+            "input parameters not an object of type TwoExpParameters"
+
+        model_counts = self.model_means(theta, nbins=10)
+        if not postmax is None:
+
+            assert isinstance(postmax, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
+                "input parameters not an object of type TwoExpParameters"
             model_counts_postmax = self.model_means(postmax, nbins=10)
 
 
         fig = plt.figure(figsize=(10,8))
         plt.plot(self.times, self.countrate, lw=1, color='black', label='input data')
         plt.plot(self.times, model_counts, lw=2, color='red', label='model light curve: posterior mean')
-        if not postmax == None:
+        if not postmax is None:
             plt.plot(self.times, model_counts_postmax, lw=2, color='blue', label='model light curve: posterior max')
         plt.legend()
         plt.xlabel('Time [s]', fontsize=18)
@@ -191,6 +211,10 @@ class BurstDict(object):
         plt.savefig(plotname + '_lc.png', format='png')
         plt.close()
         return
+
+################################################################
+################################################################
+################################################################
 
 class WordPosterior(object):
 

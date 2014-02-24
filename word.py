@@ -206,13 +206,15 @@ class CombinedWords(Word, object):
 
         return y
 
-
     def logprior(self, theta):
 
         lprior = 0.0
         for t, w in zip(theta.all, self.wordlist):
             lprior = lprior + w.logprior(t)
 
+        if hasattr(theta, "bkg"):
+            if theta.bkg < 0 or theta.bkg > saturation_countrate:
+                lprior = -inf
         return lprior
 
 

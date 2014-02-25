@@ -45,7 +45,8 @@ def two_exp_parameter_tests():
     log_skew_2 = -1.0
     log_amp_2 = 3.0
 
-    theta = parameters.TwoExpCombined([t0, log_scale, log_amp, log_skew, t0_2, log_scale_2, log_amp_2, log_skew_2], 2, log=True)
+    theta = parameters.TwoExpCombined([t0, log_scale, log_amp, log_skew, t0_2, log_scale_2, log_amp_2, log_skew_2],
+                                      2, log=True)
 
     print("Does TwoExpCombined store parameters correctly?")
     print("peak time t0 = 0.1 : \t ... \t " + str(theta.all[0].t0))
@@ -59,7 +60,8 @@ def two_exp_parameter_tests():
 
 
     ### test with scale_locked only:
-    theta = parameters.TwoExpCombined([t0, log_amp, log_skew, t0_2, log_amp_2, log_skew_2, log_scale], 2, scale_locked=True, log=True)
+    theta = parameters.TwoExpCombined([t0, log_amp, log_skew, t0_2, log_amp_2, log_skew_2, log_scale], 2,
+                                      scale_locked=True, log=True)
     print("Does TwoExpCombined store parameters correctly when scale_locked=True ?")
     print("peak time t0 = 0.1 : \t ... \t " + str(theta.all[0].t0))
     print("log(scale) log_scale = -4 : \t ... \t " + str(theta.all[0].log_scale))
@@ -71,7 +73,8 @@ def two_exp_parameter_tests():
     print("log(skew) log_skew_2 = -1 : \t ... \t " + str(theta.all[1].log_skew) + "\n")
 
     ### test with skew_locked only:
-    theta = parameters.TwoExpCombined([t0, log_scale, log_amp, t0_2, log_scale_2, log_amp_2, log_skew], 2, skew_locked=True, log=True)
+    theta = parameters.TwoExpCombined([t0, log_scale, log_amp, t0_2, log_scale_2, log_amp_2, log_skew], 2,
+                                      skew_locked=True, log=True)
     print("Does TwoExpCombined store parameters correctly when skew_locked=True ?")
     print("peak time t0 = 0.1 : \t ... \t " + str(theta.all[0].t0))
     print("log(scale) log_scale = -4 : \t ... \t " + str(theta.all[0].log_scale))
@@ -83,7 +86,8 @@ def two_exp_parameter_tests():
     print("log(skew) log_skew_2 = 2 : \t ... \t " + str(theta.all[1].log_skew) + "\n")
 
     ### test with both scale_locked and skew_locked:
-    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew], 2, scale_locked=True, skew_locked=True, log=True)
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew], 2,
+                                      scale_locked=True, skew_locked=True, log=True)
     print("Does TwoExpCombined store parameters correctly when scale_locked=True and skew_locked = True ?")
     print("peak time t0 = 0.1 : \t ... \t " + str(theta.all[0].t0))
     print("log(scale) log_scale = -4 : \t ... \t " + str(theta.all[0].log_scale))
@@ -96,7 +100,8 @@ def two_exp_parameter_tests():
 
     ### test with both scale_locked and skew_locked:
     log_bkg = 2.0
-    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg], 2, scale_locked=True, skew_locked=True, log=True, bkg = True)
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg], 2,
+                                      scale_locked=True, skew_locked=True, log=True, bkg = True)
     print("Does TwoExpCombined store parameters correctly when including a background parameter??")
     print("peak time t0 = 0.1 : \t ... \t " + str(theta.all[0].t0))
     print("log(scale) log_scale = -4 : \t ... \t " + str(theta.all[0].log_scale))
@@ -108,6 +113,44 @@ def two_exp_parameter_tests():
     print("log(skew) log_skew_2 = 2 : \t ... \t " + str(theta.all[1].log_skew) + "\n")
     print("log(background parameter): log_bkg = 2: \t ... \t " + str(theta.log_bkg))
     print("background parameter: bkg = 7.38: \t ... \t " + str(theta.bkg) + "\n")
+
+    print("Testing parameter extraction function of TwoExpParameters...")
+    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=log_amp, skew=log_skew, log=True)
+    parlist = theta._extract_params()
+    print("Parlist with all parameters: " + str(parlist))
+    parlist = theta._extract_params(scale_locked = True)
+    print("Parlist without scale (scale=-4): " + str(parlist))
+    parlist = theta._extract_params(skew_locked = True)
+    print("Parlist without skew (skew=2): " + str(parlist))
+    parlist = theta._extract_params(scale_locked = True, skew_locked=True)
+    print("Parlist without scale and without skew: " + str(parlist) + "\n")
+
+    print("Testing parameter extraction function of TwoExpCombined ...")
+    theta = parameters.TwoExpCombined([log_bkg], 0, log=True, bkg=True)
+    parlist = theta._extract_params(log=True)
+    print("Background parameter only: ")
+    print("Should be: " + str([log_bkg]) + ", method returns: " + str(parlist))
+    theta = parameters.TwoExpCombined([t0, log_scale, log_amp, log_skew, log_bkg], 1, log=True, bkg = True)
+    parlist = theta._extract_params(log=True)
+    parlist_true = [t0, log_scale, log_amp, log_skew, log_bkg]
+    print("One word, but using TwoExpCombined with background: ")
+    print("Should be: " + str(parlist_true) + ", method returns: " + str(parlist))
+    theta = parameters.TwoExpCombined([t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg], 2,
+                                      scale_locked=True, skew_locked=True, log=True, bkg=True)
+
+    parlist = theta._extract_params(log=True)
+    parlist_true = [t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg]
+    print("Two words, scale and skew the same: ")
+    print("Should be: " + str(parlist_true) + ", method returns: " + str(parlist) + "\n")
+
+    print("Testing whether add_word method works ...")
+    new_word = [0.7, 6]
+    theta._add_word(new_word)
+    parlist_true = [t0, log_amp, t0_2, log_amp_2, 0.7, 6, log_scale, log_skew, log_bkg]
+    parlist = theta._extract_params(log=True)
+    print("Three words, one added with _add_word: ")
+    print("Should be: " + str(parlist_true) + ", method returns: " + str(parlist))
+
 
     return
 

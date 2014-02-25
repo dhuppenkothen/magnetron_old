@@ -62,6 +62,29 @@ class TwoExpParameters(Parameters, object):
 
         return
 
+    def _extract_params(self, scale_locked=False, skew_locked=False, log=True):
+        parlist = [self.t0]
+        print("type parlist: " + str(type(parlist)))
+
+        if not scale_locked:
+            if log:
+                parlist.append(self.log_scale)
+            else:
+                parlist.append(self.scale)
+
+        if log:
+            parlist.append(self.log_amp)
+        else:
+            parlist.append(self.amp)
+
+        if not skew_locked:
+            if log:
+                parlist.append(self.log_skew)
+            else:
+                parlist.append(self.skew)
+        return parlist
+
+
 class TwoExpCombined(Parameters, object):
     '''
     par: list of parameters
@@ -70,26 +93,30 @@ class TwoExpCombined(Parameters, object):
 
     '''
 
-
     def __init__(self, par, ncomp, parclass=TwoExpParameters, scale_locked=False, skew_locked=False, log=True, bkg=False):
 
 
         self.all = []
         self.log = log
 
+        self.scale_locked = scale_locked
+        self.skew_locked = skew_locked
+        self.parclass = parclass
+
         npar = parclass.npar
         self.npar_all = np.sum([npar for p in xrange(ncomp)])
+        n_ind = 0
+        if bkg:
+            #print("I am in bkg")
+            if log:
+                self.log_bkg = par[-1]
+                self.bkg = np.exp(self.log_bkg)
+            else:
+                self.bkg = par[-1]
+                self.log_bkg = np.log(self.bkg)
+            n_ind -= 1
+
         if ncomp >=1:
-            n_ind = 0
-            if bkg:
-                #print("I am in bkg")
-                if log:
-                    self.log_bkg = par[-1]
-                    self.bkg = np.exp(self.log_bkg)
-                else:
-                    self.bkg = par[-1]
-                    self.log_bkg = np.log(self.bkg)
-                n_ind -= 1
 
             if skew_locked:
                 #print("I am in skew_locked")
@@ -132,3 +159,45 @@ class TwoExpCombined(Parameters, object):
 
         return
 
+    def _add_word(self, par):
+
+        t0 = par[0]
+        if self.scale_locked:
+            scale = self.scale
+            amp = par[1]
+        else:
+            scale = par[1]
+            amp = par[2]
+        if self.skew_locked:
+            skew = self.skew
+        else:
+            skew = par[-1]
+
+        new_word = self.parclass(t0=t0, scale=scale, amp=amp, skew=skew, log=self.log)
+        self.all.append(new_word)
+
+        return
+
+    def _extract_params(self, log=True):
+
+        parlist = []
+
+        if np.size(self.all) >= 1:
+            for a in self.all:
+                parlist.append(a._extract_params(log=log, scale_locked=self.scale_locked, skew_locked=self.skew_locked))
+
+            parlist = np.array(parlist).flatten()
+
+            if hasattr(self, "scale"):
+                parlist = np.append(parlist, self.scale)
+
+            if hasattr(self, "skew"):
+                parlist = np.append(parlist, self.skew)
+
+        if self.bkg:
+            if log:
+                parlist = np.append(parlist, self.log_bkg)
+            else:
+                parlist = np.append(parlist, self.bkg)
+
+        return parlist

@@ -453,8 +453,7 @@ class BurstModel(object):
         return sampler
 
 
-    @staticmethod
-    def find_postmax(sampler):
+    def find_postmax(self, sampler, ncomp, scale_locked=False, skew_locked=False, log=True, bkg=True):
 
         ### first attempt: get maxima from marginalised posteriors
         flatchain = sampler.flatchain[-10000:]
@@ -463,7 +462,7 @@ class BurstModel(object):
             flatchain = np.transpose(flatchain)
 
 
-        quants = BurstModel._quantiles(flatchain)
+        quants = self._quantiles(flatchain, ncomp, scale_locked=scale_locked, skew_locked=skew_locked, log=log, bkg=bkg)
 
         ### second attempt: find maximum posterior probability, return corresponding parameter vector
         postprob = sampler.flatlnprobability
@@ -471,8 +470,23 @@ class BurstModel(object):
         maxi = postprob.argmax()
         postmax = sampler.flatchain[maxi]
 
-        for i,p in enumerate(postmax):
+
+        if self.model is word.TwoExp:
+
+            postmax = parameters.TwoExpCombined(postmax, ncomp, parclass=parameters.TwoExpParameters,
+                                                        scale_locked=scale_locked, skew_locked=skew_locked,
+                                                        log=True, bkg=True)
+
+        else:
+            raise Exception("Model not implemented! Please add appropriate subclasses in parameters.py and word.py,"
+                                "then come back!")
+
+        parlist = postmax._extract_params(log=False)
+
+        for i,p in enumerate(parlist):
             print('posterior maximum for parameter ' + str(i) + ': ' + str(p))
+
+
 
         return quants, postmax
 
@@ -495,8 +509,7 @@ class BurstModel(object):
             plt.close()
             return
 
-    @staticmethod
-    def _quantiles(sample, interval=0.9):
+    def _quantiles(self, sample, ncomp, interval=0.9, scale_locked=False, skew_locked=False, log=True, bkg=True):
 
             all_intervals = [0.5-interval/2.0, 0.5, 0.5+interval/2.0]
 
@@ -510,8 +523,9 @@ class BurstModel(object):
             except IndexError:
                 #print("Single-dimension array")
                 q = quantiles(sample, all_intervals)
-                quants = {'lower ci':q[0], 'mean': q[1], 'upper ci':q[2], 'interval':interval}
-                return quants
+                ci_lower = q[0]
+                ci_median = q[1]
+                ci_upper = q[2]
 
             ### loop over the parameters ###
             for i,k in enumerate(sample):
@@ -524,14 +538,30 @@ class BurstModel(object):
                 cmean.append(q[1])
                 ci_upper.append(q[2])
 
-            quants = {'lower ci': ci_lower, 'mean':cmean, 'upper ci': ci_upper, 'interval':interval}
+            if self.model is word.TwoExp:
+
+                ci_lower = parameters.TwoExpCombined(ci_lower, ncomp, parclass=parameters.TwoExpParameters,
+                                                        scale_locked=scale_locked, skew_locked=skew_locked,
+                                                        log=True, bkg=True)
+                ci_median = parameters.TwoExpCombined(ci_median, ncomp, parclass=parameters.TwoExpParameters,
+                                                        scale_locked=scale_locked, skew_locked=skew_locked,
+                                                        log=True, bkg=True)
+
+                ci_upper = parameters.TwoExpCombined(ci_upper, ncomp, parclass=parameters.TwoExpParameters,
+                                                        scale_locked=scale_locked, skew_locked=skew_locked,
+                                                        log=True, bkg=True)
+
+            else:
+                raise Exception("Model not implemented! Please add appropriate subclasses in parameters.py and word.py,"
+                                "then come back!")
+            quants = [ci_lower, ci_median, ci_upper]
 
             return quants
 
 
 
 
-    def find_spikes(self, model = word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=200, namestr='test', \
+    def find_spikes(self, model=word.TwoExp, nmax = 10, nwalker=500, niter=100, burnin=200, namestr='test', \
                     scale_locked=False, skew_locked=False):
 
 
@@ -542,38 +572,40 @@ class BurstModel(object):
             all_quants, all_postmax= [], []
 
             theta_init = [np.log(np.mean(self.counts))]
-            burstmodel = BurstDict(self.times, self.counts, [])
+            bm = BurstDict(self.times, self.counts, [])
 
 
             
             #print('k = 0, theta_init : ' + str(burstmodel.wordobject._exp(theta_init)))
 
-            sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
-                                scale_locked=scale_locked, skew_locked=skew_locked, plot=True,
+            sampler = self.mcmc(bm, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
+                                scale_locked=scale_locked, skew_locked=skew_locked, plot=True, log=True, bkg=True,
                                 plotname=namestr + '_k0_posteriors')
 
             postmean = np.mean(sampler.flatchain, axis=0)
             posterr = np.std(sampler.flatchain, axis=0)
             quants, postmax = self.find_postmax(sampler)
 
+            postmean = parameters.TwoExpCombined(postmean, 0, parclass=parameters.TwoExpParameters,
+                                                    scale_locked=scale_locked, skew_locked=skew_locked,
+                                                    log=True, bkg=True)
 
-
-            burstmodel.plot_model(postmean, plotname = namestr + '_k' + str(0))
+            bm.plot_model(postmean, postmax=postmax, plotname=namestr + '_k' + str(0))
 
             #all_sampler.append(sampler.flatchain[-50000:])
             all_means.append(postmean)
             all_err.append(posterr)
             all_quants.append(quants)
             all_postmax.append(postmax)
-            all_burstdict.append(burstmodel)
+            all_burstdict.append(bm)
             all_theta_init.append(theta_init)
             print('posterior means, k = 0: ')
             print(' --- background parameter: ' + str(postmean[0]) + ' +/- ' +  str(np.exp(posterr[0])) + "\n")
 
-            all_results = {'sampler': sampler.flatchain[-10000:], 'means':postmean, 'err':posterr, 'quants':quants, 'max':postmax,
-                           'init':theta_init}
+            all_results = {'sampler': sampler, 'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax,
+                           'init': theta_init}
 
-            sampler_file= open(namestr + '_k0_posterior.dat','w')
+            sampler_file = open(namestr + '_k0_posterior.dat','w')
             pickle.dump(all_results, sampler_file)
             sampler_file.close()
 
@@ -584,19 +616,23 @@ class BurstModel(object):
                 old_postmeans = all_means[-1]
                 old_burstdict = all_burstdict[-1]
 
-                if scale_locked and not skew_locked and n>1:
-                    lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
-                    old_means = lpost._insert_scale(old_postmeans)
-                elif scale_locked and skew_locked and n > 1:
-                    lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
-                    old_means = lpost._insert_params(old_postmeans)
-                else:
-                    lpost = WordPosterior(self.times, self.counts, burstmodel)
-                    old_means = old_postmeans
+
+                lpost = WordPosterior(self.times, self.counts, bm, scale_locked=scale_locked,
+                                      skew_locked=skew_locked, log=log, bkg=bkg)
+#                if scale_locked and not skew_locked and n>1:
+#                    lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
+#                    old_means = lpost._insert_scale(old_postmeans)
+#                elif scale_locked and skew_locked and n > 1:
+#                    lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
+#                    old_means = lpost._insert_params(old_postmeans)
+#                else:
+#                    lpost = WordPosterior(self.times, self.counts, burstmodel)
+#                    old_means = old_postmeans
 
 
                 ## extract posterior means from last model run
-                model_counts = old_burstdict.model_means(old_means, nbins=10)
+
+                model_counts = old_burstdict.model_means(old_postmeans, nbins=10)
 
                 datamodel_ratio = self.counts/model_counts
                 max_diff = max(datamodel_ratio)
@@ -605,85 +641,31 @@ class BurstModel(object):
                 print('max_loc:' + str(max_loc))
 
                 wordlist = [model for m in range(n)]
-                burstmodel = BurstDict(self.times, self.counts, wordlist)
-
+                bm = BurstDict(self.times, self.counts, wordlist)
 
 
                 if model == word.TwoExp:
+
                     new_event_time = max_loc
-
-                    if scale_locked and n > 1:
-                        new_scale = old_postmeans[-2]
-                    else:
-                        new_scale = np.log(0.1*self.T)
-
-                    if skew_locked and n > 1:
-                        new_skew = old_postmeans[-3]
-                    else:
-                        new_skew = np.log(1.0)
-
-
-                    #new_scale = np.log(0.1*self.T)
+                    new_word = [new_event_time]
                     new_amp = np.log(max_diff)
-                    #new_skew = np.log(1.0)
-                    if scale_locked and not skew_locked:
-                        theta_new_init = [new_event_time, new_amp, new_skew]
+                    if not hasattr(old_postmeans, "scale"):
+                        new_scale = np.log(0.1*self.T)
+                        new_word.append(new_scale)
+                    new_word.append(new_amp)
+                    if not hasattr(old_postmeans, "skew"):
+                        new_skew = np.log(1.0)
+                        new_word.append(new_skew)
 
-                    elif scale_locked and skew_locked:
-                        theta_new_init = [new_event_time, new_amp]
-                    else:
-                        theta_new_init = [new_event_time, new_scale, new_amp, new_skew]
-                else:
-                    ### no other models defined!
-                    print('Your preferred model is not part of the code yet! Complain to Daniela and offer\
-                          her chocolate, and it soon might be!')
-                    theta_new_init = np.ones(len(old_postmeans))
-                 
-                theta_init = np.zeros(len(old_postmeans)+len(theta_new_init))
-                if scale_locked and not skew_locked:
-                    #print("Scale is locked, skew is not!")
-                    if n == 1:
-                        #print("n = 1")
-                        #print("theta_new_init: " + str(theta_new_init))
-                        theta_new_init.extend([new_scale, 0])
-                        theta_init = theta_new_init
-                        #print('theta_init: ' + str(theta_init))
-                    else:
-                        #print("n > 1")
-                        theta_init[:len(old_postmeans)-2] = old_postmeans[:-2]
-                        theta_init[len(old_postmeans-1):-2] = theta_new_init
-                        theta_init[-2] = old_postmeans[-2]
-                        #print('theta_init: ' + str(theta_init))
-                elif scale_locked and skew_locked:
-                    #print("Scale and skew are both locked")
-                    if n == 1:
-                        #print("n = 1")
-                        theta_new_init.extend([new_skew, new_scale, 0])
-                        theta_init = theta_new_init
-                        #print('theta_init: ' + str(theta_init))
-                    else:
-                        #print("n > 1")
-                        theta_init[:len(old_postmeans)-3] = old_postmeans[:-3]
-                        theta_init[len(old_postmeans)-3:-3] = theta_new_init
-                        theta_init[-3:-1] = old_postmeans[-3:-1]
-                        #print('theta_init: ' + str(theta_init))
-                else:
-                    #print("Neither scale nor skew are locked")
-                    theta_init[:len(old_postmeans)-1] = old_postmeans[:-1]
-                    theta_init[len(old_postmeans)-1:-1] = theta_new_init
-                    #print('theta_init: ' + str(theta_init))
+                    old_postmeans._add_word(new_word)
 
-                theta_init[-1] = np.log(np.mean(datamodel_ratio))
-                #print('theta_init: ' + str(theta_init))
+                    theta_init = old_postmeans._extract_params(log=True)
 
-                ## wiggle around parameters a bit
-                #random_shift = (np.random.rand(len(theta_init))-0.5)/100.0
-                #theta_init *= 1.0 + random_shift
                 theta_init = np.array(theta_init)
 
                 #print('n = ' + str(n) + ', theta_init = ' + str(theta_init))
-                sampler = self.mcmc(burstmodel, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
-                                    scale_locked=scale_locked, skew_locked=skew_locked, plot=True, \
+                sampler = self.mcmc(bm, theta_init, niter=niter, nwalker=nwalker, burnin=burnin,
+                                    scale_locked=scale_locked, skew_locked=skew_locked, plot=True, log=True, bkg=True,
                                     plotname=namestr + '_k' + str(n) + '_posteriors')
 
                 postmean = np.mean(sampler.flatchain, axis=0)
@@ -702,36 +684,41 @@ class BurstModel(object):
                     #    print(' --- parameter ' + str(i) + ': ' + str(np.exp(p)) + ' +/- ' +  str(np.exp(e)))
 
 
-                if scale_locked and not skew_locked:# and n>1:
-                    lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
-                    new_postmean = lpost._insert_scale(postmean)
-                    new_postmax = lpost._insert_scale(postmax)
-                elif scale_locked and skew_locked:# and n > 1:
-                    lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
-                    new_postmean = lpost._insert_params(postmean)
-                    new_postmax = lpost._insert_params(postmax)
+#                if scale_locked and not skew_locked:# and n>1:
+#                    lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
+#                    new_postmean = lpost._insert_scale(postmean)
+#                    new_postmax = lpost._insert_scale(postmax)
+#                elif scale_locked and skew_locked:# and n > 1:
+#                    lpost = WordPosteriorSameScaleSameSkew(self.times, self.counts, burstmodel)
+#                    new_postmean = lpost._insert_params(postmean)
+#                    new_postmax = lpost._insert_params(postmax)
+#                else:
+#                    lpost = WordPosterior(self.times, self.counts, burstmodel)
+#                    new_postmean = postmean
+#                    new_postmax = postmax
+
+
+                if model is word.TwoExp:
+                    postmean = parameters.TwoExpCombined(postmean, n, parclass=parameters.TwoExpParameters,
+                                                        scale_locked=scale_locked, skew_locked=skew_locked,
+                                                        log=True, bkg=True)
                 else:
-                    lpost = WordPosterior(self.times, self.counts, burstmodel)
-                    new_postmean = postmean
-                    new_postmax = postmax
+                    raise Exception("Model not known! At the moment, only word.TwoExp is implemented!")
 
-
-
-
-                burstmodel.plot_model(new_postmean, postmax = new_postmax, plotname = namestr + '_k' + str(n))
+                bm.plot_model(postmean, postmax=postmax, plotname=namestr + '_k' + str(n))
 
                 #all_sampler.append(sampler.flatchain[-50000:])
                 all_means.append(postmean)
                 all_err.append(posterr)
                 all_quants.append(quants)
                 all_postmax.append(postmax)
-                all_burstdict.append(burstmodel)
+                all_burstdict.append(bm)
                 all_theta_init.append(theta_init)
 
-                all_results = {'sampler': sampler.flatchain[-10000:], 'means':postmean, 'err':posterr, 'quants':quants, 'max':postmax,
+                all_results = {'sampler': sampler, 'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax,
                             'init':theta_init}
 
-                sampler_file= open(namestr + '_k' + str(n) + '_posterior.dat','w')
+                sampler_file= open(namestr + '_k' + str(n) + '_posterior.dat', 'w')
                 pickle.dump(all_results, sampler_file)
                 sampler_file.close()
 
@@ -746,36 +733,65 @@ class BurstModel(object):
                 ## append new posterior solution to old one 
     
     @staticmethod
-    def plot_quants(postmax, all_quants, model=word.TwoExp, namestr='test'):
+    def plot_quants(postmax, all_quants, model=word.TwoExp, namestr='test', log=True):
 
-        npar = model.npar
-        nspikes = len(postmax)-1
-        allmax = np.zeros((nspikes, nspikes*npar+1))
-        all_cl = np.zeros((nspikes, nspikes*npar+1))
-        all_cu = np.zeros((nspikes, nspikes*npar+1))
+        if model is word.TwoExp:
+            parnames = ["t0", "log_scale", "log_amp", "log_skew"]
 
-        for i,(p,q) in enumerate(zip(postmax[1:], all_quants[1:])):
-            allmax[i,:len(p)-1] = p[:-1]
-            all_cl[i,:len(p)-1] = q['lower ci'][:-1]
-            all_cu[i,:len(p)-1] = q['upper ci'][:-1]
+        max_words = len(postmax[-1].all)
 
-        for n in xrange(npar):
-            fig = plt.figure()
-            ## I AM HERE
+        for n in xrange(postmax[1].all[0].npar):
+
+            par_all = []
+            plt.figure()
             ymin, ymax = [], []
-            for s in xrange(nspikes):
-                #print(allmax[s:, n+s*npar])
-                ymin.append(np.min(all_cl[s:,n+s*npar]))
-                ymax.append(np.max(all_cu[s:,n+s*npar]))
-                plt.errorbar(np.arange(nspikes-s)+s+1.0+0.1*s, allmax[s:, n+s*npar],
-                             yerr=[allmax[s:, n+s*npar]- all_cl[s:,n+s*npar],all_cu[s:,n+s*npar]-allmax[s:, n+s*npar]],
-                             fmt='--o', lw=2, label="spike " + str(s), color=cm.hsv(s*30))
-            plt.axis([0.0, nspikes+5, min(ymin), max(ymax)])
+            for i,(p,ci,cu) in enumerate(zip(all_quants[:,0], all_quants[:,1], all_quants[:,2])):
+                par_temp = [a.__dict__[parnames[n]] for a in p.all]
+                lower_temp = [a.__dict__[parnames[0]] for a in ci.all]
+                upper_temp = [a.__dict__[parnames[0]] for a in cu.all]
+                plt.errorbar(np.arange(len(par_temp))+i, par_temp, yerr=[par_temp-lower_temp, upper_temp-par_temp],
+                             fmt="--o", lw=2, label="spike " + str(i), color=cm.hsv(i*30))
+                ymin.append(np.min(lower_temp))
+                ymax.append(np.max(upper_temp))
+            plt.axis([0, np.arange(max_words)+5, np.min(ymin), np.max(ymax)])
             plt.legend()
             plt.xlabel("Number of spikes in the model", fontsize=16)
-            plt.ylabel(model.parnames[n], fontsize="16")
-            plt.savefig(namestr + '_par' + str(n) + '.png', format='png')
+            plt.ylabel(postmax[1].all[0].parnames[n])
+            plt.savefig(namestr + "_" + str(parnames[n]) + ".png", format="png")
             plt.close()
+
+
+
+        ### I AM HERE!
+
+#        npar = model.npar
+#        nspikes = len(postmax)-1
+#        allmax = np.zeros((nspikes, nspikes*npar+1))
+#        all_cl = np.zeros((nspikes, nspikes*npar+1))
+#        all_cu = np.zeros((nspikes, nspikes*npar+1))
+
+#        for i,(p,q) in enumerate(zip(postmax[1:], all_quants[1:])):
+#            allmax[i,:len(p)-1] = p[:-1]
+#            all_cl[i,:len(p)-1] = q['lower ci'][:-1]
+#            all_cu[i,:len(p)-1] = q['upper ci'][:-1]
+
+#        for n in xrange(npar):
+#            fig = plt.figure()
+#            ## I AM HERE
+#            ymin, ymax = [], []
+#            for s in xrange(nspikes):
+#                #print(allmax[s:, n+s*npar])
+#                ymin.append(np.min(all_cl[s:,n+s*npar]))
+#                ymax.append(np.max(all_cu[s:,n+s*npar]))
+#                plt.errorbar(np.arange(nspikes-s)+s+1.0+0.1*s, allmax[s:, n+s*npar],
+#                             yerr=[allmax[s:, n+s*npar]- all_cl[s:,n+s*npar],all_cu[s:,n+s*npar]-allmax[s:, n+s*npar]],
+#                             fmt='--o', lw=2, label="spike " + str(s), color=cm.hsv(s*30))
+#            plt.axis([0.0, nspikes+5, min(ymin), max(ymax)])
+#            plt.legend()
+#            plt.xlabel("Number of spikes in the model", fontsize=16)
+#            plt.ylabel(model.parnames[n], fontsize="16")
+#            plt.savefig(namestr + '_par' + str(n) + '.png', format='png')
+#            plt.close()
 
         return
 

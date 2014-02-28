@@ -45,6 +45,7 @@ import scipy.special
 import emcee
 import triangle
 from scipy.stats.mstats import mquantiles as quantiles
+import time as tsys
 
 
 ### local scripts
@@ -103,6 +104,32 @@ def read_gbm_lightcurves(filename):
 #######################################################################
 
 
+###### QUICK AND DIRTY REBINNING OF LIGHT CURVES #####################
+#
+#
+# Does a quick and dirty rebin of light curves by integer numbers.
+#
+#
+#
+#
+#
+#
+#
+def rebin_lightcurve(times, counts, n=10):
+
+    nbins = int(len(times)/n)
+    dt = times[1] - times[0]
+    T = times[-1] - times[0] + dt
+    bin_dt = dt*n
+    bintimes = np.arange(nbins)*bin_dt + bin_dt/2.0
+
+    bincounts = [np.sum(counts[i*n:i*n+n]) for i in range(nbins)]
+    #print("len(bintimes): " + str(len(bintimes)))
+    #print("len(bincounts: " + str(len(bincounts)))
+    if len(bintimes) < len(bincounts):
+        bincounts = bincounts[:len(bintimes)]
+
+    return bintimes, bincounts
 
 
 class BurstDict(object):
@@ -112,6 +139,10 @@ class BurstDict(object):
         self.times = np.array(times)
         self.counts = np.array(counts)
         self.wordlist = wordlist
+        if type(wordlist) is list:
+            self.ncomp = len(wordlist)
+        else:
+            self.ncomp = 1
         self.wordmodel, self.wordobject = self._create_model()
         # noinspection PyPep8Naming
         self.Delta = self.times[1] - self.times[0]
@@ -120,12 +151,16 @@ class BurstDict(object):
 
         return
 
-    def _create_model(self,):
+    def _create_model(self):
+
+        # print(self.wordlist)
+        #print("type wordlist: " + str(type(self.wordlist)))
 
         if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
+            #print("I am here!")
             wordobject = word.CombinedWords(self.times, self.wordlist)
         elif np.size(self.wordlist) == 1:
-            if word.depth(self.wordlist) > 1:
+            if word.depth(self.wordlist) >= 1:
                 wordobject = self.wordlist[0](self.times)
             else:
                 wordobject = self.wordlist(self.times)
@@ -139,11 +174,15 @@ class BurstDict(object):
             assert isinstance(theta, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
                 "input parameters not an object of type TwoExpParameters"
 
-            if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
+            #print("theta.bkg: " + str(theta.bkg))
+#            if np.size(self.wordlist) > 1 or type(self.wordlist) is list:
+            #print("size wordlist: " + str(np.size(self.wordlist)))
+            if np.size(self.wordlist) >= 1 and isinstance(self.wordlist, list):
+
                 wordobject  = word.CombinedWords(model_times, self.wordlist)
                 y = wordobject(theta)
             elif np.size(self.wordlist) == 1:
-                if word.depth(self.wordlist) > 1:
+                if word.depth(self.wordlist) >=1:
                     wordobject = self.wordlist[0](model_times)
                 else:
                     wordobject = self.wordlist(model_times)
@@ -152,6 +191,7 @@ class BurstDict(object):
                 if bkg:
                     y = np.ones(len(model_times))*theta.bkg
 
+            #print("max(y): " + str(np.max(y)))
             return y
 
         return event_rate, wordobject
@@ -250,12 +290,14 @@ class WordPosterior(object):
         self.scale_locked = scale_locked
         self.skew_locked = skew_locked
 
+        print("model.wordlist: " + str(model.wordlist))
+
         if np.size(model.wordlist) > 1:
             self.ncomp = len(model.wordlist)
             self.wordmodel = model.wordlist[0]
         elif np.size(model.wordlist) == 1:
 
-            if word.depth(model.wordlist) > 1:
+            if word.depth(model.wordlist) >= 1:
                 self.wordmodel = model.wordlist[0]
             else:
                 self.wordmodel = model.wordlist
@@ -263,6 +305,7 @@ class WordPosterior(object):
         else:
             self.wordmodel = None
             self.ncomp = 0
+        print("self.wordmodel: " + str(self.wordmodel))
 
         return
 
@@ -291,9 +334,13 @@ class WordPosterior(object):
 
     def _log_likelihood(self, lambdas, data):
 
-
-        return -np.sum(lambdas*self.Delta) + np.sum(data*np.log(lambdas*self.Delta))\
+        #print("max lambdas: " + str(max(lambdas)))
+        #print("self.Delta: " + str(self.Delta))
+        #print("max data : " + str(np.max(data)))
+        llike = -np.sum(lambdas) + np.sum(data*np.log(lambdas))\
             -np.sum(scipy.special.gammaln(data + 1))
+
+        return llike
 
 
 
@@ -314,6 +361,7 @@ class WordPosterior(object):
         assert isinstance(theta, parameters.TwoExpParameters) or isinstance(theta, parameters.TwoExpCombined),\
             "input parameters not an object of type TwoExpParameters"
 
+        #print("theta in loglike: " + str(type(theta)))
         lambdas = self.model.model_means(theta)
 
         return self._log_likelihood(lambdas, self.countrate)
@@ -322,7 +370,7 @@ class WordPosterior(object):
     def logposterior(self, theta):
 
         if not isinstance(theta, parameters.Parameters):
-            if self.wordmodel is word.TwoExp or self.ncomp == 0:
+            if self.wordmodel is word.TwoExp or self.ncomp == 0 or self.ncomp == 1:
                 theta = parameters.TwoExpCombined(theta, self.ncomp, parclass=parameters.TwoExpParameters,
                                                   scale_locked=self.scale_locked, skew_locked=self.skew_locked,
                                                   log=self.log, bkg=self.bkg)
@@ -367,6 +415,8 @@ class BurstModel(object):
              skew_locked=False, log=True, bkg=True, plot=True, plotname = 'test'):
 
 
+        tstart = tsys.clock()
+
         lpost = WordPosterior(self.times, self.counts, model, scale_locked=scale_locked, skew_locked=skew_locked,
                               log=log, bkg=bkg)
 
@@ -384,8 +434,18 @@ class BurstModel(object):
                 if counter > 1000:
                     raise Exception("Can't find initial theta inside prior!")
                 p0_temp = initial_theta+np.random.rand(len(initial_theta))*1.0e-3
+                #print("model.ncomp: " + str(model.ncomp))
+                #print("model.wordlist: " + str(model.wordlist))
+                #p0_temp_obj = parameters.TwoExpCombined(p0_temp, model.ncomp, parclass=parameters.TwoExpParameters,
+                #                                    scale_locked=scale_locked, skew_locked=skew_locked,
+                #                                    log=True, bkg=True)
+
                 lpost_theta_init = lpost(p0_temp)
-                counter =+ 1
+                #print("p0_temp: " + str(p0_temp))
+                #print("lpost_init: " + str(lpost_theta_init))
+                counter += 1
+                #print("counter: " + str(counter))
+
             p0.append(p0_temp)
 
         print("Done. Starting the sampling.")
@@ -419,6 +479,7 @@ class BurstModel(object):
                 else:
                     plotlabels = ["bkg"]
             else:
+                print("lpost.wordmodel: " + str(lpost.wordmodel))
                 if lpost.wordmodel is word.TwoExp:
                     if log:
                         plotlabels = np.array([parameters.TwoExpParameters.parnames_log for n in range(lpost.ncomp)])
@@ -450,10 +511,14 @@ class BurstModel(object):
         print('Sampler autocorrelation length: ' + str(sampler.acor))
         print('Sampler mean acceptance fraction: ' + str(np.mean(sampler.acceptance_fraction)))
 
+        tend = tsys.clock()
+        print("Sampling time: " + str(tend - tstart))
+
         return sampler
 
 
-    def find_postmax(self, sampler, ncomp, scale_locked=False, skew_locked=False, log=True, bkg=True):
+    def find_postmax(self, sampler, ncomp, model=word.TwoExp, scale_locked=False, skew_locked=False,
+                     log=True, bkg=True):
 
         ### first attempt: get maxima from marginalised posteriors
         flatchain = sampler.flatchain[-10000:]
@@ -471,7 +536,7 @@ class BurstModel(object):
         postmax = sampler.flatchain[maxi]
 
 
-        if self.model is word.TwoExp:
+        if model is word.TwoExp:
 
             postmax = parameters.TwoExpCombined(postmax, ncomp, parclass=parameters.TwoExpParameters,
                                                         scale_locked=scale_locked, skew_locked=skew_locked,
@@ -509,12 +574,13 @@ class BurstModel(object):
             plt.close()
             return
 
-    def _quantiles(self, sample, ncomp, interval=0.9, scale_locked=False, skew_locked=False, log=True, bkg=True):
+    def _quantiles(self, sample, ncomp, model=word.TwoExp, interval=0.9, scale_locked=False,
+                   skew_locked=False, log=True, bkg=True):
 
             all_intervals = [0.5-interval/2.0, 0.5, 0.5+interval/2.0]
 
             ### empty lists for quantiles
-            ci_lower, cmean, ci_upper = [], [], []
+            ci_lower, ci_median, ci_upper = [], [], []
 
             try:
                 assert np.shape(sample)[1] > np.shape(sample)[0]
@@ -535,10 +601,10 @@ class BurstModel(object):
                 q = quantiles(k, all_intervals)
 
                 ci_lower.append(q[0])
-                cmean.append(q[1])
+                ci_median.append(q[1])
                 ci_upper.append(q[2])
 
-            if self.model is word.TwoExp:
+            if model is word.TwoExp:
 
                 ci_lower = parameters.TwoExpCombined(ci_lower, ncomp, parclass=parameters.TwoExpParameters,
                                                         scale_locked=scale_locked, skew_locked=skew_locked,
@@ -571,7 +637,7 @@ class BurstModel(object):
             all_theta_init = []
             all_quants, all_postmax= [], []
 
-            theta_init = [np.log(np.mean(self.counts))]
+            theta_init = [np.log(np.mean(self.counts)/self.Delta)]
             bm = BurstDict(self.times, self.counts, [])
 
 
@@ -584,7 +650,7 @@ class BurstModel(object):
 
             postmean = np.mean(sampler.flatchain, axis=0)
             posterr = np.std(sampler.flatchain, axis=0)
-            quants, postmax = self.find_postmax(sampler)
+            quants, postmax = self.find_postmax(sampler, 0)
 
             postmean = parameters.TwoExpCombined(postmean, 0, parclass=parameters.TwoExpParameters,
                                                     scale_locked=scale_locked, skew_locked=skew_locked,
@@ -600,10 +666,19 @@ class BurstModel(object):
             all_burstdict.append(bm)
             all_theta_init.append(theta_init)
             print('posterior means, k = 0: ')
-            print(' --- background parameter: ' + str(postmean[0]) + ' +/- ' +  str(np.exp(posterr[0])) + "\n")
+            print(' --- background parameter: ' + str(postmean.bkg) + ' +/- ' + str(np.exp(posterr[0])) + "\n")
 
-            all_results = {'sampler': sampler, 'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax,
-                           'init': theta_init}
+
+            print("type(sampler): " + str(type(sampler)))
+            all_results = {'sampler': sampler.flatchain[-10000:], "sampler_lnprob": sampler.flatlnprobability[-10000:],
+                           'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax, 'init': theta_init}
+
+            print("type(sampler): " + str(type(sampler)))
+            print("type(postmean): " + str(type(postmean)))
+            print("type(posterr): " + str(type(posterr)))
+            print("type(quants): " + str(type(quants)))
+            print("type(postmax): " + str(type(postmax)))
+            print("type(theta_init): " + str(type(theta_init)))
 
             sampler_file = open(namestr + '_k0_posterior.dat','w')
             pickle.dump(all_results, sampler_file)
@@ -618,7 +693,7 @@ class BurstModel(object):
 
 
                 lpost = WordPosterior(self.times, self.counts, bm, scale_locked=scale_locked,
-                                      skew_locked=skew_locked, log=log, bkg=bkg)
+                                      skew_locked=skew_locked, log=True, bkg=True)
 #                if scale_locked and not skew_locked and n>1:
 #                    lpost = WordPosteriorSameScale(self.times, self.counts, burstmodel)
 #                    old_means = lpost._insert_scale(old_postmeans)
@@ -633,9 +708,10 @@ class BurstModel(object):
                 ## extract posterior means from last model run
 
                 model_counts = old_burstdict.model_means(old_postmeans, nbins=10)
-
-                datamodel_ratio = self.counts/model_counts
-                max_diff = max(datamodel_ratio)
+                print("max(model_counts): " + str(np.max(model_counts)))
+                datamodel_ratio = (self.counts/self.Delta) - model_counts
+                max_diff = np.max(datamodel_ratio)
+                print("max_diff: " + str(max_diff))
                 max_ind = np.argmax(datamodel_ratio)
                 max_loc = self.times[max_ind]
                 print('max_loc:' + str(max_loc))
@@ -657,9 +733,11 @@ class BurstModel(object):
                         new_skew = np.log(1.0)
                         new_word.append(new_skew)
 
+                    print("new_word: " + str(new_word))
                     old_postmeans._add_word(new_word)
 
                     theta_init = old_postmeans._extract_params(log=True)
+                    print("theta_init: " + str(theta_init))
 
                 theta_init = np.array(theta_init)
 
@@ -670,7 +748,7 @@ class BurstModel(object):
 
                 postmean = np.mean(sampler.flatchain, axis=0)
                 posterr = np.std(sampler.flatchain, axis=0)
-                quants, postmax = self.find_postmax(sampler)
+                quants, postmax = self.find_postmax(sampler, n, scale_locked=scale_locked, skew_locked=skew_locked)
 
 
                 print('Posterior means, k = ' + str(n) + ': ')
@@ -715,8 +793,9 @@ class BurstModel(object):
                 all_burstdict.append(bm)
                 all_theta_init.append(theta_init)
 
-                all_results = {'sampler': sampler, 'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax,
-                            'init':theta_init}
+                all_results = {'sampler': sampler.flatchain[-10000:], "lnprob": sampler.flatlnprobability[-10000:],
+                               'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax,
+                                'init':theta_init}
 
                 sampler_file= open(namestr + '_k' + str(n) + '_posterior.dat', 'w')
                 pickle.dump(all_results, sampler_file)
@@ -745,15 +824,29 @@ class BurstModel(object):
             par_all = []
             plt.figure()
             ymin, ymax = [], []
-            for i,(p,ci,cu) in enumerate(zip(all_quants[:,0], all_quants[:,1], all_quants[:,2])):
-                par_temp = [a.__dict__[parnames[n]] for a in p.all]
-                lower_temp = [a.__dict__[parnames[0]] for a in ci.all]
-                upper_temp = [a.__dict__[parnames[0]] for a in cu.all]
-                plt.errorbar(np.arange(len(par_temp))+i, par_temp, yerr=[par_temp-lower_temp, upper_temp-par_temp],
+
+            par_temp = np.zeros((max_words, max_words))
+            lower_temp = np.zeros((max_words, max_words))
+            upper_temp = np.zeros((max_words, max_words))
+
+            print("len all_quants: " + str(len(all_quants[1:,0])))
+            for i,(ci,p,cu) in enumerate(zip(all_quants[1:,0], all_quants[1:,1], all_quants[1:,2])):
+                par_temp[:i+1,i] = np.array([a.__dict__[parnames[n]] for a in p.all])
+                print("par_temp:"  + str(par_temp))
+                lower_temp[:i+1,i] = np.array([a.__dict__[parnames[n]] for a in ci.all])
+                print("lower_temp: " + str(lower_temp))
+                upper_temp[:i+1,i] = np.array([a.__dict__[parnames[n]] for a in cu.all])
+                print("upper temp: " + str(upper_temp))
+
+            for i,(ci,p,cu) in enumerate(zip(lower_temp, par_temp, upper_temp)):
+                plt.errorbar(np.arange(max_words-i)+i, p[i:], yerr=[p[i:]-ci[i:], cu[i:]-p[i:]],
                              fmt="--o", lw=2, label="spike " + str(i), color=cm.hsv(i*30))
                 ymin.append(np.min(lower_temp))
                 ymax.append(np.max(upper_temp))
-            plt.axis([0, np.arange(max_words)+5, np.min(ymin), np.max(ymax)])
+            #print("ymin: " + str(np.min(ymin)))
+            #print("ymax: " + str(np.max(ymax)))
+            #print("max_words: " + str(max_words))
+            plt.axis([0, max_words+5, np.min(ymin), np.max(ymax)])
             plt.legend()
             plt.xlabel("Number of spikes in the model", fontsize=16)
             plt.ylabel(postmax[1].all[0].parnames[n])

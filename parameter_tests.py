@@ -544,30 +544,48 @@ def burstmodel_tests(long_run=True):
     bm = burstmodel.BurstModel(times, poisson_counts)
 
     print("First test: Does emcee run at all?")
-    bd = burstmodel.BurstDict(times, counts, [word.TwoExp, word.TwoExp])
+    bd = burstmodel.BurstDict(times, poisson_counts, [word.TwoExp, word.TwoExp])
     initial_theta = [0.05, 8, 0.6, 12, -5, 1.5, 4]
-    sampler = bm.mcmc(bd, initial_theta, nwalker=50, niter=50, burnin=50, scale_locked=True, skew_locked=True,
-                      log=True, bkg=True, plot=True, plotname="parclass_burstmodel_test1")
+    #sampler = bm.mcmc(bd, initial_theta, nwalker=50, niter=50, burnin=50, scale_locked=True, skew_locked=True,
+    #                  log=True, bkg=True, plot=True, plotname="parclass_burstmodel_test1")
 
 
     ### Do one without skew being the same:
     initial_theta = [0.05, 8, 2, 0.6, 12, 1, -5, 4]
-    sampler = bm.mcmc(bd, initial_theta, nwalker=50, niter=50, burnin=50, scale_locked=True, skew_locked=False,
-                      log=True, bkg=True, plot=True, plotname="parclass_burstmodel_test2")
+    #sampler = bm.mcmc(bd, initial_theta, nwalker=50, niter=50, burnin=50, scale_locked=True, skew_locked=False,
+    #                  log=True, bkg=True, plot=True, plotname="parclass_burstmodel_test2")
 
 
     ### Do one without skew or scale being the same:
     initial_theta = [0.05, -6, 8, 2, 0.6, -4, 12, 1, 4]
-    sampler = bm.mcmc(bd, initial_theta, nwalker=50, niter=50, burnin=50, scale_locked=False, skew_locked=False,
-                      log=True, bkg=True, plot=True, plotname="parclass_burstmodel_test3")
+    #sampler = bm.mcmc(bd, initial_theta, nwalker=50, niter=50, burnin=50, scale_locked=False, skew_locked=False,
+    #                  log=True, bkg=True, plot=True, plotname="parclass_burstmodel_test3")
 
+
+    #figure()
+    #plt.plot(times, poisson_counts, color="black", lw=1)
+    #plt.savefig("burstmodel_testdata.png", format="png")
+    #plt.close()
 
     ### Test posterior maximum finding methods:
-    quants, postmax = bm.find_postmax(sampler)
+    #quants, postmax = bm.find_postmax(sampler, 2, scale_locked=True, skew_locked=True)
 
-    for l,p,u in zip(quants["lower ci"], postmax, quants["upper ci"]):
-        print("lower quantile: \t" + str(l) + " \t, postmax: \t" + str(p) + "\t, upper quantile: \t" + str(u))
+    #print("quants: " + str(quants))
 
+    #for l,p,u in zip(quants[0].__dict__.keys(), postmax.__dict__.keys(), quants[2].__dict__.keys()):
+    #    print("lower quantile: \t" + str(quants[0].__dict__[l]) + " \t, postmax: \t" +
+    #          str(postmax.__dict__[p]) + "\t, upper quantile: \t" + str(quants[2].__dict__[u]))
+
+
+
+    all_means, all_err, all_postmax, all_quants, all_theta_init = bm.find_spikes(nmax=6, nwalker=500, niter=100,
+                                                                                 burnin=100, namestr="burstmodel_test",
+                                                                                 scale_locked=True, skew_locked=True)
+
+    print("all_quants: " + str(all_quants))
+    print("shape all_quants: " + str(np.shape(all_quants)))
+    all_quants = np.array(all_quants)
+    bm.plot_quants(all_postmax, all_quants, namestr="burstmodel_test")
 
 
     return

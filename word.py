@@ -85,7 +85,7 @@ class TwoExp(Word, object):
             lprior = 0.0
 
         if hasattr(theta, "bkg"):
-            if theta.bkg < 0 or theta.bkg > saturation.countrate:
+            if theta.bkg < 0 or theta.bkg > saturation_countrate:
                 lprior = -np.inf
 
         return lprior

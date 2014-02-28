@@ -64,7 +64,7 @@ class TwoExpParameters(Parameters, object):
 
     def _extract_params(self, scale_locked=False, skew_locked=False, log=True):
         parlist = [self.t0]
-        print("type parlist: " + str(type(parlist)))
+        #print("type parlist: " + str(type(parlist)))
 
         if not scale_locked:
             if log:
@@ -152,7 +152,8 @@ class TwoExpCombined(Parameters, object):
 
         elif ncomp == 0:
             self.all = []
-            self.bkg = par[0]
+            #if log:
+            #   self.bkg = par[0]
 
         else:
             raise Exception("Something went horribly, horribly wrong. Try again!")
@@ -162,16 +163,18 @@ class TwoExpCombined(Parameters, object):
     def _add_word(self, par):
 
         t0 = par[0]
-        if self.scale_locked:
+        if self.scale_locked and hasattr(self, "scale"):
             scale = self.scale
             amp = par[1]
         else:
             scale = par[1]
+            self.scale = scale
             amp = par[2]
-        if self.skew_locked:
+        if self.skew_locked and hasattr(self, "skew"):
             skew = self.skew
         else:
             skew = par[-1]
+            self.skew = skew
 
         new_word = self.parclass(t0=t0, scale=scale, amp=amp, skew=skew, log=self.log)
         self.all.append(new_word)

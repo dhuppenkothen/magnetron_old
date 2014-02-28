@@ -578,8 +578,8 @@ def burstmodel_tests(long_run=True):
 
 
 
-    all_means, all_err, all_postmax, all_quants, all_theta_init = bm.find_spikes(nmax=6, nwalker=500, niter=100,
-                                                                                 burnin=100, namestr="burstmodel_test",
+    all_means, all_err, all_postmax, all_quants, all_theta_init = bm.find_spikes(nmax=8, nwalker=500, niter=250,
+                                                                                 burnin=200, namestr="burstmodel_test",
                                                                                  scale_locked=True, skew_locked=True)
 
     print("all_quants: " + str(all_quants))

@@ -656,7 +656,13 @@ class BurstModel(object):
                                                     scale_locked=scale_locked, skew_locked=skew_locked,
                                                     log=True, bkg=True)
 
+
+            ### FIX PLOTTING FOR BKG ONLY CASE!
+
             bm.plot_model(postmean, postmax=postmax, plotname=namestr + '_k' + str(0))
+            #self.plot_results(sampler.flatchain[-10000:], postmax=postmax, nsamples=1000, scale_locked=scale_locked,
+            #                    skew_locked=skew_locked, bkg=True, log=True, namestr=namestr)
+
 
             #all_sampler.append(sampler.flatchain[-50000:])
             all_means.append(postmean)
@@ -783,7 +789,11 @@ class BurstModel(object):
                 else:
                     raise Exception("Model not known! At the moment, only word.TwoExp is implemented!")
 
-                bm.plot_model(postmean, postmax=postmax, plotname=namestr + '_k' + str(n))
+                #bm.plot_model(postmean, postmax=postmax, plotname=namestr + '_k' + str(n))
+
+                self.plot_results(sampler.flatchain[-10000:], postmax=postmax, nsamples=1000, scale_locked=scale_locked,
+                                skew_locked=skew_locked, bkg=True, log=True, namestr=namestr)
+
 
                 #all_sampler.append(sampler.flatchain[-50000:])
                 all_means.append(postmean)
@@ -832,11 +842,11 @@ class BurstModel(object):
             print("len all_quants: " + str(len(all_quants[1:,0])))
             for i,(ci,p,cu) in enumerate(zip(all_quants[1:,0], all_quants[1:,1], all_quants[1:,2])):
                 par_temp[:i+1,i] = np.array([a.__dict__[parnames[n]] for a in p.all])
-                print("par_temp:"  + str(par_temp))
+                #print("par_temp:"  + str(par_temp))
                 lower_temp[:i+1,i] = np.array([a.__dict__[parnames[n]] for a in ci.all])
-                print("lower_temp: " + str(lower_temp))
+                #print("lower_temp: " + str(lower_temp))
                 upper_temp[:i+1,i] = np.array([a.__dict__[parnames[n]] for a in cu.all])
-                print("upper temp: " + str(upper_temp))
+                #print("upper temp: " + str(upper_temp))
 
             for i,(ci,p,cu) in enumerate(zip(lower_temp, par_temp, upper_temp)):
                 plt.errorbar(np.arange(max_words-i)+i, p[i:], yerr=[p[i:]-ci[i:], cu[i:]-p[i:]],
@@ -853,40 +863,83 @@ class BurstModel(object):
             plt.savefig(namestr + "_" + str(parnames[n]) + ".png", format="png")
             plt.close()
 
+        return
 
 
-        ### I AM HERE!
+    def plot_results(self, samples, postmax = None, nsamples= 1000, scale_locked=False, skew_locked=False,
+                   model=word.TwoExp, bkg=True, log=True, namestr="test"):
 
-#        npar = model.npar
-#        nspikes = len(postmax)-1
-#        allmax = np.zeros((nspikes, nspikes*npar+1))
-#        all_cl = np.zeros((nspikes, nspikes*npar+1))
-#        all_cu = np.zeros((nspikes, nspikes*npar+1))
 
-#        for i,(p,q) in enumerate(zip(postmax[1:], all_quants[1:])):
-#            allmax[i,:len(p)-1] = p[:-1]
-#            all_cl[i,:len(p)-1] = q['lower ci'][:-1]
-#            all_cu[i,:len(p)-1] = q['upper ci'][:-1]
+        npar = model.npar
+        if bkg:
+            npar_add = 1
+        else:
+            npar_add = 0
+        if scale_locked:
+            npar -= 1
+            npar_add += 1
+        if skew_locked:
+            npar -= 1
+            npar_add += 1
 
-#        for n in xrange(npar):
-#            fig = plt.figure()
-#            ## I AM HERE
-#            ymin, ymax = [], []
-#            for s in xrange(nspikes):
-#                #print(allmax[s:, n+s*npar])
-#                ymin.append(np.min(all_cl[s:,n+s*npar]))
-#                ymax.append(np.max(all_cu[s:,n+s*npar]))
-#                plt.errorbar(np.arange(nspikes-s)+s+1.0+0.1*s, allmax[s:, n+s*npar],
-#                             yerr=[allmax[s:, n+s*npar]- all_cl[s:,n+s*npar],all_cu[s:,n+s*npar]-allmax[s:, n+s*npar]],
-#                             fmt='--o', lw=2, label="spike " + str(s), color=cm.hsv(s*30))
-#            plt.axis([0.0, nspikes+5, min(ymin), max(ymax)])
-#            plt.legend()
-#            plt.xlabel("Number of spikes in the model", fontsize=16)
-#            plt.ylabel(model.parnames[n], fontsize="16")
-#            plt.savefig(namestr + '_par' + str(n) + '.png', format='png')
-#            plt.close()
+        npar_samples = np.min(np.shape(samples))
+        npar_words = npar_samples - npar_add
+        nwords = npar_words/npar
+
+        bd = BurstDict(self.times, self.counts, [model for m in xrange(nwords)])
+
+        lpost = WordPosterior(self.times, self.counts, bd, scale_locked=scale_locked,
+                                         skew_locked=skew_locked, log=log, bkg=bkg)
+
+
+        len_samples = np.arange(np.max(np.shape(samples)))
+        sample_ind = np.random.choice(len_samples, size=nsamples, replace=False)
+
+        all_model_counts = []
+
+        for j,i in enumerate(sample_ind):
+            theta_temp = parameters.TwoExpCombined(samples[i], nwords, scale_locked=scale_locked, skew_locked=skew_locked,
+                                                   log=log, bkg=bkg)
+
+            model_counts = bd.model_means(theta_temp)
+            all_model_counts.append(model_counts)
+
+
+        if not postmax is None:
+            if not isinstance(postmax, (parameters.TwoExpCombined, parameters.TwoExpParameters)):
+                postmax = parameters.TwoExpCombined(postmax, scale_locked=scale_locked, skew_locked=skew_locked,
+                                                log=log, bkg=bkg)
+            postmax_counts = bd.model_means(postmax)
+
+        mean_counts = np.mean(all_model_counts, axis=0)
+        model_counts_cl, model_counts_median, model_counts_cu = [], [], []
+
+        all_model_counts = np.transpose(all_model_counts)
+
+        for a in all_model_counts:
+            q = quantiles(a, [0.05, 0.5, 0.95])
+            model_counts_cl.append(q[0])
+            model_counts_median.append(q[1])
+            model_counts_cu.append(q[2])
+
+
+        fig = plt.figure(figsize=(10,8))
+        plt.plot(self.times, self.counts/self.Delta, lw=1, color="black", label="input data")
+        plt.plot(self.times, mean_counts, lw=2, color="darkred", label="model light curve: mean of posterior sample")
+        plt.plot(self.times, model_counts_cl, lw=0.8, color="darkred")
+        plt.plot(self.times, model_counts_cu, lw=0.8, color="darkred")
+        plt.fill_between(self.times, model_counts_cl, model_counts_cu, color="red", alpha=0.3)
+        if not postmax is None:
+            plt.plot(self.times, postmax_counts, lw=2, color="blue", label="model light curve: posterior max")
+        plt.legend()
+        plt.xlabel("Time [s]", fontsize=18)
+        plt.ylabel("Count rate [counts/bin]", fontsize=18)
+        plt.title("An awesome model light curve!")
+        plt.savefig(namestr + "_k" + str(nwords) + "_lc.png", format="png")
+        plt.close()
 
         return
+
 
     def _exp_all(self, all_means, model=word.TwoExp):
         all_means_exp = []

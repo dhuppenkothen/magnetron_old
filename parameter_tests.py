@@ -525,10 +525,10 @@ def burstmodel_tests(long_run=True):
     t0_2 = 0.4
     log_scale = -4.0
     log_skew = 2.0
-    log_amp = 10.5
-    log_amp_2 = 12.5
+    log_amp = 10
+    log_amp_2 = 12
 
-    log_bkg = 9.2
+    log_bkg = 8.0
 
 
     theta_list = [t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg]

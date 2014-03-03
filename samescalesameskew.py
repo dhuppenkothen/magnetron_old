@@ -2,8 +2,7 @@
 import glob
 import argparse
 import burstmodel
-
-
+import numpy as np
 
 def main():
 

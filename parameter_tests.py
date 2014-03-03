@@ -525,10 +525,10 @@ def burstmodel_tests(long_run=True):
     t0_2 = 0.4
     log_scale = -4.0
     log_skew = 2.0
-    log_amp = 9.0
-    log_amp_2 = 11.0
+    log_amp = 10.5
+    log_amp_2 = 12.5
 
-    log_bkg = 5.0
+    log_bkg = 9.2
 
 
     theta_list = [t0, log_amp, t0_2, log_amp_2, log_scale, log_skew, log_bkg]
@@ -578,7 +578,7 @@ def burstmodel_tests(long_run=True):
 
 
 
-    all_means, all_err, all_postmax, all_quants, all_theta_init = bm.find_spikes(nmax=8, nwalker=500, niter=250,
+    all_means, all_err, all_postmax, all_quants, all_theta_init = bm.find_spikes(nmax=8, nwalker=250, niter=250,
                                                                                  burnin=200, namestr="burstmodel_test",
                                                                                  scale_locked=True, skew_locked=True)
 

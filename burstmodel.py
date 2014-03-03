@@ -123,7 +123,7 @@ def rebin_lightcurve(times, counts, n=10):
     bin_dt = dt*n
     bintimes = np.arange(nbins)*bin_dt + bin_dt/2.0
 
-    bincounts = [np.sum(counts[i*n:i*n+n]) for i in range(nbins)]
+    bincounts = np.array([np.sum(counts[i*n:i*n+n]) for i in range(nbins)])/n
     #print("len(bintimes): " + str(len(bintimes)))
     #print("len(bincounts: " + str(len(bincounts)))
     if len(bintimes) < len(bincounts):
@@ -824,6 +824,9 @@ class BurstModel(object):
     @staticmethod
     def plot_quants(postmax, all_quants, model=word.TwoExp, namestr='test', log=True):
 
+
+        all_quants = np.array(all_quants)
+
         if model is word.TwoExp:
             parnames = ["t0", "log_scale", "log_amp", "log_skew"]
 
@@ -867,7 +870,7 @@ class BurstModel(object):
 
 
     def plot_results(self, samples, postmax = None, nsamples= 1000, scale_locked=False, skew_locked=False,
-                   model=word.TwoExp, bkg=True, log=True, namestr="test"):
+                   model=word.TwoExp, bkg=True, log=True, namestr="test", bin = True, nbins=10):
 
 
         npar = model.npar
@@ -923,14 +926,41 @@ class BurstModel(object):
             model_counts_cu.append(q[2])
 
 
+        if bin:
+            plottimes, plotcounts = rebin_lightcurve(self.times, self.counts, n=nbins)
+            plotcounts =  plotcounts/self.Delta
+            plottimes, plot_model_counts_cl = rebin_lightcurve(self.times, model_counts_cl, n=nbins)
+            plottimes, plot_model_counts_median = rebin_lightcurve(self.times, model_counts_median, n=nbins)
+            plottimes, plot_model_counts_cu = rebin_lightcurve(self.times, model_counts_cu, n=nbins)
+            plottimes, plot_mean_counts = rebin_lightcurve(self.times, mean_counts, n=nbins)
+            if not postmax is None:
+                plottimes, plot_postmax_counts = rebin_lightcurve(self.times, postmax_counts)
+        else:
+            plottimes = self.times
+            plotcounts = self.counts/self.Delta
+            plot_model_counts_cl = model_counts_cl
+            plot_model_counts_median = model_counts_median
+            plot_model_counts_cu = model_counts_cu
+            plot_mean_counts = mean_counts
+            if not postmax is None:
+                plot_postmax_counts = postmax_counts
+
+
+        print("len plottimes: " + str(len(plottimes)))
+        print("len plotcounts: " + str(len(plotcounts)))
+        print("len plot_model_counts_cl: " + str(len(model_counts_cl)))
+        print("len plot_mean_counts: " + str(len(plot_mean_counts)))
+        print("len plot_postmax_counts: " + str(len(plot_postmax_counts)))
+
+
         fig = plt.figure(figsize=(10,8))
-        plt.plot(self.times, self.counts/self.Delta, lw=1, color="black", label="input data")
-        plt.plot(self.times, mean_counts, lw=2, color="darkred", label="model light curve: mean of posterior sample")
-        plt.plot(self.times, model_counts_cl, lw=0.8, color="darkred")
-        plt.plot(self.times, model_counts_cu, lw=0.8, color="darkred")
-        plt.fill_between(self.times, model_counts_cl, model_counts_cu, color="red", alpha=0.3)
+        plt.plot(plottimes, plotcounts, lw=1, color="black", label="input data")
+        plt.plot(plottimes, plot_mean_counts, lw=2, color="darkred", label="model light curve: mean of posterior sample")
+        plt.plot(plottimes, plot_model_counts_cl, lw=0.8, color="darkred")
+        plt.plot(plottimes, plot_model_counts_cu, lw=0.8, color="darkred")
+        plt.fill_between(plottimes, plot_model_counts_cl, plot_model_counts_cu, color="red", alpha=0.3)
         if not postmax is None:
-            plt.plot(self.times, postmax_counts, lw=2, color="blue", label="model light curve: posterior max")
+            plt.plot(plottimes, plot_postmax_counts, lw=2, color="blue", label="model light curve: posterior max")
         plt.legend()
         plt.xlabel("Time [s]", fontsize=18)
         plt.ylabel("Count rate [counts/bin]", fontsize=18)

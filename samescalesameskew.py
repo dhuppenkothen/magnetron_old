@@ -15,6 +15,7 @@ def main():
         fname = filecomponents[-1]
         froot = fname[:-9]
 
+        print("I am on file " + str(fname))
 
         if instrument == 'gbm':
             times, counts = burstmodel.read_gbm_lightcurves(f)
@@ -29,6 +30,7 @@ def main():
                            skew_locked=skew)
 
 
+        all_quants = np.array(all_quants)
         bm.plot_quants(all_postmax, all_quants, namestr=froot)
 
         #posterior_dict = {'samples':all_sampler, 'means':all_means, 'err':all_err, 'quants':all_quants,

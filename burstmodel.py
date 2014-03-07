@@ -852,14 +852,14 @@ class BurstModel(object):
                 #print("upper temp: " + str(upper_temp))
 
             for i,(ci,p,cu) in enumerate(zip(lower_temp, par_temp, upper_temp)):
-                plt.errorbar(np.arange(max_words-i)+i, p[i:], yerr=[p[i:]-ci[i:], cu[i:]-p[i:]],
+                plt.errorbar(np.arange(max_words-i)+i+1, p[i:], yerr=[p[i:]-ci[i:], cu[i:]-p[i:]],
                              fmt="--o", lw=2, label="spike " + str(i), color=cm.hsv(i*30))
-                ymin.append(np.min(lower_temp))
-                ymax.append(np.max(upper_temp))
-            #print("ymin: " + str(np.min(ymin)))
-            #print("ymax: " + str(np.max(ymax)))
+                ymin.append(np.min(lower_temp[:i+1,i]))
+                ymax.append(np.max(upper_temp[:i+1,i]))
+            print("ymin: " + str(np.min(ymin)))
+            print("ymax: " + str(np.max(ymax)))
             #print("max_words: " + str(max_words))
-            plt.axis([0, max_words+5, np.min(ymin), np.max(ymax)])
+            plt.axis([-0.5, max_words+5, np.min(ymin), np.max(ymax)])
             plt.legend()
             plt.xlabel("Number of spikes in the model", fontsize=16)
             plt.ylabel(postmax[1].all[0].parnames[n])

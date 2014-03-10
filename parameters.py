@@ -1,7 +1,22 @@
+### DEFINITION FOR PARAMETER OBJECTS #########
+#
+# This is so that I can define meaningful parameter objects
+# and make passing around and extracting individual parameters
+# easier and more transparent than passing them around in
+# meaningless lists.
+#
+#
+#
+
 import numpy as np
 
 
 class Parameters(object):
+
+    """ Superclass Parameters.
+    Nothing to see here.
+    Define subclasses for individual types of models instead.
+    """
 
     def __init__(self):
         return
@@ -10,31 +25,55 @@ class Parameters(object):
 
 class TwoExpParameters(Parameters, object):
 
+    """
+    class TwoExpParameters
+
+    This class defines parameters for the model describing two exponentials,
+    one rising and one falling, defined in class TwoExp in module word.
+
+    This model has five parameters, to be passed into __init__:
+    t0: peak time (=max count rate)
+    scale: the width of the exponentials
+    amp: the amplitude
+    skew: a skewness parameter setting the skewness of one exponential to another
+
+    additional parameters:
+    log: if True, scale, amp and skew (and bkg)are given as logarithmic quantities
+    bkg: if not None, then there's a constant background level to be added
+
+    """
 
     npar = 4
     parnames_log = ['t_0', 'log(scale)', 'log(amp)', 'log(skew)']
     parnames = ['t_0', 'scale', 'amp', 'skew']
     def __init__(self, t0 = None, scale = None, amp = None, skew = None, log=True, bkg=None):
 
+        ### set names of parameters, for plotting
         if log:
             self.parnames = TwoExpParameters.parnames_log
         else:
             self.parnames = TwoExpParameters.parnames
 
+        ### store parameters as attributes
         self.log = log
         self.t0 = t0
+
+        ### if parameters are logarithmic, save them in appropriate attributes
+        ### and exponentiate them
         if log:
             self.log_scale = scale
             self.log_amp = amp
             self.log_skew = skew
             self._exp()
 
+        ### else do reverse: save in attributes and take the logarithm
         else:
             self.scale = scale
             self.skew = skew
             self.amp = amp
             self._log()
 
+        ### if the background parameter is set, then store that, too
         if not bkg is None:
             self.bkg = bkg
 
@@ -42,6 +81,13 @@ class TwoExpParameters(Parameters, object):
 
 
     def _exp(self):
+
+        """
+        This method takes no arguments, but calls the log attributes of
+        the instance of class TwoExpParameters and exponentiates them.
+        The results are stored in the appropriate non-log attributes of the
+        relevant parameters.
+        """
 
         if not self.log_scale is None:
             self.scale = np.exp(self.log_scale)
@@ -53,6 +99,12 @@ class TwoExpParameters(Parameters, object):
 
     def _log(self):
 
+        """
+        This method takes the logarithm of non-log parameters
+        and stores them in the appropriate attributes.
+
+        """
+
         if not self.scale is None:
             self.log_scale = np.log(self.scale)
         if not self.amp is None:
@@ -63,6 +115,17 @@ class TwoExpParameters(Parameters, object):
         return
 
     def _extract_params(self, scale_locked=False, skew_locked=False, log=True):
+
+        """
+        Extract parameters from a parameter object of type TwoExpParameters and
+        store them in a list.
+
+        @param scale_locked: if True, then don't extract scale parameter; it will be take from elsewhere.
+        @param skew_locked: if True, don't extract skew parameter; it will be taken from elsewhere
+        @param log: if True, extract log versions of parameters, otherwise don't
+        @return: returns a list with the relevant parameters.
+        """
+
         parlist = [self.t0]
         #print("type parlist: " + str(type(parlist)))
 
@@ -86,16 +149,27 @@ class TwoExpParameters(Parameters, object):
 
 
 class TwoExpCombined(Parameters, object):
-    '''
-    par: list of parameters
-    ncomp: number of components
-
-
-    '''
 
     def __init__(self, par, ncomp, parclass=TwoExpParameters, scale_locked=False, skew_locked=False, log=True, bkg=False):
 
+        """
+        This object stores parameters for combinations of instances of the TwoExp model defined in word.
 
+
+        @param par: List with parameters. If scale_locked and/or skew_locked are True, define scale, skew and bkg
+                    at the end.
+        @param ncomp: number of model components
+        @param parclass: which class are the parameter objects of the individual components? Should be TwoExpParameters,
+                        otherwise it'll break.
+        @param scale_locked: if True, scale will be the same for all components; define at the end of par
+                            (before skew and bkg)
+        @param skew_locked: if True, skew will be the same for all components; define at the end of par
+                            (between scale and bkg)
+        @param log: if True, use log versions of parameters.
+        @param bkg: background level; define at the end of par (after scale and skew)
+        """
+
+        ### save some input quantities
         self.all = []
         self.log = log
 
@@ -103,8 +177,13 @@ class TwoExpCombined(Parameters, object):
         self.skew_locked = skew_locked
         self.parclass = parclass
 
+        ### number of parameters per component
         npar = parclass.npar
+        ### sum of all parameters
         self.npar_all = np.sum([npar for p in xrange(ncomp)])
+
+        ### the following code defines an index for scale and skew
+        ### such that they are extracted from the list in a correct way
         n_ind = 0
         if bkg:
             #print("I am in bkg")
@@ -116,23 +195,18 @@ class TwoExpCombined(Parameters, object):
                 self.log_bkg = np.log(self.bkg)
             n_ind -= 1
 
-        if ncomp >=1:
 
+        ### if there are more than one model component, and either skew or scale or both are locked,
+        ### then extract and save scale and skew in the right way
+        if ncomp >=1:
             if skew_locked:
-                #print("I am in skew_locked")
                 npar -= 1
-                #print('n_ind: ' + str(n_ind))
-                #print("par[-1+n_ind]: " + str(par[-1+n_ind]))
                 self.skew = par[-1+n_ind]
                 n_ind -= 1
             if scale_locked:
-                #print("I am in scale_locked")
                 npar -= 1
-                #print("scale index: " + str(-1+n_ind))
                 self.scale = par[-1+n_ind]
 
-
-            #print("npar: " + str(npar))
             for n in xrange(ncomp):
                 par_temp = par[n*npar:(n*npar)+npar]
                 t0 = par_temp[0]
@@ -147,9 +221,13 @@ class TwoExpCombined(Parameters, object):
                 else:
                     skew = par_temp[-1]
 
+                ### make an individual parameter object for each component
+                ### and distribute scale and skew in the right way
                 p = parclass(t0=t0, scale=scale, amp=amp, skew=skew, log=log, bkg=None)
                 self.all.append(p)
 
+        ### if there is no model component, there will only be a background
+        ### and the list of components will be empty.
         elif ncomp == 0:
             self.all = []
             #if log:
@@ -160,16 +238,29 @@ class TwoExpCombined(Parameters, object):
 
         return
 
+
     def _add_word(self, par):
 
+        """
+        Add a word to the parameter set.
+
+        @param par: The model parameters for the additional component.
+
+        """
+
+        ### first parameter is definitely peak time
         t0 = par[0]
+        ### if the scale is the same for all model components, extract from right attribute
         if self.scale_locked and hasattr(self, "scale"):
             scale = self.scale
             amp = par[1]
+        ### otherwise the scale had better be the second item of the input list
         else:
             scale = par[1]
             self.scale = scale
             amp = par[2]
+
+        ### same procedure for skew as for scale
         if self.skew_locked and hasattr(self, "skew"):
             skew = self.skew
         else:
@@ -182,6 +273,16 @@ class TwoExpCombined(Parameters, object):
         return
 
     def _extract_params(self, log=True):
+
+
+        """
+
+        Extract parameters from TwoExpCombined object, store in a list.
+
+        @param log: if True, extract log-versions of parameters.
+        @return: list of parameters for the combined model. If scale_locked and skew_locked
+        """
+
 
         parlist = []
 

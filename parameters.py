@@ -292,10 +292,10 @@ class TwoExpCombined(Parameters, object):
 
             parlist = np.array(parlist).flatten()
 
-            if hasattr(self, "scale"):
+            if self.scale_locked:
                 parlist = np.append(parlist, self.scale)
 
-            if hasattr(self, "skew"):
+            if self.skew_locked:
                 parlist = np.append(parlist, self.skew)
 
         if self.bkg:

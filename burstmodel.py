@@ -123,7 +123,13 @@ def rebin_lightcurve(times, counts, n=10):
     bin_dt = dt*n
     bintimes = np.arange(nbins)*bin_dt + bin_dt/2.0
 
-    bincounts = np.array([np.sum(counts[i*n:i*n+n]) for i in range(nbins)])/n
+    nbins_new = int(len(counts)/n)
+    counts_new = counts[:nbins_new*n]
+    bincounts = np.reshape(np.array(counts_new), (nbins_new, n))
+    bincounts = np.sum(bincounts, axis=1)
+    bincounts = bincounts/np.float(n)
+
+    #bincounts = np.array([np.sum(counts[i*n:i*n+n]) for i in range(nbins)])/np.float(n)
     #print("len(bintimes): " + str(len(bintimes)))
     #print("len(bincounts: " + str(len(bincounts)))
     if len(bintimes) < len(bincounts):
@@ -874,8 +880,9 @@ class BurstModel(object):
 
 
         npar = model.npar
+        npar_add = 0
         if bkg:
-            npar_add = 1
+            npar_add += 1
         else:
             npar_add = 0
         if scale_locked:

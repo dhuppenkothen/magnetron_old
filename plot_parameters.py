@@ -366,8 +366,10 @@ def plot_all_bursts(scale_locked = False, skew_locked = False):
 
     #print(filenames)
 
-    scale_postmax, scale_cl, scale_cu = [], [], []
-    skew_postmax, skew_cl, skew_cu = [], [], []
+    scale_postmax, scale_cl, scale_m, scale_cu = [], [], [], []
+    skew_postmax, skew_cl, skew_m, skew_cu = [], [], [], []
+    t0_postmax, t0_cl, t0_m, t0_cu = [], [], [], []
+    amp_postmax, amp_cl, amp_m, amp_cu = [], [], [], []
 
     for i in bids:
         for j in bsts:
@@ -392,13 +394,35 @@ def plot_all_bursts(scale_locked = False, skew_locked = False):
                 if scale_locked:
                     print("postmax attributes: " + str([p.__dict__ for p in postmax]))
                     scale_postmax.append([p.scale for p in postmax[1:]])
-                    scale_cl.append([p.scale for p in all_quants[1:,0]])
-                    scale_cu.append([p.scale for p in all_quants[1:,2]])
-
+                    scale_cl.append([p.scale for p in all_quants[1:, 0]])
+                    scale_m.append([p.scale for p in all_quants[1:, 1]])
+                    scale_cu.append([p.scale for p in all_quants[1:, 2]])
+                else:
+                    scale_postmax.append([[a.scale for a in p.all] for p in postmax[1:]])
+                    scale_cl.append([[a.scale for a in p.all] for p in all_quants[1:, 0]])
+                    scale_m.append([[a.scale for a in p.all] for p in all_quants[1:, 1]])
+                    scale_cu.append([[a.scale for a in p.all] for p in all_quants[1:, 2]])
                 if skew_locked:
                     skew_postmax.append([p.skew for p in postmax[1:]])
-                    skew_cl.append([p.skew for p in all_quants[1:,0]])
-                    skew_cu.append([p.skew for p in all_quants[1:,2]])
+                    skew_cl.append([p.skew for p in all_quants[1:, 0]])
+                    scale_m.append([p.skew for p in all_quants[1:, 1]])
+                    skew_cu.append([p.skew for p in all_quants[1:, 2]])
+                else:
+                    skew_postmax.append([[a.skew for a in p.all] for p in postmax[1:]])
+                    skew_cl.append([[a.skew for a in p.all] for p in all_quants[1:, 0]])
+                    skew_m.append([[a.skew for a in p.all] for p in all_quants[1:], 1])
+                    skew_cu.append([[a.skew for a in p.all] for p in all_quants[1:, 2]])
+
+                amp_postmax.append([[a.amp for a in p.all] for p in postmax[1:]])
+                amp_cl.append([[a.amp for a in p.all] for p in all_quants[1:, 0]])
+                amp_m.append([[a.amp for a in p.all] for p in all_quants[1:, 1]])
+                amp_cu.append([[a.amp for a in p.all] for p in all_quants[1:, 2]])
+
+                t0_postmax.append([[a.t0 for a in p.all] for p in postmax[1:]])
+                t0_cl.append([[a.t0 for a in p.all] for p in all_quants[1:, 0]])
+                t0_m.append([[a.t0 for a in p.all] for p in all_quants[1:, 1]])
+                t0_cu.append([[a.t0 for a in p.all] for p in all_quants[1:, 2]])
+
                 #allmax_scale, all_cl_scale, all_cu_scale, allmax_skew, all_cl_skew, all_cu_skew = \
                 #        burst.plot_quants(all_quants, scale_locked = scale_locked, skew_locked = skew_locked)
 
@@ -411,22 +435,30 @@ def plot_all_bursts(scale_locked = False, skew_locked = False):
                 #skew_cu.append(all_cu_skew)
                 #print("bid after plotting quantiles: " + str(bid))
                 #print("Plotting light curves:")
-                #burst.read_data(dir=data_dir + "/")
+                burst.read_data(dir=data_dir + "/")
                 #print("shape(samples): " + str(np.shape(samples)))
                 #print("bid after reading in data: " + str(bid))
                 #for (s,p) in zip(samples[1:], postmax[1:]):
-                #    burst.bm.plot_results(s, postmax =p, nsamples = nsamples, scale_locked=scale_locked,
-                #                     skew_locked=skew_locked, model = word.TwoExp, bkg=True, log=True,
+                #    burst.bm.plot_results(s, postmax =p, nsamples = nsamples, scale_locked=scale_locked, nbins=10,
+                #                     skew_locked=skew_locked, model = word.TwoExp, bkg=True, log=True, bin=True,
                 #                     namestr=i + "_" + j + "_")
                 print("And all done! Hoorah!")
                 print("bid at the end: " + str(bid))
-    all_limits = {'scale_max': scale_postmax, 'skew_max':skew_postmax, 'scale_cl':scale_cl, 'scale_cu':scale_cu,
-                  'skew_cl':skew_cl, 'skew_cu':skew_cu}
+    all_limits = {"t0_max":t0_postmax, 'scale_max': scale_postmax, "amp_max":amp_postmax, 'skew_max':skew_postmax,
+                  "t0_cl":t0_cl, "t0_m":t0_m, "t0_cu":t0_cu, 'scale_cl':scale_cl, "scale_m":scale_m,
+                  'scale_cu':scale_cu, "amp_cl":amp_cl, "amp_m":amp_m, "amp_cu":amp_cu ,
+                  'skew_cl':skew_cl, 'skew_m':skew_m, 'skew_cu':skew_cu}
     f = open('allbursts_postparas.dat', 'w')
     pickle.dump(all_limits, f)
     f.close()
 
     return
+
+
+
+
+
+
 
 def main():
     print('I am in main!')

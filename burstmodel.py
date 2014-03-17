@@ -800,7 +800,7 @@ class BurstModel(object):
                 self.plot_results(sampler.flatchain[-10000:], postmax=postmax, nsamples=1000, scale_locked=scale_locked,
                                 skew_locked=skew_locked, bkg=True, log=True, namestr=namestr)
 
-
+                self.plot_chains(sampler.flatchain, niter, namestr=namestr)
                 #all_sampler.append(sampler.flatchain[-50000:])
                 all_means.append(postmean)
                 all_err.append(posterr)
@@ -874,8 +874,8 @@ class BurstModel(object):
 
         return
 
-
-    def plot_chains(self, samples, niter, namestr="test"):
+    @staticmethod
+    def plot_chains(samples, niter, namestr="test"):
 
         """
         Plot the Markov chain results from the MCMC runs to file.
@@ -887,8 +887,12 @@ class BurstModel(object):
 
         ### if the list of samples has the parameters as dimension 0, and the actual chain as dimension 1,
         ### then transpose such that the dimensions are (samples, parameters)
-        if np.shape(samples)[0] < np.shape(samples[1]):
+        print("shape samples: " + str(np.shape(samples)))
+        print("shape samples 0: " + str(np.shape(samples)[0]))
+        print("shape samples 1: " + str(np.shape(samples)[1]))
+        if np.shape(samples)[0] < np.shape(samples)[1]:
             samples = np.transpose(samples)
+        print("shape samples: " + str(np.shape(samples)))
 
         ### number of parameters
         nparas = np.min(np.shape(samples))
@@ -899,6 +903,11 @@ class BurstModel(object):
         ### note: usually, this will be smaller than nwalker set in find_spikes or mcmc, because
         ### mcmc only stores the last 10000 iterations in emcee.EnsembleSampler.flatchain
         nwalker = int(nsamples/niter)
+        #print("nwalker: " + str(nwalker))
+        #print("niter: " + str(niter))
+        #print("nsamples: " + str(nsamples))
+        #print("nparas: " + str(nparas))
+        #print("shape samples: " + str(np.shape(samples)))
 
         ### compute mean parameter values
         meanq = np.mean(samples, axis=0)
@@ -907,14 +916,17 @@ class BurstModel(object):
         for i in xrange(nparas):
             plt.figure()
 
-            ### plot mean value for parameter i
-            plt.plot(np.ones(niter)*meanq[i], lw=2, color='red')
             ### plot all walkers in grey, to see whether the Markov chain converged
             for j in xrange(nwalker):
-                plt.plot(samples[j*niter+(j+1)*niter, i], color='black', alpha=0.8)
+                #print("j: " + str(j))
+                #print("minind: " + str(j*niter))
+                #print("maxind: " + str((j+1)*niter))
+                plt.plot(samples[j*niter:(j+1)*niter, i], color='black', alpha=0.8)
+            ### plot mean value for parameter i
+            plt.plot(np.ones(niter)*meanq[i], lw=2, color='red')
             plt.xlabel("Number of iteration", fontsize=18)
             plt.ylabel("Quantity", fontsize=18)
-            plt.savefig(namestr + "_p" + str(i) + ".eps", format='eps')
+            plt.savefig(namestr + "_p" + str(i) + ".png", format='png')
             plt.close()
 
         return

@@ -9,8 +9,12 @@ Welcome to Magnetron's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
+    introduction
+    download_and_install
+    basic_usage
+    api
 
 
 Indices and tables

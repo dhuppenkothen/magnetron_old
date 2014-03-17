@@ -121,27 +121,28 @@ For each model, the script saves a python pickle file under ``fileroot_k[n]_post
 * **means**: posterior means of the parameters, in a ``parameters.TwoExpCombined`` object
 * **max**: posterior maximum of the parameters, in a ``parameters.TwoExpCombined`` object
 * **sampler**: list of parameter sets, as given in ``s.flatchain``, where ``s`` is an object
-of type ``emcee.EnsembleSampler``.
+  of type ``emcee.EnsembleSampler``.
 * **lnprob**: log posterior probability of the parameter sets stored in **sampler**
 * **err**: standard deviation for each parameter as computed from the samples in **sampler**
 * **quants**: list with 0.05, 0.5 and 0.95 quantiles for each parameter.
 * **init**: initial parameter set used as a starting point for the MCMC run
 * (**niter**: number of iterations in MCMC run; this is a recent addition and not yet present
-in every data file)
+  in every data file)
+
 Three types of plots are saved:
 
 1. A triangle plot of the posterior parameter distributions, under ``fileroot_k[n]_posterior.png``
 2. the original time series with the model of the posterior maximum overplotted in blue, and models for the
- 0.05, 0.5 and 0.95 quantiles derived from 1000 randomly chosen parameter sets overplotted in red (bands),
- in ``fileroot_k[n]_lc.png``
+   0.05, 0.5 and 0.95 quantiles derived from 1000 randomly chosen parameter sets overplotted in red (bands),
+   in ``fileroot_k[n]_lc.png``
 3. time series of the actual Markov chains for each parameter in ``fileroot_k[n]_p[j]_chains.png``. ``j`` is 
-the jth parameter; I could put the actual parameter names, but I'm currently too lazy to do this for purely
-diagnostic plots (also, with a bit of knowledge of the code, it's easy to read off which is which)
+   the jth parameter; I could put the actual parameter names, but I'm currently too lazy to do this for purely
+   diagnostic plots (also, with a bit of knowledge of the code, it's easy to read off which is which)
 4. for all models considered, a plot of the posterior quantiles of each parameter versus the number of 
-components in the model, grouped by parameter type. Produces four plots for the ``word.TwoExp`` model
-currently used in all analyses: ``fileroot_t0.png`` for the peak positions of each component,
-``fileroot_log_scale.png`` for the logarithm of the rise times, ``fileroot_log_amp.png`` for the logarithm
-of the component amplitudes, and ``fileroot_log_skew.png`` for the logarithm of the skewness parameter. 
+   components in the model, grouped by parameter type. Produces four plots for the ``word.TwoExp`` model
+   currently used in all analyses: ``fileroot_t0.png`` for the peak positions of each component,
+   ``fileroot_log_scale.png`` for the logarithm of the rise times, ``fileroot_log_amp.png`` for the logarithm
+   of the component amplitudes, and ``fileroot_log_skew.png`` for the logarithm of the skewness parameter. 
 
 
 Below a few examples on how to run the script.
@@ -226,10 +227,10 @@ in the directory considered:
 
 * **t0_max**, **t0_cl**, **t0_m**, **t0_cu**: posterior maximum, 0.05, 0.5 and 0.95 quantiles for the peak time
 * **scale_max**, **scale_cl**, **scale_m**, **scale_cu**: posterior maximum, 0.05, 0.5 and 0.95 quantiles for 
-the log rise time
+  the log rise time
 * **amp_max**, **amp_cl**, **amp_m**, **amp_cu**: posterior maximum, 0.05, 0.5 and 0.95 quantiles for the 
-log amplitude
+  log amplitude
 * **skew_max**, **skew_cl**, **skew_m**, **skew_cu**: posterior maximum, 0.05, 0.5 and 0.95 quantiles for the 
-log skewness parameter  
+  log skewness parameter  
 
 The latter can be used for further ensemble analysis.

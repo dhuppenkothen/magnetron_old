@@ -121,7 +121,7 @@ def rebin_lightcurve(times, counts, n=10):
     dt = times[1] - times[0]
     T = times[-1] - times[0] + dt
     bin_dt = dt*n
-    bintimes = np.arange(nbins)*bin_dt + bin_dt/2.0
+    bintimes = np.arange(nbins)*bin_dt + bin_dt/2.0 + times[0]
 
     nbins_new = int(len(counts)/n)
     counts_new = counts[:nbins_new*n]
@@ -473,7 +473,7 @@ class BurstModel(object):
         pos, prob, state = sampler.run_mcmc(p0, burnin)
         print("Burned in. Now doing real run ...")
         sampler.reset()
-        sampler.run_mcmc(pos, niter, rstate0 = state)
+        sampler.run_mcmc(pos, niter, rstate0=state)
 
         print("...sampling done. Am I plotting?")
 
@@ -873,6 +873,52 @@ class BurstModel(object):
             plt.close()
 
         return
+
+
+    def plot_chains(self, samples, niter, namestr="test"):
+
+        """
+        Plot the Markov chain results from the MCMC runs to file.
+        samples: an emcee.flatchain list, i.e. a flattened list of
+        iterations and walkers.
+        niter: the number of iterations per walker used in emcee run.
+
+        """
+
+        ### if the list of samples has the parameters as dimension 0, and the actual chain as dimension 1,
+        ### then transpose such that the dimensions are (samples, parameters)
+        if np.shape(samples)[0] < np.shape(samples[1]):
+            samples = np.transpose(samples)
+
+        ### number of parameters
+        nparas = np.min(np.shape(samples))
+        ### number of sampled parameter sets
+        nsamples = np.max(np.shape(samples))
+
+        ### the number of walkers included in the sample
+        ### note: usually, this will be smaller than nwalker set in find_spikes or mcmc, because
+        ### mcmc only stores the last 10000 iterations in emcee.EnsembleSampler.flatchain
+        nwalker = int(nsamples/niter)
+
+        ### compute mean parameter values
+        meanq = np.mean(samples, axis=0)
+
+        ### loop over parameters
+        for i in xrange(nparas):
+            plt.figure()
+
+            ### plot mean value for parameter i
+            plt.plot(np.ones(niter)*meanq[i], lw=2, color='red')
+            ### plot all walkers in grey, to see whether the Markov chain converged
+            for j in xrange(nwalker):
+                plt.plot(samples[j*niter+(j+1)*niter, i], color='black', alpha=0.8)
+            plt.xlabel("Number of iteration", fontsize=18)
+            plt.ylabel("Quantity", fontsize=18)
+            plt.savefig(namestr + "_p" + str(i) + ".eps", format='eps')
+            plt.close()
+
+        return
+
 
 
     def plot_results(self, samples, postmax = None, nsamples= 1000, scale_locked=False, skew_locked=False,

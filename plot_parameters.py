@@ -438,10 +438,12 @@ def plot_all_bursts(scale_locked = False, skew_locked = False):
                 burst.read_data(dir=data_dir + "/")
                 #print("shape(samples): " + str(np.shape(samples)))
                 #print("bid after reading in data: " + str(bid))
-                #for (s,p) in zip(samples[1:], postmax[1:]):
-                #    burst.bm.plot_results(s, postmax =p, nsamples = nsamples, scale_locked=scale_locked, nbins=10,
-                #                     skew_locked=skew_locked, model = word.TwoExp, bkg=True, log=True, bin=True,
-                #                     namestr=i + "_" + j + "_")
+                for (s,p) in zip(samples[1:], postmax[1:]):
+                    plt.figure()
+
+                    burst.bm.plot_results(s, postmax =p, nsamples = nsamples, scale_locked=scale_locked, nbins=10,
+                                     skew_locked=skew_locked, model = word.TwoExp, bkg=True, log=True, bin=True,
+                                     namestr=i + "_" + j + "_")
                 print("And all done! Hoorah!")
                 print("bid at the end: " + str(bid))
     all_limits = {"t0_max":t0_postmax, 'scale_max': scale_postmax, "amp_max":amp_postmax, 'skew_max':skew_postmax,

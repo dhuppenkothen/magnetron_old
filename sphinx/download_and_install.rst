@@ -5,7 +5,8 @@ Downloading Magnetron
 
 You can find *Magnetron* as a git repository at its `bitbucket address <https://bitbucket.org/dhuppenkothen/transientdict/>`_.
 Use ::
-    git clone https://dhuppenkothen@bitbucket.org/dhuppenkothen/transientdict.git
+git clone https://dhuppenkothen@bitbucket.org/dhuppenkothen/transientdict.git
+
 to clone the repository to your local disc, or set up your ssh client.
 
 Installing Magnetron

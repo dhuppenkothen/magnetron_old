@@ -7,6 +7,143 @@ Usage of the scripts in *Magnetron* depends strongly on the use case. Here, we f
 usage of the code at the highest level. For details on the individual classes consult :doc:`api`.
 
 
+
+Defining a Model
+-----------------
+
+There are two classes in ``burstmodel.py`` that are used to define and work with models:
+
+* ``BurstDict`` defines the actual model. It can be invoked with an arbitrary number of model
+  model components like this::
+ 
+    import numpy as np
+    import burstmodel
+    import word
+
+    ## make some fake Poisson-distributed data
+    times = np.arange(1000)/1000.0
+    counts = np.ones(len(times))*20.0
+    poisson_counts = np.array([np.random.poisson(c) for c in counts])
+
+    ## now create a BurstDict instance with a single model shape of
+    ## type word.TwoExp:
+    bd = burstmodel.BurstDict(times, poisson_counts, word.TwoExp)
+
+
+  Defining a model with more than one components is simple: replace the :code:`word.TwoExp` 
+  call by a list of calls of :code:`word.TwoExp` (or another model defined in word, if such
+  a thing existed)::
+
+    ## use three model components
+    nwords = 3
+
+    ## define a list with the model components:
+    wordlist = [word.TwoExp for w in xrange(nwords)]
+
+    ## now define model:
+    bd = burstmodel.BurstDict(times, poisson_counts, wordlist)
+
+  Making a model light curve requires the appropriate :code:`parameters.TwoExpParameters` object::
+
+    import parameters
+
+    ## define parameters
+    t0 = 0.2
+    log_scale = -4.0
+    log_amp = 10.0
+    log_skew = 2.0
+
+    ## make TwoExpParameters object, set log=True for scale,skew and amp in log units:
+    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=log_amp, skew=log_skew, log=True)
+
+  or, for a model with several components, a :code:`parameters.TwoExpCombined` object::
+
+    nwords = 3
+    ## first component: [t0, log_scale, log_amp, log_skew]:
+    c1 = [0.1, -5.0, 10.0, 1.0]
+    ## second component, same form:
+    c2 = [0.3, -6.0, 12.0, 0.0]
+    ## third component, same form:
+    c3 = [0.7, -4.0, 8.0, -1.0]
+
+    ## whole parameter list: [c1, c2, c3, log(background)]
+    bkg = 3.0
+    theta_list = [c1, c2, c3, bkg]
+
+    ## make parameter object, each component has its own scale and skew,
+    ## thus scale_locked and skew_locked are False:
+    theta_combined = parameters.TwoExpCombined(theta_list, nwords, scale_locked=False, skew_locked=False,
+                                               log=True, bkg=True)
+
+
+  We can now make a model light curve with our parameter object (simple, 1-component case)::
+
+    ## nbins sets the number of points per time bin to average over
+    model_counts = bd.model_means(theta, nbins=10)
+
+  If we are trying to simulate, we can also make a realisation of a light curve by running the
+  model light curve through a Poisson distribution::
+
+    poisson_model_counts = bd.poissonify(theta)
+
+  or we can plot the model to file::
+
+    bd.plot_model(theta, plotname="myplot")
+
+  If you have a second parameter set that you want to overplot, e.g. the posterior maximum from
+  an MCMC run, you can do it like this::
+
+    bd.plot_model(theta, postmax=other_theta, plotname="myplot")
+
+  but you are advised to plot results from an MCMC run using the :code:`BurstModel`` method
+  :code:`plot_results`.
+
+
+* ``BurstModel`` is a high-level class that can run MCMC on a model and do stuff with the results.
+  Invoking it is simple::
+
+    import numpy as np
+    import burstmodel
+    import word
+    import parameters
+
+    ## make some Poisson data
+    times = np.arange(1000)/1000.0
+    counts = np.ones(len(times))*20.0
+    poisson_counts = np.array([np.random.poisson(c) for c in counts])
+
+    ## make an instance of BurstModel
+    bm = burstmodel.BurstModel(times, poisson_counts)
+
+  To run MCMC, define a :code:`BurstDict` instance as above, and then call
+  :code:`BurstModel.mcmc` on it::
+
+    nwords = 3
+    bd = burstmodel.BurstDict(times, poisson_counts, [word.TwoExp for w in xrange(nwords)])
+
+
+
+
+Defining a Posterior Probability Density
+-----------------------------------------
+
+
+
+Running MCMC on an Individual Model
+-----------------------------------
+
+
+
+Running MCMC for a Sequence of Models with Increasing Number of Model Components
+-----------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
 High-Level Scripts
 ===================
 

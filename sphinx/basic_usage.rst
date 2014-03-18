@@ -54,7 +54,8 @@ There are two classes in ``burstmodel.py`` that are used to define and work with
     log_skew = 2.0
 
     ## make TwoExpParameters object, set log=True for scale,skew and amp in log units:
-    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=log_amp, skew=log_skew, log=True)
+    theta = parameters.TwoExpParameters(t0=t0, scale=log_scale, amp=log_amp, 
+                                        skew=log_skew, log=True)
 
   or, for a model with several components, a :code:`parameters.TwoExpCombined` object::
 
@@ -66,15 +67,26 @@ There are two classes in ``burstmodel.py`` that are used to define and work with
     ## third component, same form:
     c3 = [0.7, -4.0, 8.0, -1.0]
 
-    ## whole parameter list: [c1, c2, c3, log(background)]
+    ## whole (flat) parameter list: [c1, c2, c3, log(background)]
     bkg = 3.0
-    theta_list = [c1, c2, c3, bkg]
+    theta_list = c1
+    theta_list.extend(c2)
+    theta_list.extend(c3)
+    theta_list.append(bkg)
 
     ## make parameter object, each component has its own scale and skew,
     ## thus scale_locked and skew_locked are False:
-    theta_combined = parameters.TwoExpCombined(theta_list, nwords, scale_locked=False, skew_locked=False,
-                                               log=True, bkg=True)
+    theta_combined = parameters.TwoExpCombined(theta_list, nwords, scale_locked=False, 
+                                               skew_locked=False, log=True, bkg=True)
 
+
+  To make a model of the **background only**, simply make an instance of :code:`BurstDict`
+  with an empty list, and similarly an instance of :code:`TwoExpCombined` with a background
+  parameter only::
+
+    bkg = 4.0
+    bd = burstmodel.BurstDict(times, poisson_counts, [])
+    theta = parameters.TwoExpCombined([bkg], 0, log=True, bkg=True)
 
   We can now make a model light curve with our parameter object (simple, 1-component case)::
 
@@ -115,22 +127,88 @@ There are two classes in ``burstmodel.py`` that are used to define and work with
     ## make an instance of BurstModel
     bm = burstmodel.BurstModel(times, poisson_counts)
 
-  To run MCMC, define a :code:`BurstDict` instance as above, and then call
-  :code:`BurstModel.mcmc` on it::
+
+  See sections below for more details on what to do once you've got a burst model defined.
+
+Defining a Posterior Probability Density Function
+--------------------------------------------------
+
+Sometimes, for applications outside the ones served by the classes and methods in 
+``burstmodel.py``, it may be convenient to just define the log-posterior probability
+density function, for use with other code.
+
+Before delving into the details of what one can do with :code:`BurstModel`, a short
+description of the relevant class in ``burstmodel.py``, :code:`WordPosterior`.
+This class takes the data as input, as well as an instance of :code:`BurstDict` that
+defines the model::
+    
+    import numpy as np
+    import word
+    import parameters
+    import burstmodel
+
+    ## make some fake data
+    times = np.array(1000)/1000.0
+    counts = np.ones(len(times)*20.0
+    poisson_counts = np.array([np.random.poisson(c) for c in counts])
+
+    ## define the BurstDict instance
+    nwords = 3
+    wordlist = [word.TwoExp for w in xrange(nwords)]
+    bd = burstmodel.BurstDict(times, poisson_counts, wordlist)
+
+    ## define the log posterior:
+    lpost = burstmodel.WordPosterior(times, poisson_counts, bd,
+                                     scale_locked=False, skew_locked=False,
+                                     log=True, bkg=True)
+
+
+One can now simply call :code:`lpost` on a list of parameters::
+
+    nwords = 3
+    ## first component: [t0, log_scale, log_amp, log_skew]:
+    c1 = [0.1, -5.0, 10.0, 1.0]
+    ## second component, same form:
+    c2 = [0.3, -6.0, 12.0, 0.0]
+    ## third component, same form:
+    c3 = [0.7, -4.0, 8.0, -1.0]
+
+    ## whole (flat) parameter list: [c1, c2, c3, log(background)]
+    bkg = 3.0
+    theta_list = [c1, c2, c3, bkg]
+    theta_list = np.array(theta_list).flatten()
+
+    ## call log-posterior:
+    log_post_prob = lpost(theta_list)
+
+Note that :code:`lpost` can take either a simple list of parameters as
+input, or an object of type :code:`TwoExpParameters` or :code:`TwoExpCombined`::
+
+    ## make parameter object, each component has its own scale and skew,
+    ## thus scale_locked and skew_locked are False:
+    theta_combined = parameters.TwoExpCombined(theta_list, nwords, scale_locked=False, 
+                                               skew_locked=False, log=True, bkg=True)
+
+    log_post_prob = lpost(theta_combined)
+
+It is also possible to call the prior and the log-likelihood (for Poisson data) independently, 
+again either with a list of parameters or an object as defined in ``parameters.py``::
+
+    log_prior_prob = lpost.logprior(theta_combined)
+    log_likelihood = lpost.loglike(theta_combined)
+
+
+    
+Running MCMC on an Individual Model
+-----------------------------------
+
+
+To run MCMC, define a :code:`BurstDict` instance as above, and then call
+:code:`BurstModel.mcmc` on it::
 
     nwords = 3
     bd = burstmodel.BurstDict(times, poisson_counts, [word.TwoExp for w in xrange(nwords)])
 
-
-
-
-Defining a Posterior Probability Density
------------------------------------------
-
-
-
-Running MCMC on an Individual Model
------------------------------------
 
 
 

@@ -23,10 +23,10 @@ To Do
 This I need to do, with no guarantee of completeness. Feel free to add to it.
 
 * create log files for running ``BurstModel.find_spikes``. Needs to save at the
-very least autocorrelation times, and overall parameters like the number of 
-ensemble walkers and iterations for the MCMC run, and whether the rise time and
-skewness parameter are fixed between model runs.
+  very least autocorrelation times, and overall parameters like the number of 
+  ensemble walkers and iterations for the MCMC run, and whether the rise time and
+  skewness parameter are fixed between model runs.
 * make new implementation in branch *parameterclass* compatible with the code
-the others wrote in *master*. 
+  the others wrote in *master*. 
 
 

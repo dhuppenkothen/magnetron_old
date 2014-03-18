@@ -203,11 +203,47 @@ Running MCMC on an Individual Model
 -----------------------------------
 
 
-To run MCMC, define a :code:`BurstDict` instance as above, and then call
-:code:`BurstModel.mcmc` on it::
+To run MCMC, define a :code:`BurstDict` instance as above, a list of initial
+parameters for the model, and then call :code:`BurstModel.mcmc` on it::
 
     nwords = 3
+    ## times and poisson_counts are lists with the data time stamps and counts/bin
     bd = burstmodel.BurstDict(times, poisson_counts, [word.TwoExp for w in xrange(nwords)])
+
+    ## first component: [t0, log_scale, log_amp, log_skew]:
+    c1 = [0.1, -5.0, 10.0, 1.0]
+    ## second component, same form:
+    c2 = [0.3, -6.0, 12.0, 0.0]
+    ## third component, same form:
+    c3 = [0.7, -4.0, 8.0, -1.0]
+
+    ## whole (flat) parameter list: [c1, c2, c3, log(background)]
+    bkg = 3.0
+    theta_list = [c1, c2, c3, bkg]
+    theta_list = np.array(theta_list).flatten()
+
+    ## define BurstModel object:
+    bm = burstmodel.BurstModel(times, poisson_counts)
+    
+    ## define number of ensemble walkers:
+    nwalker = 500
+    ## define number of burn-in iterations:
+    burnin = 200
+    ## define number of actual iterations after burn-in:
+    niter = 200
+
+    ## now run MCMC:
+    sampler = bm.mcmc(bd, theta_list, nwalker=nwalker, niter=niter, 
+                      burnin=burnin, scale_locked=False, skew_locked=False,
+                      log=True, bkg=True, plot=True, plotname="myplot")
+
+
+:code:`BurstModel.mcmc` returns an instance of type :code:`emcee.EnsembleSampler`.
+If :code:`plot=True`, a triangle-plot with the posterior probability distributions
+derived from the MCMC run will be saved to ``plotname.png``. It is possible, of course,
+to run :code:`BurstModel.plot_mcmc` on :code:`sampler.flatchain` manually afterwards, but
+the implementation in :code:`BurstModel.mcmc` takes care of meaningfully labelling the
+axes in the triangle plot. 
 
 
 

@@ -19,7 +19,7 @@ Requirements
 * `emcee <http://dan.iel.fm/emcee/current/>`_
 * `acor <https://github.com/dfm/acor>`_
 * `triangle <https://github.com/dfm/triangle.py>`_
-(* `dnest <https://github.com/eggplantbren/DNest3>`_ if you want to play around on branch ``dnest``.)
+* (`dnest <https://github.com/eggplantbren/DNest3>`_ if you want to play around on branch ``dnest``.)
 If it breaks because of a failed import, I've probably forgotten something.
 
 

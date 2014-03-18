@@ -246,16 +246,135 @@ the implementation in :code:`BurstModel.mcmc` takes care of meaningfully labelli
 axes in the triangle plot. 
 
 
+Making Sense of an MCMC Run
+----------------------------
+
+There are several things to do with the output of an MCMC run. 
+Most of these use :code:`sampler.flatchain`, and in the following, I will define ::
+    
+    ## times and poisson_counts are lists of time stamps and counts/bin
+    bm = burstmodel.BurstModel(times, poisson_counts)
+
+    ## sampler is an emcee.EnsembleSampler object as returned by BurstModel.mcmc
+    sample = sampler.flatchain
+
+
+The methods currently implemented in :code:`BurstModel` to make use of the output
+of an MCMC run are:
+
+* :code:`plot_mcmc`: takes sample, a name for the plot and a list of labels for the axes
+  and saves a triangle plot::
+
+    plotlabels=["t0", "log(scale)", "log(amplitude)", "log(skewness)"]
+
+    ## note that the number of labels for the plot must be the same as the
+    ## number of parameters in sample:
+    assert len(plotlabels) == np.min(np.shape(samples)), "Incorrect number of plot labels"
+
+    ## now we can create the triangle plot
+    bm.plot_mcmc(sample, "myplot", plotlabels)
+
+* :code:`find_postmax`: find the posterior maximum and 0.05, 0.5 and 0.95 quantiles. Unlike 
+  most of the other methods, this requires the actual :code:`emcee.EnsembleSampler` object, 
+  because it requires its attribute :code:`flatlnprobability`::
+
+    ## number of model components:
+    nwords = 3
+    quants, postmax = bm.find_postmax(sampler, nwords, scale_locked=False,
+                                      skew_locked=False, log=True, bkg=True)
+
+
+  Quantiles are computed by :code:`BurstModel._quantiles` (a direct call to that method allows
+  direct specification of the quantile range), and returned as a list of :code:`parameters.TwoExpParameters`
+  or :code:`parameters.TwoExpCombined` objects: :code:`[lower quantile, median, upper quantile]`.
+  Similarly, :code:`postmax` will be an object of the same parameter class as the quantiles.
+
+* :code:`plot_chains`: plot a time series of the Markov chains for each parameter in the model, for
+  diagnostic purposes (e.g. to see whether the chain has converged)::
+
+    bm.plot_chains(sample, niter, "mymodel")
+
+  One needs to know the number of iterations in the MCMC run, because otherwise splitting up
+  the flat sample by walkers doesn't work (although for a converged chain, this shouldn't matter).
+  The method produces a splurge of :code:`n` plots, called ``mymodel_p[i]_chains.png``, where ``i``
+  is the ith parameter. 
+
+* :code:`plot_results`: Plot the data as a count **rate** instead of counts/bin, overplot the
+  posterior maximum (if :code:`postmax` is not :code:`None`), as well as the 0.05 and 0.95 quantiles
+  and median for each time step in the list of time stamps, derived from :code:`nsamples` model light curves
+  from :code:`nsamples` randomly chosen parameter sets from :code:`sample`::
+
+    bm.plot_results(sample, postmax=theta_postmax, nsamples=1000, scale_locked=False,
+                    skew_locked=False, bkg=True, log=True, bin=True, nbins=10, 
+                    namestr="mymodel")
+
+  :code:`postmax` needs to be an object of a paramter class (for example as returned by :code:`find_postmax`).
+  If :code:`bin=True`, then the light curve will be binned to a new time resolution, which
+  must be an integer multiple of the original time resolution (the multiple is set in :code:`nbins`).
+  The method automatically deduces the number of model components, and saves the resulting plot in
+  a file ``mymodel_k[nwords]_lc.png``. 
 
 
 Running MCMC for a Sequence of Models with Increasing Number of Model Components
 -----------------------------------------------------------------------------------
 
+:code:`BurstModel` implements a method that takes a lot of the above, and runs it over
+an iteratively larger number of model components (starting with only background).
+This is easy and straightforward to run, but takes quite a long time, depending
+on the number of model parameters and the number of ensemble walkers/iterations. 
+
+The method is called like this::
+
+    ## define burst model, times and poisson_counts are lists with data time 
+    ## stamps and counts/bin, respectively
+    bm = burstmodel.BurstModel(times, poisson_counts)
+
+    ## maximum number of model components to consider:
+    nmax = 10
+    ## number of ensemble walkers:
+    nwalker = 500
+    ## number of burn-in iterations:
+    burnin=200
+    ## number of iterations after burn-in:
+    niter=200
+
+    ## run find_spikes to run a number of models
+    all_means, all_err, all_postmax, all_quants, all_theta_init
+        = bm.find_spikes(nmax=nmax, nwalker=nwalker, niter=niter,
+                         burnin=burnin, scale_locked=False, skew_locked=False,
+                         namestr="mymodel")
 
 
+For each model from :code:`0` to :code:`nmax`, it does an MCMC run, computes 
+posterior maxima and quantiles, and produces plots for the light curve with
+models, posterior distributions of parameters and Markov chains, as described
+above. 
 
+The method determines the initial parameter set for each model component 
+automatically: the initial parameters for the model components already present
+in the previous model (with one fewer component) is set to the posterior maximum
+of the previous MCMC run. the initial peak position of a new model component is located
+at the greatest discrepancy between the data and the posterior maximum model
+light curve of the previous model with one fewer model component. If the rise time
+(=scale) is the same for all model components, the initial guess for the new model
+will be based on the posterior maximum of the previous model. Otherwise it is set to
+``1/10`` of the duration of the time series. Similarly, if the skewness parameter is
+the same for all model components, the initial guess for the new model will be based on
+the posterior maximum of the old model. Otherwise, the skewness is set to 0. 
+The initial guess for the amplitude of the new component is directly derived from 
+the difference between the data and the posterior maximum model light curve of the
+previous model.
 
+:code:`find_spikes` returns a number of lists of parameter-type objects for each model
+used, returning (in order): posterior means, standard deviation from posterior means, 
+posterior maxima, posterior quantiles (0.05, 0.5, 0.95) and initial parameter guesses
+for each MCMC run. 
 
+:code:`find_spikes` also saves the MCMC samples, posterior maximum, associated log-probabilities,
+posterior means, standard deviations, quantiles and initial parameter choices for
+the MCMC run in a dictionary, which is written to disc in a python pickle file
+of name ``mymodel_k[i]_posterior.dat``, where ``i`` is the number of components
+in the model.
 
 
 High-Level Scripts

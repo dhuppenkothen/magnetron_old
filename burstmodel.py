@@ -810,7 +810,7 @@ class BurstModel(object):
                 all_theta_init.append(theta_init)
 
                 all_results = {'sampler': sampler.flatchain[-10000:], "lnprob": sampler.flatlnprobability[-10000:],
-                               'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax,
+                               'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax, 'niter': niter,
                                 'init':theta_init}
 
                 sampler_file= open(namestr + '_k' + str(n) + '_posterior.dat', 'w')
@@ -926,7 +926,7 @@ class BurstModel(object):
             plt.plot(np.ones(niter)*meanq[i], lw=2, color='red')
             plt.xlabel("Number of iteration", fontsize=18)
             plt.ylabel("Quantity", fontsize=18)
-            plt.savefig(namestr + "_p" + str(i) + ".png", format='png')
+            plt.savefig(namestr + "_p" + str(i) + "_chains.png", format='png')
             plt.close()
 
         return

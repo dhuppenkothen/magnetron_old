@@ -1,6 +1,7 @@
 import numpy as np
 import word
 import burstmodel
+import parameters
 
 from pylab import *
 rc("font", size=20, family="serif", serif="Computer Sans")
@@ -8,7 +9,7 @@ rc("text", usetex=True)
 
 import matplotlib.cm as cm
 import generaltools as gt
-
+import textwrap
 
 
 
@@ -22,15 +23,17 @@ def example_model():
     amp = 1.0
     skew = 5.0
 
-    word_counts = w.model(t0, scale, amp, skew)
+    p = parameters.TwoExpParameters(t0=t0, scale=scale, amp=amp, skew=skew, log=False, bkg=None)
+
+    word_counts = w.model(p)
 
     fig = plt.figure(figsize=(18,6))
 
-    subplot(1,3,1)
+    ax = fig.add_subplot(1,3,1)
     plot(times, word_counts, lw=2, color='black')
     xlabel(r"$\xi$")
     ylabel('Counts per bin in arbitrary units')
-    title(r'single word, $t=0.5$, $\tau=0.05$, $A=1$, $s=5$', fontsize=20)
+    ax.set_title(r'single word, $t=0.5$, $\tau=0.05$, $A=1$, $s=5$', fontsize=13)
 
 
     counts = np.ones(len(times))
@@ -39,23 +42,25 @@ def example_model():
     wordparams = [0.1, np.log(0.05), np.log(60.0), np.log(5.0), 0.4, np.log(0.01),
                   np.log(100.0), np.log(1.0), 0.7, np.log(0.04), np.log(50), -2, np.log(10.0)]
 
+    p = parameters.TwoExpCombined(wordparams, 3, scale_locked=False, skew_locked=False, log=True, bkg=True)
 
-    model_counts = b.model_means(wordparams)
+    model_counts = b.model_means(p)
 
-    subplot(1,3,2)
+    ax = fig.add_subplot(1,3,2)
 
     plot(times, model_counts, lw=2, color='black')
     xlabel(r"Time $t$ [s]")
     ylabel('Counts per bin in arbitrary units')
-    title(r'three words, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$, $A=60, 100, 50$, $s=5,1,0.1$', fontsize=13)
+    ax.set_title(r'three words, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$' + "\n" + r'$A=60, 100, 50$, $s=5,1,0.1$', fontsize=13)
 
     poisson_counts = np.array([np.random.poisson(c) for c in model_counts])
 
-    subplot(1,3,3)
+    ax = fig.add_subplot(1,3,3)
     plot(times, poisson_counts, lw=2, color='black')
     xlabel(r"Time $t$ [s]")
     ylabel('Counts per bin in arbitrary units')
-    title(r'three words, /w Poisson, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$, $A=60, 100, 50$, $s=5,1,0.1$', fontsize=13)
+    #title("\n".join(textwrap.wrap(r'three words, /w Poisson, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$, $A=60, 100, 50$, $s=5,1,0.1$', 60)))
+    ax.set_title(r'three words, /w Poisson, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$,' + "\n" + r'$A=60, 100, 50$, $s=5,1,0.1$', fontsize=13)
 
     savefig("example_words.png", format='png')
     close()
@@ -63,6 +68,36 @@ def example_model():
     return
 
 
+def plot_example_bursts():
+
+    filenames = ["090122218_+048.206_data.dat", "090122194_+058.836_data.dat", "090122173_+241.347_data.dat",
+                 "090122283_+131.840_data.dat", "090122283_+247.198_data.dat", "090122044_-000.043_data.dat"]
+
+    alltimes, allcounts, allbintimes, allbincountrate= [], [], [], []
+    for f in filenames:
+        times, counts = burstmodel.read_gbm_lightcurves(f)
+        countrate = np.array(counts)/(times[1] - times[0])
+        bintimes, bincountrate = burstmodel.rebin_lightcurve(times, countrate, 10)
+        alltimes.append(times)
+        allcounts.append(counts)
+        allbintimes.append(bintimes)
+        allbincountrate.append(bincountrate)
+
+    fig = figure(figsize=(30,18))
+    subplots_adjust(top=0.95, bottom=0.05, left=0.05, right=0.97, wspace=0.15, hspace=0.2)
+    for i in range(6):
+        subplot(2,3,i)
+        plot(allbintimes[i], allbincountrate[i]/10000.0, lw=2, color="black", linestyle='steps-mid')
+        axis([allbintimes[i][0], allbintimes[i][-1], 0.0, np.max(allbincountrate[i])/10000.0+2])
+        f = filenames[i].split("_")
+        xlabel("Time since trigger [s]")
+        ylabel(r"Count rate [$10^{4} \, \mathrm{cts}/\mathrm{s}$]")
+        title("ObsID " + f[0] + r", $t_{\mathrm{start}} = $" + str(float(f[1])))
+    savefig("example_bursts.png", format='png')
+    plt.close()
+
+
+    return
 
 def parameter_distributions(filename, namestr="allbursts"):
 
@@ -298,7 +333,7 @@ def playing_around_with_amplitudes(filename, nwords = 10, namestr="allbursts"):
 
 def main():
 
-    example_model()
+    plot_example_bursts()
 
     return
 

@@ -8,7 +8,7 @@ rc("font", size=20, family="serif", serif="Computer Sans")
 rc("text", usetex=True)
 
 import matplotlib.cm as cm
-import generaltools as gt
+import cPickle as pickle
 import textwrap
 
 
@@ -96,7 +96,6 @@ def plot_example_bursts():
     savefig("example_bursts.png", format='png')
     plt.close()
 
-
     return
 
 def parameter_distributions(filename, namestr="allbursts"):
@@ -120,8 +119,9 @@ def parameter_distributions(filename, namestr="allbursts"):
 
     """
 
-
-    allparas = gt.getpickle(filename)
+    pfile = open(filename, "r")
+    allparas = pickle.load(pfile)
+    pfile.close()
     scale_max = np.array(allparas["scale_max"])
     scale_cl = np.array(allparas["scale_cl"])
     scale_cu = np.array(allparas["scale_cu"])
@@ -242,7 +242,10 @@ def parameter_distributions(filename, namestr="allbursts"):
 
 def playing_around_with_amplitudes(filename, nwords = 10, namestr="allbursts"):
 
-    allparas = gt.getpickle(filename)
+    pfile = open(filename, "r")
+    allparas = pickle.load(pfile)
+    pfile.close()
+
     amp_max = np.array(allparas["amp_max"])
     t0_max = np.array(allparas["t0_max"])
 

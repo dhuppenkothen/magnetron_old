@@ -319,6 +319,7 @@ class WordPosterior(object):
     def logprior(self, theta):
 
         if not isinstance(theta, parameters.Parameters):
+            print("I am here!")
             if self.wordmodel is word.TwoExp or self.ncomp == 0:
                 theta = parameters.TwoExpCombined(theta, self.ncomp, parclass=parameters.TwoExpParameters,
                                                   scale_locked=self.scale_locked, skew_locked=self.skew_locked,
@@ -327,9 +328,10 @@ class WordPosterior(object):
             else:
                 raise Exception("Word class not known! Needs to be implemented!")
 
+        print("type(theta): " + str(type(theta)))
 
-        assert isinstance(theta, (parameters.TwoExpParameters, parameters.TwoExpCombined)),\
-            "input parameters not an object of type TwoExpParameters"
+        #assert isinstance(theta, (parameters.TwoExpParameters, parameters.TwoExpCombined)),\
+        #    "input parameters not an object of type TwoExpParameters"
 
         return self.model.wordobject.logprior(theta)
 
@@ -376,6 +378,7 @@ class WordPosterior(object):
     def logposterior(self, theta):
 
         if not isinstance(theta, parameters.Parameters):
+            print("I am here")
             if self.wordmodel is word.TwoExp or self.ncomp == 0 or self.ncomp == 1:
                 theta = parameters.TwoExpCombined(theta, self.ncomp, parclass=parameters.TwoExpParameters,
                                                   scale_locked=self.scale_locked, skew_locked=self.skew_locked,
@@ -383,6 +386,7 @@ class WordPosterior(object):
 
             else:
                 raise Exception("Word class not known! Needs to be implemented!")
+
 
         return self.logprior(theta) + self.loglike(theta)
 

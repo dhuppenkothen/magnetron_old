@@ -186,7 +186,7 @@ class TwoExpCombined(Parameters, object):
         ### such that they are extracted from the list in a correct way
         n_ind = 0
         if bkg:
-            #print("I am in bkg")
+            print("I am in bkg")
             if log:
                 self.log_bkg = par[-1]
                 self.bkg = np.exp(self.log_bkg)

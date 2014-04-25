@@ -175,10 +175,12 @@ def find_weights(p_samples):
 def run_burst(filename, dnest_dir = "./"):
 
     ### first run: set levels to 200
+    print("Rewriting DNest run file")
     rewrite_main(filename, dnest_dir)
     rewrite_options(nlevels=200, dnest_dir=dnest_dir)
     remake_model()
 
+    print("First run of DNest: Find number of levels")
     ## run DNest
     dnest_process = subprocess.Popen("./main")
 
@@ -186,20 +188,30 @@ def run_burst(filename, dnest_dir = "./"):
     endflag = False
     while endflag is False:
         tsys.sleep(30)
-        logx_samples, p_samples = run_burst()
+        logx_samples, p_samples = postprocess_new()
         endflag = find_weights(p_samples)
 
     print("endflag: " + str(endflag))
 
     dnest_process.kill()
-    dnest_data = np.loadtxt("sample.txt")
+    dnest_data = np.loadtxt("%ssample.txt" %dnest_dir)
     nlevels = len(dnest_data)
 
     rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
     remake_model()
 
     dnest_process = subprocess.Popen("./main")
-    dnest_process.wait()
+
+    endflag = False
+    while endflag is False:
+        tsys.sleep(30)
+        samples = np.loadtxt("%ssample.txt"%dnest_dir)
+        if len(samples) >= 1000+nlevels:
+            endflag = True
+        else:
+            endflag = False
+
+    dnest_process.kill()
 
     fsplit = filename.split("_")
     froot = "%s_%s" %(fsplit[0], fsplit[1])

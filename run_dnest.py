@@ -4,6 +4,8 @@ import subprocess
 import time as tsys
 import numpy as np
 import copy
+import glob
+import argparse
 
 import postprocess
 
@@ -72,25 +74,6 @@ def extract_nlevels(filename):
 
 
 
-def run_burst(filename, dnest_dir = "./"):
-
-    ### first run: set levels to 200
-    rewrite_main(filename, dnest_dir)
-    rewrite_options(filename, nlevels=200, dnest_dir=dnest_dir)
-    remake_model()
-
-    ## run DNest
-    dnest_process = subprocess.Popen("./main")
-
-
-    endflag = False
-    while endflag is False:
-        continue
-
-
-
-    return
-
 
 def postprocess_new(temperature=1., numResampleLogX=1, plot=False):
 
@@ -124,7 +107,6 @@ def postprocess_new(temperature=1., numResampleLogX=1, plot=False):
     for i in xrange(0, sample.shape[0]):
         while sandwich[i] < levels.shape[0]-1 and logl_samples[i] > logl_levels[sandwich[i] + 1]:
             sandwich[i] += 1
-
 
 
     for z in xrange(0, numResampleLogX):
@@ -183,9 +165,80 @@ def postprocess_new(temperature=1., numResampleLogX=1, plot=False):
 
 def find_weights(p_samples):
 
-    p_ind = np.where(p_samples > 0)[0]
-    if p_ind[0] > 10:
+    #p_ind = np.where(p_samples > 0)[0]
+    if np.max(p_samples[:10]) == 0.0:
         return True
     else:
         return False
 
+
+def run_burst(filename, dnest_dir = "./"):
+
+    ### first run: set levels to 200
+    rewrite_main(filename, dnest_dir)
+    rewrite_options(nlevels=200, dnest_dir=dnest_dir)
+    remake_model()
+
+    ## run DNest
+    dnest_process = subprocess.Popen("./main")
+
+
+    endflag = False
+    while endflag is False:
+        tsys.sleep(30)
+        logx_samples, p_samples = run_burst()
+        endflag = find_weights(p_samples)
+
+    print("endflag: " + str(endflag))
+
+    dnest_process.kill()
+    dnest_data = np.loadtxt("sample.txt")
+    nlevels = len(dnest_data)
+
+    rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
+    remake_model()
+
+    dnest_process = subprocess.Popen("./main")
+    dnest_process.wait()
+
+    fsplit = filename.split("_")
+    froot = "%s_%s" %(fsplit[0], fsplit[1])
+
+    shutil.move("sample.txt", "%s_sample.txt" %froot)
+    shutil.move("posterior_sample.txt", "%s_posterior_sample.txt" %froot)
+    shutil.move("levels.txt", "%s_levels.txt" %froot)
+    shutil.move("sample_info.txt", "%s_sample_info.txt" %froot)
+    shutil.move("weights.txt", "%s_weights.txt" %froot)
+
+    return
+
+
+def run_all_bursts(data_dir="./", dnest_dir="./"):
+
+    filenames = glob.glob("%s*_data.dat"%data_dir)
+
+    for f in filenames:
+        run_burst(f, dnest_dir=dnest_dir)
+
+    return
+
+
+def main():
+    run_all_bursts(data_dir, dnest_dir)
+    return
+
+
+if "__name__" == "__main__":
+    parser = argparse.ArgumentParser(description="Running DNest on a number of bursts")
+
+    parser.add_argument("-d", "--datadir", action="store", required=False, dest="data_dir",
+                        default="./", help="Specify directory with data files (default: current directory)")
+    parser.add_argument("-n", "--dnestdir", action="store", required=False, dest="dnest_dir",
+                        default="./", help="Specify directory with DNest model implementation "
+                                           "(default: current directory")
+
+    clargs = parser.parse_args()
+    data_dir = clargs.data_dir
+    dnest_dir = clargs.dnest_dir
+
+    main()

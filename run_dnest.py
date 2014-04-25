@@ -165,10 +165,15 @@ def postprocess_new(temperature=1., numResampleLogX=1, plot=False):
 
 def find_weights(p_samples):
 
-    #p_ind = np.where(p_samples > 0)[0]
-    if np.max(p_samples[:10]) == 0.0:
+    print("max(p_samples): %f" %np.max(p_samples[-10:]))
+
+    ### NOTE: logx_samples runs from 0 to -120, but I'm interested in the values of p_samples near the
+    ### smallest values of X, so I need to look at the end of the list
+    if np.max(p_samples[-10:]) < 1.0e-5:
+        print("Returning True")
         return True
     else:
+        print("Returning False")
         return False
 
 
@@ -190,6 +195,7 @@ def run_burst(filename, dnest_dir = "./"):
         tsys.sleep(30)
         logx_samples, p_samples = postprocess_new()
         endflag = find_weights(p_samples)
+        print("Endflag: " + str(endflag))
 
     print("endflag: " + str(endflag))
 
@@ -217,30 +223,37 @@ def run_burst(filename, dnest_dir = "./"):
     froot = "%s_%s" %(fsplit[0], fsplit[1])
 
     shutil.move("sample.txt", "%s_sample.txt" %froot)
-    shutil.move("posterior_sample.txt", "%s_posterior_sample.txt" %froot)
-    shutil.move("levels.txt", "%s_levels.txt" %froot)
-    shutil.move("sample_info.txt", "%s_sample_info.txt" %froot)
-    shutil.move("weights.txt", "%s_weights.txt" %froot)
+    try:
+        shutil.move("posterior_sample.txt", "%s_posterior_sample.txt" %froot)
+        shutil.move("levels.txt", "%s_levels.txt" %froot)
+        shutil.move("sample_info.txt", "%s_sample_info.txt" %froot)
+        shutil.move("weights.txt", "%s_weights.txt" %froot)
+    except IOError:
+        print("No file posterior_sample.txt")
 
     return
 
 
 def run_all_bursts(data_dir="./", dnest_dir="./"):
 
+    print("I am in run_all_bursts")
     filenames = glob.glob("%s*_data.dat"%data_dir)
+    #print(filenames)
 
     for f in filenames:
+        print("Running on burst %s" %f)
         run_burst(f, dnest_dir=dnest_dir)
 
     return
 
 
 def main():
+    print("I am in main")
     run_all_bursts(data_dir, dnest_dir)
     return
 
 
-if "__name__" == "__main__":
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Running DNest on a number of bursts")
 
     parser.add_argument("-d", "--datadir", action="store", required=False, dest="data_dir",

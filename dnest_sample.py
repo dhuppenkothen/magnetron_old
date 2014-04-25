@@ -19,15 +19,10 @@ def read_dnest_results(filename, dnestdir="./"):
 
     #options = burstmodel.conversion("%sOPTIONS.txt" %dnestdir)
 
-    dfile = open("%s%s" %(dnestdir, filename), "r")
-    data = dfile.readlines()
+    dfile = "%s%s" %(dnestdir, filename)
+    alldata = np.loadtxt(dfile)
 
-    alldata = []
-    for d in data[2:]:
-        alldata.append(np.array([float(t) for t in d.split()[:-1]]))
-
-    alldata = np.array(alldata)
-
+    niter = len(alldata)
 
     ## background parameter
     bkg = alldata[:,0]
@@ -78,12 +73,31 @@ def read_dnest_results(filename, dnestdir="./"):
         paras_real.append([(pos,amp,scale,skew) for pos,amp,scale,skew in zip(p,a,sc,sk) if pos != 0.0])
 
 
-
-
-    sample_dict = {"bkg":bkg, "cdim":burst_dims, "cmax":compmax, "parameters":paras_real}
+    sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax, "parameters":paras_real}
 
     return sample_dict
 
+def extract_param(sample_dict, i, filtered=True):
+
+    if filtered:
+        params = sample_dict["filtered parameters"]
+    else:
+        params = sample_dict["parameters"]
+
+    output_par = []
+    for par in params:
+        par_temp = [p[i] for p in par]
+        output_par.append(par_temp)
+
+    return np.array(output_par)
+
+def flatten_param(par):
+
+    par_new = []
+    for p in par:
+        par_new.extend(p)
+
+    return np.array(par_new)
 
 def extract_real_spikes(sample_dict, min_scale=1.0e-4):
 
@@ -99,7 +113,7 @@ def extract_real_spikes(sample_dict, min_scale=1.0e-4):
 
     paras_filtered = []
     for par in paras:
-        p_temp = [p for p in par if p[2] >= min_scale/5.0 and  p[1] >= max_bkg]
+        p_temp = [p for p in par if p[2] >= min_scale/5.0 and p[1] >= max_bkg]
         if len(p_temp) > 0:
             paras_filtered.append(p_temp)
         else:
@@ -109,3 +123,54 @@ def extract_real_spikes(sample_dict, min_scale=1.0e-4):
     sample_dict["filtered parameters"] = paras_filtered
 
     return sample_dict
+
+
+def position_histogram(sample_dict, btimes, tsearch=0.01, tfine=0.001, niter=1000):
+
+    """
+    Make a histogram of the distribution of position parameters.
+    sample_dict: dictionary with output from Dnest run
+    btimes: burst start and end times
+    tsearch: length of segment over which to integrate probability
+    tfine: histogram bin size
+    niter: number of iterations in the DNest run
+    """
+
+    ## extract parameters
+    positions = []
+    if "filtered parameters" in sample_dict.keys():
+        fparams = sample_dict["filtered parameters"]
+    else:
+        fparams = sample_dict["parameters"]
+
+    ## extract positions only
+    for fpar in fparams:
+        ptemp = [f[0] for f in fpar]
+        positions.extend(ptemp)
+
+    ## burst duration
+
+    tstart = btimes[0]
+    tend = btimes[1]
+
+    tseg = tend - tstart
+
+    ## number of bins in histogram
+    nbins = int(tseg/tfine)+1
+    range = np.arange(nbins)*tfine + tstart[0]
+
+    ## make histogram
+    n, bins = np.histogram(positions, bins=range, normed=True)
+    n_normed = n*np.diff(bins)
+
+    ## number of histogram bins to integrate
+    nsearch = int(tsearch/tfine)
+
+    nsum_all = []
+    for i in xrange(len(n[:-nsearch])):
+        n_temp = n_normed[i:i+nsearch]
+        nsum_all.append(np.sum(n_temp))
+
+
+
+    return

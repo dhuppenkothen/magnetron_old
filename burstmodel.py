@@ -115,7 +115,7 @@ def read_gbm_lightcurves(filename):
 #
 #
 #
-def rebin_lightcurve(times, counts, n=10):
+def rebin_lightcurve(times, counts, n=10, type='average'):
 
     nbins = int(len(times)/n)
     dt = times[1] - times[0]
@@ -127,7 +127,10 @@ def rebin_lightcurve(times, counts, n=10):
     counts_new = counts[:nbins_new*n]
     bincounts = np.reshape(np.array(counts_new), (nbins_new, n))
     bincounts = np.sum(bincounts, axis=1)
-    bincounts = bincounts/np.float(n)
+    if type in ["average", "mean"]:
+        bincounts = bincounts/np.float(n)
+    else:
+        bincounts = bincounts
 
     #bincounts = np.array([np.sum(counts[i*n:i*n+n]) for i in range(nbins)])/np.float(n)
     #print("len(bintimes): " + str(len(bintimes)))

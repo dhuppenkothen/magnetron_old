@@ -115,15 +115,24 @@ def read_gbm_lightcurves(filename):
 #
 #
 #
-def rebin_lightcurve(times, counts, n=10):
+def rebin_lightcurve(times, counts, n=10, type='average'):
 
     nbins = int(len(times)/n)
     dt = times[1] - times[0]
     T = times[-1] - times[0] + dt
     bin_dt = dt*n
-    bintimes = np.arange(nbins)*bin_dt + bin_dt/2.0
+    bintimes = np.arange(nbins)*bin_dt + bin_dt/2.0 + times[0]
 
-    bincounts = np.array([np.sum(counts[i*n:i*n+n]) for i in range(nbins)])/n
+    nbins_new = int(len(counts)/n)
+    counts_new = counts[:nbins_new*n]
+    bincounts = np.reshape(np.array(counts_new), (nbins_new, n))
+    bincounts = np.sum(bincounts, axis=1)
+    if type in ["average", "mean"]:
+        bincounts = bincounts/np.float(n)
+    else:
+        bincounts = bincounts
+
+    #bincounts = np.array([np.sum(counts[i*n:i*n+n]) for i in range(nbins)])/np.float(n)
     #print("len(bintimes): " + str(len(bintimes)))
     #print("len(bincounts: " + str(len(bincounts)))
     if len(bintimes) < len(bincounts):
@@ -313,6 +322,7 @@ class WordPosterior(object):
     def logprior(self, theta):
 
         if not isinstance(theta, parameters.Parameters):
+            print("I am here!")
             if self.wordmodel is word.TwoExp or self.ncomp == 0:
                 theta = parameters.TwoExpCombined(theta, self.ncomp, parclass=parameters.TwoExpParameters,
                                                   scale_locked=self.scale_locked, skew_locked=self.skew_locked,
@@ -321,9 +331,10 @@ class WordPosterior(object):
             else:
                 raise Exception("Word class not known! Needs to be implemented!")
 
+        print("type(theta): " + str(type(theta)))
 
-        assert isinstance(theta, (parameters.TwoExpParameters, parameters.TwoExpCombined)),\
-            "input parameters not an object of type TwoExpParameters"
+        #assert isinstance(theta, (parameters.TwoExpParameters, parameters.TwoExpCombined)),\
+        #    "input parameters not an object of type TwoExpParameters"
 
         return self.model.wordobject.logprior(theta)
 
@@ -370,6 +381,7 @@ class WordPosterior(object):
     def logposterior(self, theta):
 
         if not isinstance(theta, parameters.Parameters):
+            print("I am here")
             if self.wordmodel is word.TwoExp or self.ncomp == 0 or self.ncomp == 1:
                 theta = parameters.TwoExpCombined(theta, self.ncomp, parclass=parameters.TwoExpParameters,
                                                   scale_locked=self.scale_locked, skew_locked=self.skew_locked,
@@ -377,6 +389,7 @@ class WordPosterior(object):
 
             else:
                 raise Exception("Word class not known! Needs to be implemented!")
+
 
         return self.logprior(theta) + self.loglike(theta)
 
@@ -467,7 +480,7 @@ class BurstModel(object):
         pos, prob, state = sampler.run_mcmc(p0, burnin)
         print("Burned in. Now doing real run ...")
         sampler.reset()
-        sampler.run_mcmc(pos, niter, rstate0 = state)
+        sampler.run_mcmc(pos, niter, rstate0=state)
 
         print("...sampling done. Am I plotting?")
 
@@ -794,7 +807,7 @@ class BurstModel(object):
                 self.plot_results(sampler.flatchain[-10000:], postmax=postmax, nsamples=1000, scale_locked=scale_locked,
                                 skew_locked=skew_locked, bkg=True, log=True, namestr=namestr)
 
-
+                self.plot_chains(sampler.flatchain, niter, namestr=namestr)
                 #all_sampler.append(sampler.flatchain[-50000:])
                 all_means.append(postmean)
                 all_err.append(posterr)
@@ -804,7 +817,7 @@ class BurstModel(object):
                 all_theta_init.append(theta_init)
 
                 all_results = {'sampler': sampler.flatchain[-10000:], "lnprob": sampler.flatlnprobability[-10000:],
-                               'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax,
+                               'means': postmean, 'err': posterr, 'quants': quants, 'max': postmax, 'niter': niter,
                                 'init':theta_init}
 
                 sampler_file= open(namestr + '_k' + str(n) + '_posterior.dat', 'w')
@@ -868,14 +881,73 @@ class BurstModel(object):
 
         return
 
+    @staticmethod
+    def plot_chains(samples, niter, namestr="test"):
+
+        """
+        Plot the Markov chain results from the MCMC runs to file.
+        samples: an emcee.flatchain list, i.e. a flattened list of
+        iterations and walkers.
+        niter: the number of iterations per walker used in emcee run.
+
+        """
+
+        ### if the list of samples has the parameters as dimension 0, and the actual chain as dimension 1,
+        ### then transpose such that the dimensions are (samples, parameters)
+        print("shape samples: " + str(np.shape(samples)))
+        print("shape samples 0: " + str(np.shape(samples)[0]))
+        print("shape samples 1: " + str(np.shape(samples)[1]))
+        if np.shape(samples)[0] < np.shape(samples)[1]:
+            samples = np.transpose(samples)
+        print("shape samples: " + str(np.shape(samples)))
+
+        ### number of parameters
+        nparas = np.min(np.shape(samples))
+        ### number of sampled parameter sets
+        nsamples = np.max(np.shape(samples))
+
+        ### the number of walkers included in the sample
+        ### note: usually, this will be smaller than nwalker set in find_spikes or mcmc, because
+        ### mcmc only stores the last 10000 iterations in emcee.EnsembleSampler.flatchain
+        nwalker = int(nsamples/niter)
+        #print("nwalker: " + str(nwalker))
+        #print("niter: " + str(niter))
+        #print("nsamples: " + str(nsamples))
+        #print("nparas: " + str(nparas))
+        #print("shape samples: " + str(np.shape(samples)))
+
+        ### compute mean parameter values
+        meanq = np.mean(samples, axis=0)
+
+        ### loop over parameters
+        for i in xrange(nparas):
+            plt.figure()
+
+            ### plot all walkers in grey, to see whether the Markov chain converged
+            for j in xrange(nwalker):
+                #print("j: " + str(j))
+                #print("minind: " + str(j*niter))
+                #print("maxind: " + str((j+1)*niter))
+                plt.plot(samples[j*niter:(j+1)*niter, i], color='black', alpha=0.8)
+            ### plot mean value for parameter i
+            plt.plot(np.ones(niter)*meanq[i], lw=2, color='red')
+            plt.xlabel("Number of iteration", fontsize=18)
+            plt.ylabel("Quantity", fontsize=18)
+            plt.savefig(namestr + "_p" + str(i) + "_chains.png", format='png')
+            plt.close()
+
+        return
+
+
 
     def plot_results(self, samples, postmax = None, nsamples= 1000, scale_locked=False, skew_locked=False,
                    model=word.TwoExp, bkg=True, log=True, namestr="test", bin = True, nbins=10):
 
 
         npar = model.npar
+        npar_add = 0
         if bkg:
-            npar_add = 1
+            npar_add += 1
         else:
             npar_add = 0
         if scale_locked:

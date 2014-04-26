@@ -25,7 +25,7 @@ def main():
 
 
         all_means, all_err, all_postmax, all_quants, all_theta_init = \
-            bm.find_spikes(nmax=10, nwalker=nwalker, niter=niter, burnin=100, namestr=froot, scale_locked=scale,
+            bm.find_spikes(nmax=10, nwalker=nwalker, niter=niter, burnin=200, namestr=froot, scale_locked=scale,
                            skew_locked=skew)
 
 

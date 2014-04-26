@@ -5,6 +5,7 @@
 
 \newcommand{\project}[1]{\textsl{#1}}
 \newcommand{\Fermi}{\project{Fermi}}
+\newcommand{\RXTE}{\project{RXTE}}
 \newcommand{\given}{\,|\,}
 \newcommand{\dd}{\mathrm{d}}
 \renewcommand{\count}{y}
@@ -51,21 +52,46 @@ That motivates a very simple model,
 \section{data}
 
 The ``raw'' data, for our purposes, are photon arrival times.
-These come from triggered photon streams telemetered down from the \Fermi\ Gamma-ray Burst Monitor (GBM).
-These data streams have [the following crazy properties, including dead time, saturation]
+For magnetar SGR J1550-5418, these come from triggered photon streams telemetered down from the \Fermi\ Gamma-ray Burst Monitor (GBM).
+\Fermi\/GBM is not a pointed instrument, but has twelve detectors observing the entire unocculted sky all the time. When a burst triggers the
+instrument (by increased count rate), GBM will link down data streams at the native time resolution of the instrument, $2\mu\mathrm{s}$ from 
+$30$ seconds before the trigger to $300$ seconds after the trigger, after which it cannot trigger for another $300$ seconds. 
+Because bursts may appear within $300$s of each other, one observation (equivalent to one trigger of length $330$s) may include more than one
+bursts, and one must find the untriggered bursts in the data.
 
-We currently use light curves with a time resolution of 1ms. The time resolution is chosen small enough to preserve features
-in the data on short time scales, while at the same time have a reasonable number of counts (>10) per time bin. 
+The data streams are affected by dead time and saturation. Saturation cuts off the number of recorded photons at the maximum rate
+that the science data bus on board the spacecraft can transmit, $3.5 \times 10^{5} \, \mathrm{counts}/\mathrm{s}$ per detector. This means
+that exceptionally bright bursts will flatten out above that count rate. We exclude any bursts with count rates $>3.5\times10^{5} \, \mathrm{cts}/\mathrm{s}$.
+Dead time occurs because the instrument cannot record a second photon within $2.6\mu\mathrm{s}$ of arrival of a previous photon. 
+The second photon is thus either not recorded at all, or, on occasion, recorded as a single photon with the combined energy. This effectively 
+imposes a time scale onto the data, which means that the data then deviate away from the expected Poisson distribution. 
+Dead time is harder to quantify and account for than saturation. It is possible to correct count rates based on simulations of the instrument (REF, Bhat et al, 2013),
+but this will not correct the statistical distributions. We currently don't take dead time into account in our analysis. 
+
+We currently use light curves with a time resolution of $0.1\,\mathrm{ms}$. The time resolution is chosen small enough to preserve features
+in the data on short time scales, while at the same time have a reasonable number of counts per time bin. 
 Burst durations are defined in $T90$, the time in which $90\%$ of photons arrive at the detector, with $0.2T90$ added on either side
 to make sure the entire burst is included. 
 
+Data for the strongest-field magnetars SGR 1806-20 and SGR 1900+14 are recorded with the {\it Rossi} X-ray Timing Explorer (\RXTE), which someone
+else will write the details about (but data are still time-tagged photon events and suffer from saturation and dead time). 
 
 %There are many small details.
 %We choose [what binning and why?].
 %We use data [in what interval?] around each burst.
 
 In what follows, the data for one burst are photon counts $\count_n$ (integer) in $N$ bins $n$.
-The data from a few example bursts are shown in Figure [what figure?].
+The data from a few example bursts are shown in Figure \ref{fig:example_bursts}.
+
+%\begin{figure*}[h]
+%\begin{center}
+%\includegraphics[width=18cm]{example_bursts.png}
+%\caption{}
+%\label{fig:example_bursts}
+%\end{center}
+%\end{figure*}
+
+
 
 \section{model}
 
@@ -88,7 +114,7 @@ where $\Poisson(\count\given\mean)$ is the Poisson probability of getting count 
   $K$ is the number of words (spikes) $k$ making up the burst,
   $\phi(\xi)$ is the dimensionless word function,
   $A_k, t_k$ are the amplitudes and time offsets of the words,
-  and $s, \tau$ set the shape (asymmetry or skew) and duration of the words.
+  and $s, \tau$ set the shape (asymmetry or skew) and rise time of the words.
   
 Various parameters can be left free completely, or can be tied together between words:
  
@@ -102,19 +128,24 @@ for complete freedom of word parameters between words,
 \theta \equiv [,\{t_k, A_k, s_k \}_{k=1}^K,  \tau_k, \mean_{\bg} ]
 \end{equation}
 
-for tying the word duration together within a burst, and
+for tying the rise time together within a burst, and
 
 \begin{equation}
-\theta \equiv [,\{t_k, A_k\}_{k=1}^K, s_k , \tau_k, \mean_{\bg} ]\end{equation}
+\theta \equiv [,\{t_k, A_k\}_{k=1}^K, \tau_k, s_k , \mean_{\bg} ]\end{equation}
 
-for a model where both the word duration and the skewness are tied together for all words within a burst.
+for a model where both the rise time and the skewness are tied together for all words within a burst.
+
+%\begin{figure*}[h]
+%\begin{center}
+%\includegraphics[width=18cm]{example_words.png}
+%\caption{}
+%\label{fig:example_words}
+%\end{center}
+%\end{figure*}
 
   
-Figure [what figure?] shows the shape of a word
+Figure \ref{fig:example_words} shows the shape of a word
   and an example of a burst generated by our model.
-[This figure should show a word in $\xi$ space,
-  a multi-word burst in $t$ space,
-  and a Poisson draw from that model.]
 
 The model for a large set of bursts is whatever.
 [We should probably, in the above, index bursts $m$,

@@ -42,8 +42,20 @@ import matplotlib.cm as cm
 
 import numpy as np
 import scipy.special
-import emcee
-import triangle
+try:
+    import emcee
+    emceeflag=True
+except ImportError:
+    print("No module emcee")
+    emceeflag = False
+
+try:
+    import triangle
+    triangleflag=True
+except ImportError:
+    print("No module triangle")
+    triangleflag=False
+
 from scipy.stats.mstats import mquantiles as quantiles
 
 

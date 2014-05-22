@@ -1,6 +1,7 @@
 #include "ClassicMassInf1D.h"
 #include "RandomNumberGenerator.h"
 #include "Utils.h"
+#include "Data.h"
 #include <cmath>
 
 using namespace DNest3;
@@ -11,6 +12,7 @@ ClassicMassInf1D::ClassicMassInf1D(double x_min, double x_max,
 ,x_max(x_max)
 ,mu_min(mu_min)
 ,mu_max(mu_max)
+,min_width(0.3333*Data::get_instance().get_dt())
 {
 
 }

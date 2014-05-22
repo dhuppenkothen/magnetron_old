@@ -22,7 +22,7 @@ void ClassicMassInf1D::fromPrior()
 	mu = exp(log(mu_min) + log(mu_max/mu_min)*randomU());
 	mu_widths = exp(log(1E-3*(x_max - x_min)) + log(1E3)*randomU());
 
-	a = -10. + 10.*randomU();
+	a = -10. + 20.*randomU();
 	b = 2.*randomU();
 }
 

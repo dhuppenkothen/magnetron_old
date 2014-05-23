@@ -2,16 +2,19 @@
 import numpy as np
 
 import burstmodel
+import parameters
+import word
+
 from pylab import *
 import scipy.stats
 
-def read_dnest_results(filename, dnestdir="./"):
+def read_dnest_results(filename, datadir="./"):
 
     """
     Read output from RJObject/DNest3 run and return in a format more
     friendly to post-processing.
 
-    filename: filename with posterior sample (probably sample.txt)
+    filename: filename with posterior sample (posterior_sample.txt)
 
     NOTE: parameters (amplitudes + background) are in COUNTS space, not COUNT RATE!
     """
@@ -19,7 +22,7 @@ def read_dnest_results(filename, dnestdir="./"):
 
     #options = burstmodel.conversion("%sOPTIONS.txt" %dnestdir)
 
-    dfile = "%s%s" %(dnestdir, filename)
+    dfile = "%s%s" %(datadir, filename)
     alldata = np.loadtxt(dfile)
 
     niter = len(alldata)
@@ -70,7 +73,7 @@ def read_dnest_results(filename, dnestdir="./"):
     paras_real = []
 
     for p,a,sc,sk in zip(pos_all, amp_all, scale_all, skew_all):
-        paras_real.append([(pos,amp,scale,skew) for pos,amp,scale,skew in zip(p,a,sc,sk) if pos != 0.0])
+        paras_real.append([(pos,scale,amp,skew) for pos,amp,scale,skew in zip(p,a,sc,sk) if pos != 0.0])
 
 
     sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax, "parameters":paras_real}
@@ -172,5 +175,57 @@ def position_histogram(sample_dict, btimes, tsearch=0.01, tfine=0.001, niter=100
         nsum_all.append(np.sum(n_temp))
 
 
-
     return
+
+
+def parameter_sample(filename, datadir="./"):
+
+    ### extract parameters from file
+    sample_dict = read_dnest_results(filename, datadir=datadir)
+
+
+    ### I need the parameters, the number of components, and the background parameter
+    pars_all = sample_dict["parameters"]
+    nbursts_all = sample_dict["nbursts"]
+    bkg_all = sample_dict["bkg"]
+
+    parameters_all = []
+    for pars,nbursts,bkg in zip(pars_all, nbursts_all, bkg_all):
+
+        pars_flat = np.array(pars).flatten()
+        pars_flat = list(pars_flat)
+        pars_flat.extend([bkg])
+        pars_flat = np.array(pars_flat)
+
+        p = parameters.TwoExpCombined(pars_flat, int(nbursts), log=False, bkg=True)
+
+        parameters_all.append(p)
+
+    return parameters_all
+
+
+def make_model_lightcurves(samplefile, times=None, datadir="./"):
+
+    if times is None:
+        fsplit = samplefile.split("_")
+        datafile = "%s%s_%s_data.dat"%(datadir, fsplit[0], fsplit[1])
+
+        ### load data
+        times, counts = burstmodel.read_gbm_lightcurves(datafile)
+
+    else:
+        counts = np.ones(len(times))
+
+    parameters_all = parameter_sample(samplefile, datadir)
+
+    model_counts_all = []
+
+    for p in parameters_all:
+        ncomp = len(p.all)
+        wordlist = [word.TwoExp for i in xrange(ncomp)]
+        bd = burstmodel.BurstDict(times, counts, wordlist)
+        model_counts = bd.model_means(p)
+
+        model_counts_all.append(model_counts)
+
+    return model_counts_all

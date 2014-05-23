@@ -215,8 +215,9 @@ class BurstDict(object):
         delta = self.Delta/nbins
         ## number of small time bins
         nsmall = self.nbins_data*nbins
+
         ## make a high-resolution time array 
-        times_small = np.arange(nsmall)*delta
+        times_small = np.arange(nsmall)*delta + self.times[0]
 
         rate_small = self.wordmodel(times_small, theta)
 

@@ -8,6 +8,7 @@ import glob
 import argparse
 
 import postprocess
+import burstmodel
 
 def rewrite_main(filename, dnest_dir = "./"):
 
@@ -75,13 +76,16 @@ def extract_nlevels(filename):
 
 
 
-def postprocess_new(temperature=1., numResampleLogX=1, plot=False):
+def postprocess_new(temperature=1., numResampleLogX=1, plot=False, save_posterior=False):
 
     cut = 0
 
-    levels = np.atleast_2d(np.loadtxt("levels.txt"))
-    sample_info = np.atleast_2d(np.loadtxt("sample_info.txt"))
-    sample = np.atleast_2d(np.loadtxt("sample.txt"))
+    try:
+        levels = np.atleast_2d(np.loadtxt("levels.txt"))
+        sample_info = np.atleast_2d(np.loadtxt("sample_info.txt"))
+        sample = np.atleast_2d(np.loadtxt("sample.txt"))
+    except IOError:
+        return None, None
 
     sample = sample[int(cut*sample.shape[0]):, :]
     sample_info = sample_info[int(cut*sample_info.shape[0]):, :]
@@ -160,6 +164,34 @@ def postprocess_new(temperature=1., numResampleLogX=1, plot=False):
         P_samples[:,z] = np.exp(logP_samples[:,z])
         H_estimates[z] = -logz_estimates[z] + np.sum(P_samples[:,z]*logl)
 
+    if save_posterior:
+
+        P_samples = np.mean(P_samples, 1)
+        P_samples = P_samples/np.sum(P_samples)
+        logz_estimate = np.mean(logz_estimates)
+        logz_error = np.std(logz_estimates)
+        H_estimate = np.mean(H_estimates)
+        H_error = np.std(H_estimates)
+        ESS = np.exp(-np.sum(P_samples*np.log(P_samples+1E-300)))
+
+        print("log(Z) = " + str(logz_estimate) + " +- " + str(logz_error))
+        print("Information = " + str(H_estimate) + " +- " + str(H_error) + " nats.")
+        print("Effective sample size = " + str(ESS))
+
+        # Resample to uniform weight
+        N = int(ESS)
+        posterior_sample = np.zeros((N, sample.shape[1]))
+        w = P_samples
+        w = w/np.max(w)
+        np.savetxt('weights.txt', w) # Save weights
+        for i in xrange(0, N):
+            while True:
+                which = np.random.randint(sample.shape[0])
+                if np.random.rand() <= w[which]:
+                    break
+            posterior_sample[i,:] = sample[which,:]
+        np.savetxt("posterior_sample.txt", posterior_sample)
+
     return logx_samples, P_samples
 
 
@@ -179,23 +211,60 @@ def find_weights(p_samples):
 
 def run_burst(filename, dnest_dir = "./"):
 
+    times, counts = burstmodel.read_gbm_lightcurves(filename)
+
+    dt = times[1] - times[0]
+
+    dt_wanted = 0.001
+
+
+    if dt < dt_wanted:
+        dt_new = int(dt_wanted/dt)
+        assert dt_wanted/dt >1, "New time resolution smaller than old one! This is wrong!"
+        bintimes, bincounts = burstmodel.rebin_lightcurve(times, counts, dt_new)
+
+        np.savetxt("%s_new.dat"%(filename[:-4]), np.array(zip(bintimes, bincounts)))
+
+        filename = "%s_new.dat"%(filename[:-4])
+
     ### first run: set levels to 200
     print("Rewriting DNest run file")
     rewrite_main(filename, dnest_dir)
     rewrite_options(nlevels=200, dnest_dir=dnest_dir)
     remake_model()
 
+    fdir = filename.split("/")
+    fname = fdir[-1]
+    fdir = filename[:-len(fname)]
+    print("directory: %s" %fdir)
+    print("filename: %s" %fname)
+
+    fsplit = fname.split("_")
+    froot = "%s/%s_%s" %(fdir, fsplit[0], fsplit[1])
+    print("froot: " + str(froot))
+
+
+
     print("First run of DNest: Find number of levels")
     ## run DNest
     dnest_process = subprocess.Popen("./main")
 
 
+
     endflag = False
     while endflag is False:
-        tsys.sleep(30)
-        logx_samples, p_samples = postprocess_new()
-        endflag = find_weights(p_samples)
-        print("Endflag: " + str(endflag))
+        try:
+            tsys.sleep(60)
+            logx_samples, p_samples = postprocess_new(save_posterior=False)
+            if p_samples is None:
+                endflag = False
+            else:
+                endflag = find_weights(p_samples)
+                print("Endflag: " + str(endflag))
+
+        except KeyboardInterrupt:
+            break
+
 
     print("endflag: " + str(endflag))
 
@@ -210,17 +279,29 @@ def run_burst(filename, dnest_dir = "./"):
 
     endflag = False
     while endflag is False:
-        tsys.sleep(30)
-        samples = np.loadtxt("%ssample.txt"%dnest_dir)
-        if len(samples) >= 1000+nlevels:
-            endflag = True
-        else:
-            endflag = False
+        try:
+            tsys.sleep(120)
+            samples = np.loadtxt("%ssample.txt"%dnest_dir)
+            print("samples file: %ssample.txt" %dnest_dir)
+            print("nlevels: %i" %len(samples)) 
+            print("Endflag: " + str(endflag))
+
+            if len(samples) >= np.max([5*nlevels, 1000+nlevels]):
+                endflag = True
+            else:
+                endflag = False
+        except KeyboardInterrupt:
+            break
+
+    print("Endflag: " + str(endflag))
 
     dnest_process.kill()
+     
+    logx_samples, p_samples = postprocess_new(save_posterior=True)    
 
     fsplit = filename.split("_")
-    froot = "%s_%s" %(fsplit[0], fsplit[1])
+    #froot = "%s_%s" %(fsplit[0], fsplit[1])
+    print("froot: " + str(froot))
 
     shutil.move("sample.txt", "%s_sample.txt" %froot)
     try:

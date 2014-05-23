@@ -156,8 +156,8 @@ class TwoExpCombined(Parameters, object):
         This object stores parameters for combinations of instances of the TwoExp model defined in word.
 
 
-        @param par: List with parameters. If scale_locked and/or skew_locked are True, define scale, skew and bkg
-                    at the end.
+        @param par: List with parameters. each component needs to be of type [position, scale, amplitude, skewness].
+                    If scale_locked and/or skew_locked are True, define scale, skew and bkg at the end.
         @param ncomp: number of model components
         @param parclass: which class are the parameter objects of the individual components? Should be TwoExpParameters,
                         otherwise it'll break.
@@ -186,7 +186,7 @@ class TwoExpCombined(Parameters, object):
         ### such that they are extracted from the list in a correct way
         n_ind = 0
         if bkg:
-            print("I am in bkg")
+            #print("I am in bkg")
             if log:
                 self.log_bkg = par[-1]
                 self.bkg = np.exp(self.log_bkg)

@@ -215,10 +215,10 @@ def run_burst(filename, dnest_dir = "./"):
 
     dt = times[1] - times[0]
 
-    dt_wanted = 0.001
+    dt_wanted = 0.0001
 
 
-    if dt < dt_wanted:
+    if dt < 0.7*dt_wanted:
         dt_new = int(dt_wanted/dt)
         assert dt_wanted/dt >1, "New time resolution smaller than old one! This is wrong!"
         bintimes, bincounts = burstmodel.rebin_lightcurve(times, counts, dt_new)
@@ -247,7 +247,7 @@ def run_burst(filename, dnest_dir = "./"):
 
     print("First run of DNest: Find number of levels")
     ## run DNest
-    dnest_process = subprocess.Popen("./main")
+    dnest_process = subprocess.Popen(["./main", "-t", "8"])
 
 
 
@@ -275,7 +275,7 @@ def run_burst(filename, dnest_dir = "./"):
     rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
     remake_model()
 
-    dnest_process = subprocess.Popen("./main")
+    dnest_process = subprocess.Popen(i["./main", "-t", "8"])
 
     endflag = False
     while endflag is False:

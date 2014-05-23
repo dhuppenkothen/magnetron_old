@@ -275,7 +275,7 @@ def run_burst(filename, dnest_dir = "./"):
     rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
     remake_model()
 
-    dnest_process = subprocess.Popen(i["./main", "-t", "8"])
+    dnest_process = subprocess.Popen(["./main", "-t", "8"])
 
     endflag = False
     while endflag is False:

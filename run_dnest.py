@@ -53,6 +53,26 @@ def rewrite_options(nlevels=200, dnest_dir="./"):
     return
 
 
+def rewrite_display(filename, dnest_dir="./"):
+
+    mfile = open(dnest_dir+"display.py", "r")
+    mdata = mfile.readlines()
+    mfile.close()
+
+    mdata[2] = "data = np.loadtxt('%s')\n"%filename
+
+    mwrite_file = open(dnest_dir+"display.py.tmp", "w")
+
+    for l in mdata:
+        mwrite_file.write(l)
+
+    mwrite_file.close()
+
+    shutil.move(dnest_dir+"display.py.tmp", dnest_dir+"display.py")
+
+    return
+
+
 def remake_model():
 
     tstart = tsys.clock()
@@ -215,7 +235,7 @@ def run_burst(filename, dnest_dir = "./"):
 
     dt = times[1] - times[0]
 
-    dt_wanted = 0.0001
+    dt_wanted = 0.0005
 
 
     if dt < 0.7*dt_wanted:
@@ -243,6 +263,9 @@ def run_burst(filename, dnest_dir = "./"):
     froot = "%s/%s_%s" %(fdir, fsplit[0], fsplit[1])
     print("froot: " + str(froot))
 
+
+    ### printing DNest display script
+    rewrite_display(filename, dnest_dir)
 
 
     print("First run of DNest: Find number of levels")
@@ -286,7 +309,8 @@ def run_burst(filename, dnest_dir = "./"):
             print("nlevels: %i" %len(samples)) 
             print("Endflag: " + str(endflag))
 
-            if len(samples) >= np.max([5*nlevels, 1000+nlevels]) and len(np.shape(samples)) > 1:
+            if len(samples) >= 5*nlevels and len(np.shape(samples)) > 1:
+            #if len(samples) >= np.max([5*nlevels, 1000+nlevels]) and len(np.shape(samples)) > 1:
                 endflag = True
             else:
                 endflag = False

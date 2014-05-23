@@ -286,7 +286,7 @@ def run_burst(filename, dnest_dir = "./"):
             print("nlevels: %i" %len(samples)) 
             print("Endflag: " + str(endflag))
 
-            if len(samples) >= np.max([5*nlevels, 1000+nlevels]):
+            if len(samples) >= np.max([5*nlevels, 1000+nlevels]) and len(np.shape(samples)) > 1:
                 endflag = True
             else:
                 endflag = False
@@ -319,7 +319,7 @@ def run_all_bursts(data_dir="./", dnest_dir="./"):
 
     print("I am in run_all_bursts")
     filenames = glob.glob("%s*_data.dat"%data_dir)
-    #print(filenames)
+    print(filenames)
 
     for f in filenames:
         print("Running on burst %s" %f)

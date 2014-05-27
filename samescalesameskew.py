@@ -45,6 +45,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Model magnetar bursts with spikes!')
 
+
     modechoice = parser.add_mutually_exclusive_group(required = True)
     modechoice.add_argument('-a', '--all', action='store_true', dest='all', help='run on all files in the directory')
     modechoice.add_argument('-s', '--single', action='store_true', dest='single', help='run on a single file')

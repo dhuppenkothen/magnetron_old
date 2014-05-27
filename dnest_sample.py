@@ -1,5 +1,6 @@
 
 import numpy as np
+import glob
 
 import burstmodel
 import parameters
@@ -7,6 +8,40 @@ import word
 
 from pylab import *
 import scipy.stats
+
+def plot_posterior_lightcurves(datadir="./", nsims=10):
+
+    files = glob.glob("%s*posterior*"%datadir)
+
+    for f in files:
+        fsplit = f.split("_")
+        data = loadtxt("%s_%s_all_data_new.dat"%(fsplit[0], fsplit[1]))
+        fig = figure(figsize=(12,9))
+        plot(data[:,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
+        sample = atleast_2d(loadtxt(f))
+        print(sample.shape)
+        ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
+        for i in ind:
+            print("shape data: " + str(len(data[:,0])))
+            print("shape sample: " + str(len(sample[i,-data.shape[0]:])))
+            plot(data[:,0], sample[i,-data.shape[0]:], lw=1)
+        xlabel("Time since trigger [s]", fontsize=20)
+        ylabel("Counts per bin", fontsize=20)
+        savefig("%s_%s_lc.png"%(fsplit[0], fsplit[1]), format="png")
+        close()
+
+    return
+
+
+def
+
+
+
+
+
+
+##### OLD CODE: NEED TO CHECK THIS! ##########
+
 
 def read_dnest_results(filename, datadir="./"):
 

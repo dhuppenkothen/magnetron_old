@@ -147,6 +147,14 @@ class TwoExpParameters(Parameters, object):
                 parlist.append(self.skew)
         return parlist
 
+    def compute_energy(self, bkg=0):
+        amp = self.amp - bkg
+        norm = amp/self.scale
+        first_term = np.exp(self.t0/self.scale)
+        second_term = (1.0/self.skew)*np.exp(-self.t0/(self.skew*self.scale))
+
+        return norm*(first_term + second_term)
+
 
 class TwoExpCombined(Parameters, object):
 
@@ -305,3 +313,18 @@ class TwoExpCombined(Parameters, object):
                 parlist = np.append(parlist, self.bkg)
 
         return parlist
+
+    def compute_energy(self):
+
+        e_all = []
+
+        if "bkg" in self.__dict__.keys():
+            bkg = self.bkg
+        else:
+            bkg = 0.0
+
+        for a in self.all:
+            e = a.compute_energy(bkg=bkg)
+            e_all.append(e)
+
+        return e_all

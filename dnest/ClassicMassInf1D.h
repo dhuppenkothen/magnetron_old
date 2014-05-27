@@ -9,6 +9,7 @@ class ClassicMassInf1D:public Distribution
 		// Limits
 		double x_min, x_max;
 		double mu_min, mu_max;
+		double min_width;
 
 		// Mean of amplitudes and widths
 		double mu, mu_widths;

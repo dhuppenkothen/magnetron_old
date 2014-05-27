@@ -10,7 +10,7 @@ class Data
 		std::vector<int> y;
 
 		// Some useful summaries
-		double t_min, t_max, t_range;
+		double t_min, t_max, t_range, dt;
 		double y_mean;
 		void compute_summaries();
 
@@ -25,6 +25,7 @@ class Data
 		double get_t_max() const { return t_max; }
 		double get_t_range() const { return t_range; }
 		double get_y_mean() const { return y_mean; }
+		double get_dt() const { return dt; }
 
 	// Singleton
 	private:

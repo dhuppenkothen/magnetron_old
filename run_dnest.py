@@ -53,6 +53,26 @@ def rewrite_options(nlevels=200, dnest_dir="./"):
     return
 
 
+def rewrite_display(filename, dnest_dir="./"):
+
+    mfile = open(dnest_dir+"display.py", "r")
+    mdata = mfile.readlines()
+    mfile.close()
+
+    mdata[2] = "data = np.loadtxt('%s')\n"%filename
+
+    mwrite_file = open(dnest_dir+"display.py.tmp", "w")
+
+    for l in mdata:
+        mwrite_file.write(l)
+
+    mwrite_file.close()
+
+    shutil.move(dnest_dir+"display.py.tmp", dnest_dir+"display.py")
+
+    return
+
+
 def remake_model():
 
     tstart = tsys.clock()
@@ -215,10 +235,10 @@ def run_burst(filename, dnest_dir = "./"):
 
     dt = times[1] - times[0]
 
-    dt_wanted = 0.001
+    dt_wanted = 0.0005
 
 
-    if dt < dt_wanted:
+    if dt < 0.7*dt_wanted:
         dt_new = int(dt_wanted/dt)
         assert dt_wanted/dt >1, "New time resolution smaller than old one! This is wrong!"
         bintimes, bincounts = burstmodel.rebin_lightcurve(times, counts, dt_new)
@@ -244,10 +264,13 @@ def run_burst(filename, dnest_dir = "./"):
     print("froot: " + str(froot))
 
 
+    ### printing DNest display script
+    rewrite_display(filename, dnest_dir)
+
 
     print("First run of DNest: Find number of levels")
     ## run DNest
-    dnest_process = subprocess.Popen("./main")
+    dnest_process = subprocess.Popen(["./main", "-t", "8"])
 
 
 
@@ -275,7 +298,7 @@ def run_burst(filename, dnest_dir = "./"):
     rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
     remake_model()
 
-    dnest_process = subprocess.Popen("./main")
+    dnest_process = subprocess.Popen(["./main", "-t", "8"])
 
     endflag = False
     while endflag is False:
@@ -286,7 +309,8 @@ def run_burst(filename, dnest_dir = "./"):
             print("nlevels: %i" %len(samples)) 
             print("Endflag: " + str(endflag))
 
-            if len(samples) >= np.max([5*nlevels, 1000+nlevels]):
+            if len(samples) >= 5*nlevels and len(np.shape(samples)) > 1:
+            #if len(samples) >= np.max([5*nlevels, 1000+nlevels]) and len(np.shape(samples)) > 1:
                 endflag = True
             else:
                 endflag = False
@@ -319,7 +343,7 @@ def run_all_bursts(data_dir="./", dnest_dir="./"):
 
     print("I am in run_all_bursts")
     filenames = glob.glob("%s*_data.dat"%data_dir)
-    #print(filenames)
+    print(filenames)
 
     for f in filenames:
         print("Running on burst %s" %f)

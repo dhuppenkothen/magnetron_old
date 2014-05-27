@@ -50,5 +50,7 @@ void Data::compute_summaries()
 	for(size_t i=0; i<y.size(); i++)
 		y_mean += y[i];
 	y_mean /= y.size();
+
+	dt = t[1] - t[0];
 }
 

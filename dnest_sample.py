@@ -7,6 +7,7 @@ import parameters
 import word
 
 from pylab import *
+import matplotlib.cm as cm
 import scipy.stats
 
 def plot_posterior_lightcurves(datadir="./", nsims=10):
@@ -16,9 +17,11 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
     for f in files:
         fsplit = f.split("_")
         data = loadtxt("%s_%s_all_data_new.dat"%(fsplit[0], fsplit[1]))
-        fig = figure(figsize=(12,9))
+        fig = figure(figsize=(24,9))
+        ax = fig.add_subplot(121)
         plot(data[:,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
         sample = atleast_2d(loadtxt(f))
+
         print(sample.shape)
         ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
         for i in ind:
@@ -27,17 +30,284 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
             plot(data[:,0], sample[i,-data.shape[0]:], lw=1)
         xlabel("Time since trigger [s]", fontsize=20)
         ylabel("Counts per bin", fontsize=20)
+
+        ax = fig.add_subplot(122)
+        nbursts = sample[:, 7]
+
+        hist(nbursts, bins=30, range=[np.min(nbursts), np.max(nbursts)], histtype='stepfilled')
+        xlabel("Number of spikes per burst", fontsize=20)
+        ylabel("N(samples)", fontsize=20)
         savefig("%s_%s_lc.png"%(fsplit[0], fsplit[1]), format="png")
         close()
 
     return
 
 
-def
+def extract_sample(datadir="./", nsims=5):
+
+    files = glob.glob("%s*posterior*"%datadir)
+
+    all_parameters, nsamples = [], []
+    for f in files:
+        parameters = parameter_sample(f)
+        all_parameters.append(parameters)
+        nsamples.append(len(parameters))
+
+    if nsims > np.min(nsamples):
+        nsims = np.min(nsamples)
+        print("Number of desired simulations larger than smallest posterior sample.")
+        print("Resetting nsims to %i" %nsims)
+
+    parameters_red = np.array([np.random.choice(p, replace=False, size=nsims) for p in all_parameters])
+    print("shape of reduced parameter array: " + str(parameters_red.shape))
+
+    return parameters_red
+
+def risetime_amplitude(datadir="./", nsims=5, dt=0.0005):
+
+
+    parameters_red = extract_sample(datadir, nsims)
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+    risetime_sample, amplitude_sample = [], []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        risetime_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
+
+        #risetime_all = risetime_all.flatten()
+        amplitude_all = np.array([np.array([a.amp for a in s.all]) for s in sample])
+        #amplitude_all = amplitude_all.flatten()
+
+        risetime, amplitude = [], []
+        for r,a in zip(risetime_all, amplitude_all):
+            risetime.extend(r)
+            amplitude.extend(a)
+
+        risetime_sample.append(risetime)
+        amplitude_sample.append(amplitude)
+
+
+    sp_all = []
+
+    fig = figure(figsize=(12,9))
+    ax = fig.add_subplot(111)
+    for i,(r,a) in enumerate(zip(risetime_sample, amplitude_sample)):
+        a = np.array(a)/0.0005
+        sp = scipy.stats.spearmanr(r,a)
+        sp_all.append(sp)
+        logr = np.log10(r)
+        loga = np.log10(a)
+        scatter(logr,loga, color=cm.jet(i*20))
+
+    axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+          np.max([np.max(np.log10(r)) for r in risetime_sample]),
+          np.min([np.min(np.log10(a)) for r in amplitude_sample]),
+          np.max([np.max(np.log10(a)) for a in amplitude_sample])])
+
+    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+    ylabel("spike amplitude", fontsize=20)
+    title("spike amplitude versus rise time")
+    savefig("risetime_amplitude.png", format="png")
+    close()
+
+    return risetime_sample, amplitude_sample, sp_all
+
+
+def risetime_energy(datadir="./", nsims=5, dt=0.0005):
+
+
+    parameters_red = extract_sample(datadir, nsims)
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+
+    risetime_sample, energy_sample = [], []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        risetime_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
+
+        #risetime_all = risetime_all.flatten()
+        energy_all = np.array([np.array([a.energy for a in s.all]) for s in sample])
+        #amplitude_all = amplitude_all.flatten()
+
+        risetime, energy = [], []
+        for r,a in zip(risetime_all, energy_all):
+            risetime.extend(r)
+            energy.extend(a)
+
+        risetime_sample.append(risetime)
+        energy_sample.append(energy)
+
+    sp_all = []
+
+    fig = figure(figsize=(12,9))
+    ax = fig.add_subplot(111)
+    for i,(r,a) in enumerate(zip(risetime_sample, energy_sample)):
+        a = np.array(a)/0.0005
+        sp = scipy.stats.spearmanr(r,a)
+        sp_all.append(sp)
+        scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
+
+    axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+          np.max([np.max(np.log10(r)) for r in risetime_sample]),
+          np.min([np.min(np.log10(a)) for r in energy_sample]),
+          np.max([np.max(np.log10(a)) for a in energy_sample])])
+
+    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+    ylabel("total number of counts in a spike", fontsize=20)
+    title("total number of counts in a spike versus rise time")
+    savefig("risetime_energy.png", format="png")
+    close()
+
+    return risetime_sample, energy_sample, sp_all
+
+def risetime_skewness(datadir="./", nsims=5):
+
+
+    parameters_red = extract_sample(datadir, nsims)
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+
+    risetime_sample, skewness_sample = [], []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        risetime_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
+
+        #risetime_all = risetime_all.flatten()
+        skewness_all = np.array([np.array([a.skew for a in s.all]) for s in sample])
+        #amplitude_all = amplitude_all.flatten()
+
+        risetime, skewness = [], []
+        for r,a in zip(risetime_all, skewness_all):
+            risetime.extend(r)
+            skewness.extend(a)
+
+        risetime_sample.append(risetime)
+        skewness_sample.append(skewness)
+
+    sp_all = []
+
+    fig = figure(figsize=(12,9))
+    ax = fig.add_subplot(111)
+    for i,(r,a) in enumerate(zip(risetime_sample, skewness_sample)):
+        a = np.array(a)/0.0005
+        sp = scipy.stats.spearmanr(r,a)
+        sp_all.append(sp)
+        scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
+
+    axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+          np.max([np.max(np.log10(r)) for r in risetime_sample]),
+          np.min([np.min(np.log10(a)) for r in skewness_sample]),
+          np.max([np.max(np.log10(a)) for a in skewness_sample])])
+
+    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+    ylabel("skewness parameter", fontsize=20)
+    title("skewness versus rise time")
+    savefig("risetime_skewness.png", format="png")
+    close()
+
+    return risetime_sample, skewness_sample, sp_all
 
 
 
+def waiting_times(datadir="./", nsims=10):
 
+    parameters_red = extract_sample(datadir, nsims)
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+    waitingtime_sample = []
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        t0_all = np.array([np.array([a.t0 for a in s.all]) for s in sample])
+
+        t0 = []
+        for t in t0_all:
+            t0.extend(t)
+
+        t0_sort = np.sort(np.array(t0))
+        print(t0_sort)
+
+        waitingtime = t0_sort[1:] - t0_sort[:-1]
+        waitingtime_sample.append(waitingtime)
+
+
+    fig = figure(figsize=(12,9))
+    ax = fig.add_subplot(111)
+    n_all = []
+    for i,w in enumerate(waitingtime_sample):
+
+        n,bins, patches = hist(log10(w), bins=30, range=[np.log10(0.0001), np.log10(1000.0)],
+                               color=cm.jet(i*20),alpha=0.6, normed=True)
+        n_all.append(n)
+
+    axis([np.log10(0.0001), np.log10(1000.0), np.min([np.min(n) for n in n_all]), np.max([np.min(n) for n in n_all])])
+
+    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+    ylabel("total number of counts in a spike", fontsize=20)
+    title("total number of counts in a spike versus rise time")
+    savefig("risetime_energy.png", format="png")
+    close()
+
+
+    return waitingtime_sample
+
+def skewness_dist(datadir="./", nsims=10):
+
+    parameters_red = extract_sample(datadir, nsims)
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+    skewness_sample = []
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        skewness_all = np.array([np.array([a.skew for a in s.all]) for s in sample])
+
+        skewness = []
+        for t in skewness_all:
+            skewness.extend(t)
+
+        skewness_sample.append(skewness)
+
+    fig = figure(figsize=(12,9))
+    ax = fig.add_subplot(111)
+
+    for i,w in enumerate(skewness_sample):
+
+        n,bins, patches = hist(log10(w), bins=30,
+                               color=cm.jet(i*20),alpha=0.6, normed=True)
+        #n_all.append(n)
+
+    #axis([, np.log10(1000.0), np.min([np.min(n) for n in n_all]), np.max([np.min(n) for n in n_all])])
+
+    xlabel(r"$\log{(\mathrm{skewness})}$ [s]", fontsize=20)
+    ylabel("p(skewness)", fontsize=20)
+    title("skewness parameter for a large number of spikes")
+    savefig("skewness_dist.png", format="png")
+    close()
+
+
+    return skewness_sample
 
 
 ##### OLD CODE: NEED TO CHECK THIS! ##########
@@ -233,6 +503,7 @@ def parameter_sample(filename, datadir="./"):
         pars_flat = np.array(pars_flat)
 
         p = parameters.TwoExpCombined(pars_flat, int(nbursts), log=False, bkg=True)
+        e_all = p.compute_energy()
 
         parameters_all.append(p)
 

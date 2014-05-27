@@ -149,11 +149,13 @@ class TwoExpParameters(Parameters, object):
 
     def compute_energy(self, bkg=0):
         amp = self.amp - bkg
-        norm = amp/self.scale
-        first_term = np.exp(self.t0/self.scale)
-        second_term = (1.0/self.skew)*np.exp(-self.t0/(self.skew*self.scale))
+        norm = amp*self.scale
+        first_term = 1.0
+        second_term = self.skew
 
-        return norm*(first_term + second_term)
+        self.energy = norm*(first_term + second_term)
+
+        return self.energy
 
 
 class TwoExpCombined(Parameters, object):
@@ -319,10 +321,11 @@ class TwoExpCombined(Parameters, object):
         e_all = []
 
         if "bkg" in self.__dict__.keys():
-            bkg = self.bkg
+            #bkg = self.bkg
+            bkg= 0.0
         else:
             bkg = 0.0
-
+        #print("bkg: %f"%bkg)
         for a in self.all:
             e = a.compute_energy(bkg=bkg)
             e_all.append(e)

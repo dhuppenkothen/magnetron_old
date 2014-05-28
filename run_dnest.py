@@ -238,10 +238,10 @@ def run_burst(filename, dnest_dir = "./"):
     dt_wanted = 0.0005
 
 
-    if dt < 0.7*dt_wanted:
+    if dt < dt_wanted:
         dt_new = int(dt_wanted/dt)
         assert dt_wanted/dt >1, "New time resolution smaller than old one! This is wrong!"
-        bintimes, bincounts = burstmodel.rebin_lightcurve(times, counts, dt_new)
+        bintimes, bincounts = burstmodel.rebin_lightcurve(times, counts, dt_new, type="sum")
 
         np.savetxt("%s_new.dat"%(filename[:-4]), np.array(zip(bintimes, bincounts)))
 

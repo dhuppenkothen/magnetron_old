@@ -317,7 +317,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=500):
             print("nlevels: %i" %len(samples)) 
             print("Endflag: " + str(endflag))
 
-            if len(samples) >= nsims and len(np.shape(samples)) > 1:
+            if len(samples) >= np.max([5*nlevels, 1000+nlevels]) and len(np.shape(samples)) > 1:
             #if len(samples) >= np.max([5*nlevels, 1000+nlevels]) and len(np.shape(samples)) > 1:
                 endflag = True
             else:

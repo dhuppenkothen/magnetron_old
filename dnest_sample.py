@@ -9,6 +9,7 @@ import word
 from pylab import *
 import matplotlib.cm as cm
 import scipy.stats
+import scipy.optimize
 
 def plot_posterior_lightcurves(datadir="./", nsims=10):
 
@@ -28,6 +29,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
             print("shape data: " + str(len(data[:,0])))
             print("shape sample: " + str(len(sample[i,-data.shape[0]:])))
             plot(data[:,0], sample[i,-data.shape[0]:], lw=1)
+            plot(data[:,0], np.ones(len(data[:,0]))*sample[i,0], lw=2)
         xlabel("Time since trigger [s]", fontsize=20)
         ylabel("Counts per bin", fontsize=20)
 
@@ -43,7 +45,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
     return
 
 
-def extract_sample(datadir="./", nsims=50):
+def extract_sample(datadir="./", nsims=50, filter_weak=False):
 
     files = glob.glob("%s*posterior*"%datadir)
     print("files: " + str(files))
@@ -53,7 +55,7 @@ def extract_sample(datadir="./", nsims=50):
         fname = f.split("/")[-1]
         bid = fname.split("_")[0]
         bids.append(bid)
-        parameters = parameter_sample(f)
+        parameters = parameter_sample(f, filter_weak=filter_weak)
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
 
@@ -104,7 +106,7 @@ def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005):
     fig = figure(figsize=(12,9))
     ax = fig.add_subplot(111)
     for i,(r,a) in enumerate(zip(risetime_sample, amplitude_sample)):
-        a = np.array(a)/0.0005
+        a = np.array(a)/dt
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
         logr = np.log10(r)
@@ -113,8 +115,8 @@ def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005):
 
     axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
           np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(a)) for a in amplitude_sample]),
-          np.max([np.max(np.log10(a)) for a in amplitude_sample])])
+          np.min([np.min(np.log10(np.array(a)/dt)) for a in amplitude_sample]),
+          np.max([np.max(np.log10(np.array(a)/dt)) for a in amplitude_sample])])
 
     xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
     ylabel("log(spike amplitude)", fontsize=20)
@@ -157,6 +159,15 @@ def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005):
         risetime_sample.append(risetime)
         energy_sample.append(energy)
 
+
+    ### compute lower limit for rise times
+    rx = np.logspace(np.min([np.min(np.log10(r)) for r in risetime_sample]),
+                     np.max([np.max(np.log10(r)) for r in risetime_sample]),
+                     num=1000)
+
+    min_energy = (1.0/dt)*rx
+
+
     sp_all = []
 
     fig = figure(figsize=(12,9))
@@ -169,8 +180,10 @@ def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005):
 
     axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
           np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(a)) for a in energy_sample]),
-          np.max([np.max(np.log10(a)) for a in energy_sample])])
+          np.min([np.min(np.log10(np.array(a)/dt)) for a in energy_sample]),
+          np.max([np.max(np.log10(np.array(a)/dt)) for a in energy_sample])])
+
+    plot(np.log10(rx), np.log10(min_energy), lw=2, color="black", ls="dashed")
 
     xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
     ylabel("total number of counts in a spike", fontsize=20)
@@ -226,7 +239,7 @@ def risetime_skewness(sample=None, datadir="./", nsims=5):
 
     axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
           np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(a)) for r in skewness_sample]),
+          np.min([np.min(np.log10(a)) for a in skewness_sample]),
           np.max([np.max(np.log10(a)) for a in skewness_sample])])
 
     xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
@@ -244,7 +257,7 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None)
     if sample is None and bids is None:
         parameters_red, bids = extract_sample(datadir, nsims)
     else:
-        parameter_red = sample
+        parameters_red = sample
 
 
     if nsims > parameters_red.shape[1]:
@@ -325,7 +338,7 @@ def risetime_duration(sample=None, datadir="./", nsims=10):
         print("Resetting nsims to %i."%nsims)
 
 
-    risetime_sample, skewness_sample, duration_sample, bkg_sample, amp_sample = [], [], [], [], []
+    risetime_sample, duration_sample = [], []
 
     for i in xrange(nsims):
 
@@ -333,27 +346,23 @@ def risetime_duration(sample=None, datadir="./", nsims=10):
         risetime_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
 
         #risetime_all = risetime_all.flatten()
-        skewness_all = np.array([np.array([a.skew for a in s.all]) for s in sample])
+        duration_all = np.array([np.array([a.duration for a in s.all]) for s in sample])
         #amplitude_all = amplitude_all.flatten()
 
-        amplitude_all = np.array([np.array([a.amp for a in s.all]) for s in sample])
 
-        bkg_all = np.array([s.bkg for s in sample])
-
-
-        risetime, skewness = [], []
-        for r,a in zip(risetime_all, skewness_all):
+        risetime, duration = [], []
+        for r,a in zip(risetime_all, duration_all):
             risetime.extend(r)
-            skewness.extend(a)
+            duration.extend(a)
 
         risetime_sample.append(risetime)
-        skewness_sample.append(skewness)
+        duration_sample.append(duration)
 
     sp_all = []
 
     fig = figure(figsize=(12,9))
     ax = fig.add_subplot(111)
-    for i,(r,a) in enumerate(zip(risetime_sample, skewness_sample)):
+    for i,(r,a) in enumerate(zip(risetime_sample, duration_sample)):
         a = np.array(a)
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
@@ -361,18 +370,16 @@ def risetime_duration(sample=None, datadir="./", nsims=10):
 
     axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
           np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(a)) for r in skewness_sample]),
-          np.max([np.max(np.log10(a)) for a in skewness_sample])])
+          np.min([np.min(np.log10(a)) for a in duration_sample]),
+          np.max([np.max(np.log10(a)) for a in duration_sample])])
 
     xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
-    ylabel("skewness parameter", fontsize=20)
-    title("skewness versus rise time")
-    savefig("risetime_skewness.png", format="png")
+    ylabel("spike duration", fontsize=20)
+    title("rise time versus total duration")
+    savefig("risetime_duration.png", format="png")
     close()
 
-
-
-    return
+    return risetime, duration, sp_all
 
 def skewness_dist(sample=None, datadir="./", nsims=10):
 
@@ -419,6 +426,46 @@ def skewness_dist(sample=None, datadir="./", nsims=10):
     return skewness_sample
 
 
+
+def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10):
+
+    if sample is None:
+        parameters_red,bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
+
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+
+    risetime_all, amplitude_all, energy_all, duration_all, waitingtime_all = [], [], [], [], []
+
+    for pars in parameters_red:
+
+        risetime = np.array([[a.scale for a in p.all] for p in pars])
+        duration = np.array([[a.duration for a in p.all] for p in pars])
+        t0 = np.array([[a.t0 for a in p.all] for p in pars])
+        amplitude = np.array([[a.amp for a in p.all] for p in pars])
+
+        waiting_times = np.array([t[1:]-t[:-1] for t in t0])
+
+        risetime_all.append(risetime)
+        duration_all.append(duration)
+        amplitude_all.append(amplitude)
+        waitingtime_all.append(waiting_times)
+
+    ### I NEED TO FINISH THIS FUNCTION
+
+    return
+
+
+
+
+
+
 def extract_brightest_bursts(min_countrate=100000.0):
 
     files = glob.glob("*data.dat")
@@ -443,12 +490,35 @@ def extract_brightest_bursts(min_countrate=100000.0):
         else:
             continue
 
+    return brightest
+
+
+
+def straight(x,a,b):
+    return a*x + b
+
+def pl(x, a, b):
+    return b*np.array(x)**a
+
+
+def fit_distribution(func, x, y, p0):
+
+    def lsquare(params):
+        return y - func(x, *params)
+
+    popt, pcov, infodict, mesg, ier = scipy.optimize.leastsq(lsquare, p0, full_output=True)
+
+    print("nfev: " + str(infodict["nfev"]))
+
+    print(mesg)
+
+    return popt
 
 
 ##### OLD CODE: NEED TO CHECK THIS! ##########
 
 
-def read_dnest_results(filename, datadir="./"):
+def read_dnest_results(filename, datadir="./", filter_smallest=False):
 
     """
     Read output from RJObject/DNest3 run and return in a format more
@@ -621,11 +691,12 @@ def position_histogram(sample_dict, btimes, tsearch=0.01, tfine=0.001, niter=100
     return
 
 
-def parameter_sample(filename, datadir="./"):
+def parameter_sample(filename, datadir="./", filter_weak=False):
 
     ### extract parameters from file
     sample_dict = read_dnest_results(filename, datadir=datadir)
 
+    print("filter_weak " + str(filter_weak))
 
     ### I need the parameters, the number of components, and the background parameter
     pars_all = sample_dict["parameters"]
@@ -636,13 +707,24 @@ def parameter_sample(filename, datadir="./"):
     parameters_all = []
     for pars,nbursts,bkg in zip(pars_all, nbursts_all, bkg_all):
 
-        pars_flat = np.array(pars).flatten()
+        if filter_weak:
+            pars_filtered = [p for p in pars if p[2] > bkg]
+        else:
+            pars_filtered = pars
+
+        print("len pars %i"%len(pars))
+        print("len filtered pars %i"%len(pars_filtered))
+
+        nbursts = len(pars_filtered)
+
+        pars_flat = np.array(pars_filtered).flatten()
         pars_flat = list(pars_flat)
         pars_flat.extend([bkg])
         pars_flat = np.array(pars_flat)
 
         p = parameters.TwoExpCombined(pars_flat, int(nbursts), log=False, bkg=True)
         e_all = p.compute_energy()
+        d_all = p.compute_duration()
 
         parameters_all.append(p)
 

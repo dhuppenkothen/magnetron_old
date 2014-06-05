@@ -157,6 +157,28 @@ class TwoExpParameters(Parameters, object):
 
         return self.energy
 
+    def compute_duration(self, bkg=None):
+
+        amp = self.amp
+
+        if bkg is None:
+            bkg = 0.01*amp
+
+        skew = self.skew
+        scale = self.scale
+
+        log_fall = np.log(amp/bkg)
+        log_rise = np.log(bkg/amp)
+
+        fall_term = skew*scale*log_fall
+        rise_term = scale*log_rise
+
+        self.duration = fall_term - rise_term
+
+        return self.duration
+
+
+
 
 class TwoExpCombined(Parameters, object):
 
@@ -328,6 +350,21 @@ class TwoExpCombined(Parameters, object):
         #print("bkg: %f"%bkg)
         for a in self.all:
             e = a.compute_energy(bkg=bkg)
+            e_all.append(e)
+
+        return e_all
+
+    def compute_duration(self):
+
+        e_all = []
+
+        if "bkg" in self.__dict__.keys():
+            bkg = self.bkg
+        else:
+            bkg = 0.0
+        #print("bkg: %f"%bkg)
+        for a in self.all:
+            e = a.compute_duration(bkg=bkg)
             e_all.append(e)
 
         return e_all

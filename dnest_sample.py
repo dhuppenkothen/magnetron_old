@@ -67,10 +67,13 @@ def extract_sample(datadir="./", nsims=50):
 
     return parameters_red, bids
 
-def risetime_amplitude(datadir="./", nsims=5, dt=0.0005):
+def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005):
 
+    if sample is None:
+        parameters_red, bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
 
-    parameters_red, bids = extract_sample(datadir, nsims)
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -122,10 +125,13 @@ def risetime_amplitude(datadir="./", nsims=5, dt=0.0005):
     return risetime_sample, amplitude_sample, sp_all
 
 
-def risetime_energy(datadir="./", nsims=5, dt=0.0005):
+def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005):
 
+    if sample is None:
+        parameters_red,bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
 
-    parameters_red,bids = extract_sample(datadir, nsims)
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -156,14 +162,14 @@ def risetime_energy(datadir="./", nsims=5, dt=0.0005):
     fig = figure(figsize=(12,9))
     ax = fig.add_subplot(111)
     for i,(r,a) in enumerate(zip(risetime_sample, energy_sample)):
-        a = np.array(a)
+        a = np.array(a)/dt
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
         scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
 
     axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
           np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(a)) for r in energy_sample]),
+          np.min([np.min(np.log10(a)) for a in energy_sample]),
           np.max([np.max(np.log10(a)) for a in energy_sample])])
 
     xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
@@ -174,10 +180,15 @@ def risetime_energy(datadir="./", nsims=5, dt=0.0005):
 
     return risetime_sample, energy_sample, sp_all
 
-def risetime_skewness(datadir="./", nsims=5):
+def risetime_skewness(sample=None, datadir="./", nsims=5):
+
+    if sample is None:
+        parameters_red,bids = extract_sample(datadir, nsims)
+
+    else:
+        parameters_red = sample
 
 
-    parameters_red,bids = extract_sample(datadir, nsims)
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -208,7 +219,7 @@ def risetime_skewness(datadir="./", nsims=5):
     fig = figure(figsize=(12,9))
     ax = fig.add_subplot(111)
     for i,(r,a) in enumerate(zip(risetime_sample, skewness_sample)):
-        a = np.array(a)/0.0005
+        a = np.array(a)
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
         scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
@@ -228,9 +239,14 @@ def risetime_skewness(datadir="./", nsims=5):
 
 
 
-def waiting_times(datadir="./", nsims=10, trigfile=None):
+def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None):
 
-    parameters_red, bids = extract_sample(datadir, nsims)
+    if sample is None and bids is None:
+        parameters_red, bids = extract_sample(datadir, nsims)
+    else:
+        parameter_red = sample
+
+
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -294,9 +310,15 @@ def waiting_times(datadir="./", nsims=10, trigfile=None):
     return waitingtime_sample
 
 
-def risetime_duration(datadir="./", nsims=10):
+def risetime_duration(sample=None, datadir="./", nsims=10):
 
-    parameters_red,bids = extract_sample(datadir, nsims)
+
+    if sample is None:
+        parameters_red,bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
+
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -332,7 +354,7 @@ def risetime_duration(datadir="./", nsims=10):
     fig = figure(figsize=(12,9))
     ax = fig.add_subplot(111)
     for i,(r,a) in enumerate(zip(risetime_sample, skewness_sample)):
-        a = np.array(a)/0.0005
+        a = np.array(a)
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
         scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
@@ -352,9 +374,13 @@ def risetime_duration(datadir="./", nsims=10):
 
     return
 
-def skewness_dist(datadir="./", nsims=10):
+def skewness_dist(sample=None, datadir="./", nsims=10):
 
-    parameters_red = extract_sample(datadir, nsims)
+    if sample is None:
+        parameters_red = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -391,6 +417,32 @@ def skewness_dist(datadir="./", nsims=10):
 
 
     return skewness_sample
+
+
+def extract_brightest_bursts(min_countrate=100000.0):
+
+    files = glob.glob("*data.dat")
+    posterior_files = glob.glob("*posterior_sample*")
+
+    brightest = []
+    brightest_posterior = []
+    for f in files:
+        fsplit = f.split("_")
+        if "%s_%s_posterior_sample.txt"%(fsplit[0], fsplit[1]) in posterior_files:
+            times, counts = burstmodel.read_gbm_lightcurves(f)
+            dt = times[1] -times[0]
+            print(dt)
+            countrate = np.array(counts)/dt
+            maxc = np.max(countrate)
+            print(maxc)
+            if min_countrate <= maxc <= 280000.0:
+                brightest.append(f)
+                brightest_posterior.append("%s_%s_posterior_sample.txt"%(fsplit[0], fsplit[1]))
+            else:
+                continue
+        else:
+            continue
+
 
 
 ##### OLD CODE: NEED TO CHECK THIS! ##########

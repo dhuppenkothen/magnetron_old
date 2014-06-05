@@ -229,7 +229,7 @@ def find_weights(p_samples):
         return False
 
 
-def run_burst(filename, dnest_dir = "./", levelfilename=None):
+def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=500):
 
     times, counts = burstmodel.read_gbm_lightcurves(filename)
 
@@ -311,7 +311,8 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None):
     while endflag is False:
         try:
             tsys.sleep(120)
-            samples = np.loadtxt("%ssample.txt"%dnest_dir)
+            logx_samples, p_samples = postprocess_new(save_posterior=True)
+            samples = np.loadtxt("%sposterior_sample.txt"%dnest_dir)
             print("samples file: %ssample.txt" %dnest_dir)
             print("nlevels: %i" %len(samples)) 
             print("Endflag: " + str(endflag))

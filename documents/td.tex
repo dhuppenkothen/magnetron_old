@@ -72,20 +72,34 @@ the nuclear physics of the star's crust and core, making them a prime diagnostic
 
 While giant flares are relatively rare phenomena (we have only observed $3$ in the last $35$ years), magnetars also show a complex
 behaviour of emitting much smaller, shorter recurrent bursts. These bursts are of the order of $<1\mathrm{s}$ long, with energies
-generally between $10^{38}\,\mathrm{erg}$ and $10^{41}\,\mathrm{erg}$, and are observed either appearing individually, or in burst 
+generally between $10^{38}\,\mathrm{erg}$ and $10^{41}\,\mathrm{erg}$, and have a complex temporal structure with single or
+multiple peaks that differs from one burst to the next. They are observed either appearing individually, or in burst 
 storms, where tens or hundreds of bursts can occur over a timescale of single days to weeks. The appearance of bursts appears to be
-random. Additionally, they show a complex temporal morphology within each burst. %%ALSO NEED TO SAY WE
-%% HAVE MAY OF THESE BURSTS! 
-%% NEED SOME SOC STUFF HERE
-At present, it is not clear whether these bursts are smaller-scale versions of the crust fracture process believed to produce a giant flare,
+random, but far more numerous than the giant flares: for the two best-observed magnetars, SGR 1806-20 and SGR 1900+14, the
+data set spans thousands of such bursts. 
+
+One observation of particular interest concerns the overall distributions of these bursts: the differential distribution of fluence (integrated flux) and 
+the cumulative distribution of waiting times are similar to those observed in earth quakes and solar flares. Especially the fluence distribution
+can be well-modelled by a power law with a power-law index of $\sim 1.7$, believed to be a typical signature for a system obeying 
+self-organised criticality (SOC). In the SOC framework, the physical system in question continuously drives itself towards a critical state,
+without requiring fine tuning. When the critical state is reached, relaxation occurs via a catastrophic release of energy. The system returns
+to a subcritical state, and the cycle begins anew. The standard example of an SOC system is a sand pile: as sand grains are slowly dropped onto
+the pile, the slope of the sand pile steepens gradually. However, there is a critical slope, at which the sand pile can no longer support the 
+additional grains dropped onto it, and relaxation occurs via an avalanche, returning the slope to a sub-critical state. 
+One advantage of describing a system in the SOC framework is that while the details of the process leading to the critical state and subsequent
+relaxation depend on the physical processes specific to the system, many of the overall statistical properties are universal.
+
+%%% STILL NEED TO TIE TOGETHER SOC STUFF WITH STUFF BELOW ON EXTRACTING TIME SCALES
+
+At present, it is not clear whether magnetar bursts are smaller-scale versions of the crust fracture process believed to produce a giant flare,
 or perhaps entirely magnetospheric events. In the latter scenario, the evolution of the magnetic field would operate on timescales
 slow enough for the crust to respond with plastic deformation rather than brittle fracture, and the energy release would proceed via
-explosive reconnection in the magnetosphere instead. 
+explosive reconnection in the magnetosphere instead.
 
 %%% do these models predict different timescales, and can we say something here about distinguishing them?
 
-Because of the bursts' complex morphology, it is difficult to extract information from their temporal evolution. Many bursts show a
-pattern of one or multiple spikes, where these spikes sometimes sit on top of each other. To extract parameters that could be related
+Because of the bursts' complex temporal morphology, differing from burst to burst, it is difficult to extract information from their temporal evolution. 
+Many bursts show a pattern of one or multiple spikes, where these spikes sometimes sit on top of each other. To extract parameters that could be related
 to physical quantities such as the rise time of each spike and the waiting time distribution between spikes, it is necessary to 
 extract both from the data in an unbiased way. At the same time, because of the much larger data set SGR bursts offer, this process
 needs to operate automatically without the user's intervention.

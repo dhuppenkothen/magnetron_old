@@ -41,15 +41,68 @@ We perform probabilistic inference with a Poisson likelihood and vague priors to
   and the shape of the dimensionless spike function.
 The phenomenology of spike multiplicity, shape, and width is discussed.
 
-\section{introduction}
+\section{Introduction}
 
-Magnetars make bursts.
-Magnetar bursts have many spikes each.
-The spikes look similar within each burst.
-That motivates a very simple model,
-  in which each burst is made up of a sum of spike models, which we call words.
+Neutron stars, the ultra-dense compact remnants of core-collapse supernovae, are the prime laboratory for studying nuclear 
+physical processes in a parameter regime of density and pressure inaccessible to experiments on Earth. 
+Among the veritable zoo of neutron star phenomena, two stand out for their peculiar parameters: Soft Gamma Repeaters (SGRs),
+named after their hallmark recurring bursts in hard X-rays, and Anomalous X-ray Pulsars (AXPs), persistent pulsating X-ray
+sources with a conspicuous paucity of radio counterparts (although a total of three sources from both groups now
+have confirmed radio detections). 
 
-\section{data}
+While SGRs and AXPs were detected as separate phenomena, they share common properties: slow spin periods between
+$2 - 12 \, \mathrm{s}$, coupled with generally high period derivatives, lead to large inferred dipole magnetic fields of
+the order of $10^{14} \, \mathrm{G}$, well above the quantum-critical limit $B_{\mathrm{QED}} = 4.4 \times 10^{13} \, \mathrm{G}$,
+where quantum effects such as pair production and photon splitting become important (although three sources have been 
+identified with properties similar to SGRs and AXPs, but inferred dipole fields below this limit). 
+
+Both AXPs and SGRs are believed to be the observable phenomena of the same underlying physical system: a highly magnetised
+neutron star, also called a magnetar. In the standard scenario, the observable X-ray emission, both persistent emission and bursts, 
+is powered by the slow evolution and decay of the source's strong magnetic field, instead of the loss of rotational energy as 
+is generally the case for standard radio pulsars. 
+
+SGR bursts are of particular interest for a variety of reasons. Most importantly, the observation of three giant flares, catastrophic
+outbursts in hard X-rays of energies up to $10^{47} \, \mathrm{erg}$, and the associated detection of quasi-periodic oscillations (QPOs)
+in the tails of these flares, have opened up a potential new way to look into the neutron star interior via asteroseismology. In the standard 
+model, these giant flares are caused by a catastrophic re-ordering of the neutron star's internal field. As the magnetic field lines, frozen into
+the solid crust, move, the crust responds by fracturing when its breaking strain is exceeded by the forces exerted by the magnetic field.
+The energy released in this process is both released into the magnetosphere, where it forms a pair plasma that slowly radiates away and
+produces the observed emission, as well as seismic waves throughout the star. The frequencies of the oscillatory modes depend on
+the nuclear physics of the star's crust and core, making them a prime diagnostic for the conditions inside the star.
+
+While giant flares are relatively rare phenomena (we have only observed $3$ in the last $35$ years), magnetars also show a complex
+behaviour of emitting much smaller, shorter recurrent bursts. These bursts are of the order of $<1\mathrm{s}$ long, with energies
+generally between $10^{38}\,\mathrm{erg}$ and $10^{41}\,\mathrm{erg}$, and are observed either appearing individually, or in burst 
+storms, where tens or hundreds of bursts can occur over a timescale of single days to weeks. The appearance of bursts appears to be
+random. Additionally, they show a complex temporal morphology within each burst. %%ALSO NEED TO SAY WE
+%% HAVE MAY OF THESE BURSTS! 
+%% NEED SOME SOC STUFF HERE
+At present, it is not clear whether these bursts are smaller-scale versions of the crust fracture process believed to produce a giant flare,
+or perhaps entirely magnetospheric events. In the latter scenario, the evolution of the magnetic field would operate on timescales
+slow enough for the crust to respond with plastic deformation rather than brittle fracture, and the energy release would proceed via
+explosive reconnection in the magnetosphere instead. 
+
+%%% do these models predict different timescales, and can we say something here about distinguishing them?
+
+Because of the bursts' complex morphology, it is difficult to extract information from their temporal evolution. Many bursts show a
+pattern of one or multiple spikes, where these spikes sometimes sit on top of each other. To extract parameters that could be related
+to physical quantities such as the rise time of each spike and the waiting time distribution between spikes, it is necessary to 
+extract both from the data in an unbiased way. At the same time, because of the much larger data set SGR bursts offer, this process
+needs to operate automatically without the user's intervention.
+
+In this paper, we propose a new method to model magnetar bursts as a linear combination of simple shapes. Both the number of components
+per burst as well as the model parameters for each components are free parameters, to be explored using Diffusive Nested Sampling.
+We apply this model to a large data set of bursts from XXX [WHICH MAGNETAR], and, for the first time, extract a wealth of 
+physically relevant time scales from SGR bursts. We place the results in the context of the SOC framework, and tie the extracted
+quantities to relevant physical parameters.
+
+%Magnetars make bursts.
+%Magnetar bursts have many spikes each.
+%The spikes look similar within each burst.
+%That motivates a very simple model,
+%  in which each burst is made up of a sum of spike models, which we call words.
+
+\section{Data}
 
 The ``raw'' data, for our purposes, are photon arrival times.
 For magnetar SGR J1550-5418, these come from triggered photon streams telemetered down from the \Fermi\ Gamma-ray Burst Monitor (GBM).
@@ -68,7 +121,7 @@ imposes a time scale onto the data, which means that the data then deviate away 
 Dead time is harder to quantify and account for than saturation. It is possible to correct count rates based on simulations of the instrument (REF, Bhat et al, 2013),
 but this will not correct the statistical distributions. We currently don't take dead time into account in our analysis. 
 
-We currently use light curves with a time resolution of $0.1\,\mathrm{ms}$. The time resolution is chosen small enough to preserve features
+We currently use light curves with a time resolution of $0.5\,\mathrm{ms}$. The time resolution is chosen small enough to preserve features
 in the data on short time scales, while at the same time have a reasonable number of counts per time bin. 
 Burst durations are defined in $T90$, the time in which $90\%$ of photons arrive at the detector, with $0.2T90$ added on either side
 to make sure the entire burst is included. 
@@ -91,9 +144,14 @@ The data from a few example bursts are shown in Figure \ref{fig:example_bursts}.
 %\end{center}
 %\end{figure*}
 
+\section{Analysis Methods}
 
 
-\section{model}
+\subsection{A hierarchical Bayesian model for magnetar bursts}
+
+
+
+\section{Model shapes}
 
 The model for the data in or near one burst is
 \begin{eqnarray}
@@ -191,9 +249,10 @@ Figure [what figure?] shows an example burst,
 It also shows the result of the posterior-prediction validation
   that selects $K=4$ as the best choice for this burst.
 
-\section{results}
+\section{Results}
 
-\section{discussion}
+\section{Discussion}
+
 
 \paragraph{acknowledgements}
 We thank the organizers of MaxEnt2013.

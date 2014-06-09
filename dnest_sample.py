@@ -16,17 +16,19 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
 
     for f in files:
         fsplit = f.split("_")
-        data = loadtxt("%s_%s_all_data_new.dat"%(fsplit[0], fsplit[1]))
+        data = loadtxt("%s_%s_all_data.dat"%(fsplit[0], fsplit[1]))
         fig = figure(figsize=(24,9))
         ax = fig.add_subplot(121)
         plot(data[:,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
         sample = atleast_2d(loadtxt(f))
 
+        print(f)
         print(sample.shape)
-        ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
+
+        ind = np.random.choice(np.arange(len(sample)), replace=False, size=nsims3)
         for i in ind:
-            print("shape data: " + str(len(data[:,0])))
-            print("shape sample: " + str(len(sample[i,-data.shape[0]:])))
+            #print("shape data: " + str(len(data[:,0])))
+            #print("shape sample: " + str(len(sample[i,-data.shape[0]:])))
             plot(data[:,0], sample[i,-data.shape[0]:], lw=1)
         xlabel("Time since trigger [s]", fontsize=20)
         ylabel("Counts per bin", fontsize=20)
@@ -43,13 +45,13 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
     return
 
 
-def extract_sample(datadir="./", nsims=5):
+def extract_sample(datadir="./", nsims=5, trigfile=None):
 
     files = glob.glob("%s*posterior*"%datadir)
 
     all_parameters, nsamples = [], []
     for f in files:
-        parameters = parameter_sample(f)
+        parameters = parameter_sample(f, trigfile=trigfile)
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
 
@@ -121,7 +123,7 @@ def risetime_amplitude(datadir="./", nsims=5, dt=0.0005):
 def risetime_energy(datadir="./", nsims=5, dt=0.0005):
 
 
-    parameters_red = extract_sample(datadir, nsims)
+    parameters_red = extract_sample(datadir, nsims, trigfile=None)
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -224,9 +226,9 @@ def risetime_skewness(datadir="./", nsims=5):
 
 
 
-def waiting_times(datadir="./", nsims=10):
+def waiting_times(datadir="./", nsims=10, trigfile="sgr1550_ttrig.dat"):
 
-    parameters_red = extract_sample(datadir, nsims)
+    parameters_red = extract_sample(datadir, nsims, trigfile=trigfile)
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -313,7 +315,7 @@ def skewness_dist(datadir="./", nsims=10):
 ##### OLD CODE: NEED TO CHECK THIS! ##########
 
 
-def read_dnest_results(filename, datadir="./"):
+def read_dnest_results(filename, datadir="./", trigfile=None):
 
     """
     Read output from RJObject/DNest3 run and return in a format more
@@ -329,6 +331,22 @@ def read_dnest_results(filename, datadir="./"):
 
     dfile = "%s%s" %(datadir, filename)
     alldata = np.loadtxt(dfile)
+
+
+    if not trigfile is None:
+        trigdata = burstmodel.conversion("%s%s"%(datadir,trigfile))
+        bids = np.array(trigdata[0])
+        ttrig_all = np.array([float(t) for t in trigdata[1]])
+
+        bid_data = filename.split("_")[0][2:]
+        #print("bid_data: " + str(bid_data))
+        bind = np.where(bids == bid_data)[0]
+        ttrig = ttrig_all[bind]
+        #print("ttrig: " + str(ttrig))
+
+    else:
+        ttrig = 0
+
 
     niter = len(alldata)
 
@@ -363,7 +381,7 @@ def read_dnest_results(filename, datadir="./"):
     nbursts = alldata[:, 7]
 
     ## peak positions for all model components, some will be zero
-    pos_all = alldata[:, 8:8+compmax]
+    pos_all = np.array(alldata[:, 8:8+compmax]) + ttrig
 
     ## amplitudes for all model components, some will be zero
     amp_all = alldata[:, 8+compmax:8+2*compmax]
@@ -483,10 +501,10 @@ def position_histogram(sample_dict, btimes, tsearch=0.01, tfine=0.001, niter=100
     return
 
 
-def parameter_sample(filename, datadir="./"):
+def parameter_sample(filename, datadir="./", trigfile=None):
 
     ### extract parameters from file
-    sample_dict = read_dnest_results(filename, datadir=datadir)
+    sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile)
 
 
     ### I need the parameters, the number of components, and the background parameter

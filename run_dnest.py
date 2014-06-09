@@ -229,23 +229,23 @@ def find_weights(p_samples):
         return False
 
 
-def run_burst(filename, dnest_dir = "./"):
+def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=500):
 
     times, counts = burstmodel.read_gbm_lightcurves(filename)
 
     dt = times[1] - times[0]
 
-    dt_wanted = 0.0005
+    #dt_wanted = 0.0005
 
 
-    if dt < 0.7*dt_wanted:
-        dt_new = int(dt_wanted/dt)
-        assert dt_wanted/dt >1, "New time resolution smaller than old one! This is wrong!"
-        bintimes, bincounts = burstmodel.rebin_lightcurve(times, counts, dt_new, type="sum")
+    #if dt < dt_wanted:
+    #    dt_new = int(dt_wanted/dt)
+    #    assert dt_wanted/dt >1, "New time resolution smaller than old one! This is wrong!"
+    #    bintimes, bincounts = burstmodel.rebin_lightcurve(times, counts, dt_new, type="sum")
 
-        np.savetxt("%s_new.dat"%(filename[:-4]), np.array(zip(bintimes, bincounts)))
+    #    np.savetxt("%s_new.dat"%(filename[:-4]), np.array(zip(bintimes, bincounts)))
 
-        filename = "%s_new.dat"%(filename[:-4])
+    #    filename = "%s_new.dat"%(filename[:-4])
 
     ### first run: set levels to 200
     print("Rewriting DNest run file")
@@ -295,6 +295,13 @@ def run_burst(filename, dnest_dir = "./"):
     dnest_data = np.loadtxt("%ssample.txt" %dnest_dir)
     nlevels = len(dnest_data)
 
+
+    ### save levels to file
+    if not levelfilename is None:
+        levelfile = open(levelfilename, "a")
+        levelfile.write("%s \t %i \n" %(filename, nlevels))
+        levelfile.close()
+
     rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
     remake_model()
 
@@ -304,12 +311,13 @@ def run_burst(filename, dnest_dir = "./"):
     while endflag is False:
         try:
             tsys.sleep(120)
-            samples = np.loadtxt("%ssample.txt"%dnest_dir)
+            logx_samples, p_samples = postprocess_new(save_posterior=True)
+            samples = np.loadtxt("%sposterior_sample.txt"%dnest_dir)
             print("samples file: %ssample.txt" %dnest_dir)
             print("nlevels: %i" %len(samples)) 
             print("Endflag: " + str(endflag))
 
-            if len(samples) >= 5*nlevels and len(np.shape(samples)) > 1:
+            if len(samples) >= nsims and len(np.shape(samples)) > 1:
             #if len(samples) >= np.max([5*nlevels, 1000+nlevels]) and len(np.shape(samples)) > 1:
                 endflag = True
             else:
@@ -339,22 +347,29 @@ def run_burst(filename, dnest_dir = "./"):
     return
 
 
-def run_all_bursts(data_dir="./", dnest_dir="./"):
+def run_all_bursts(data_dir="./", dnest_dir="./", levelfilename="test_levels.dat"):
 
     print("I am in run_all_bursts")
     filenames = glob.glob("%s*_data.dat"%data_dir)
     print(filenames)
 
+    levelfilename = data_dir+levelfilename
+    print("Saving levels in file %s"%levelfilename)
+
+    levelfile = open(levelfilename, "w")
+    levelfile.write("# data filename \t number of levels \n")
+    levelfile.close()
+
     for f in filenames:
         print("Running on burst %s" %f)
-        run_burst(f, dnest_dir=dnest_dir)
+        run_burst(f, dnest_dir=dnest_dir, levelfilename=levelfilename)
 
     return
 
 
 def main():
     print("I am in main")
-    run_all_bursts(data_dir, dnest_dir)
+    run_all_bursts(data_dir, dnest_dir, levelfilename)
     return
 
 
@@ -366,9 +381,12 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--dnestdir", action="store", required=False, dest="dnest_dir",
                         default="./", help="Specify directory with DNest model implementation "
                                            "(default: current directory")
+    parser.add_argument("-f", "--filename", action="store", required=False, dest="filename",
+                        default="test_levels.dat", help="Define filename for file that saves the number of levels to use")
 
     clargs = parser.parse_args()
     data_dir = clargs.data_dir
     dnest_dir = clargs.dnest_dir
+    levelfilename = clargs.filename
 
     main()

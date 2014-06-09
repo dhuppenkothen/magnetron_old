@@ -48,10 +48,16 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
 def extract_sample(datadir="./", nsims=5, trigfile=None):
 
     files = glob.glob("%s*posterior*"%datadir)
+    print("files: " + str(files))
 
-    all_parameters, nsamples = [], []
+    all_parameters, bids, nsamples = [], [], []
     for f in files:
+        #parameters = parameter_sample(f, trigfile=trigfile)
+        fname = f.split("/")[-1]
+        bid = fname.split("_")[0]
+        bids.append(bid)
         parameters = parameter_sample(f, trigfile=trigfile)
+
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
 
@@ -63,12 +69,12 @@ def extract_sample(datadir="./", nsims=5, trigfile=None):
     parameters_red = np.array([np.random.choice(p, replace=False, size=nsims) for p in all_parameters])
     print("shape of reduced parameter array: " + str(parameters_red.shape))
 
-    return parameters_red
+    return parameters_red, bids
 
 def risetime_amplitude(datadir="./", nsims=5, dt=0.0005):
 
 
-    parameters_red = extract_sample(datadir, nsims)
+    parameters_red, bids = extract_sample(datadir, nsims)
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -104,15 +110,15 @@ def risetime_amplitude(datadir="./", nsims=5, dt=0.0005):
         sp_all.append(sp)
         logr = np.log10(r)
         loga = np.log10(a)
-        scatter(logr,loga, color=cm.jet(i*20))
+        scatter(logr,loga, color=cm.jet(i*50))
 
     axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
           np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(a)) for r in amplitude_sample]),
+          np.min([np.min(np.log10(a)) for a in amplitude_sample]),
           np.max([np.max(np.log10(a)) for a in amplitude_sample])])
 
     xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
-    ylabel("spike amplitude", fontsize=20)
+    ylabel("log(spike amplitude)", fontsize=20)
     title("spike amplitude versus rise time")
     savefig("risetime_amplitude.png", format="png")
     close()
@@ -123,7 +129,7 @@ def risetime_amplitude(datadir="./", nsims=5, dt=0.0005):
 def risetime_energy(datadir="./", nsims=5, dt=0.0005):
 
 
-    parameters_red = extract_sample(datadir, nsims, trigfile=None)
+    parameters_red,bids = extract_sample(datadir, nsims)
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -154,7 +160,7 @@ def risetime_energy(datadir="./", nsims=5, dt=0.0005):
     fig = figure(figsize=(12,9))
     ax = fig.add_subplot(111)
     for i,(r,a) in enumerate(zip(risetime_sample, energy_sample)):
-        a = np.array(a)/0.0005
+        a = np.array(a)
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
         scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
@@ -175,7 +181,7 @@ def risetime_energy(datadir="./", nsims=5, dt=0.0005):
 def risetime_skewness(datadir="./", nsims=5):
 
 
-    parameters_red = extract_sample(datadir, nsims)
+    parameters_red,bids = extract_sample(datadir, nsims)
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -226,22 +232,42 @@ def risetime_skewness(datadir="./", nsims=5):
 
 
 
-def waiting_times(datadir="./", nsims=10, trigfile="sgr1550_ttrig.dat"):
+def waiting_times(datadir="./", nsims=10, trigfile=None):
 
-    parameters_red = extract_sample(datadir, nsims, trigfile=trigfile)
+    parameters_red, bids = extract_sample(datadir, nsims)
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
         print("Resetting nsims to %i."%nsims)
 
     waitingtime_sample = []
+    print("nsims: %i"%nsims)
+
+    if not trigfile is None:
+        data = burstmodel.conversion(trigfile)
+        bid_ttrig = np.array([t for t in data[0]])
+        ttrig_all = np.array([float(t) for t in data[1]])
+
+
     for i in xrange(nsims):
 
         sample = parameters_red[:,i]
+
         t0_all = np.array([np.array([a.t0 for a in s.all]) for s in sample])
 
+        t0_all_corrected = []
+        if not trigfile is None:
+            for j,t in enumerate(t0_all):
+                bid_ind = np.where(bid_ttrig == bids[j])[0]
+                ttrig = ttrig_all[bid_ind]
+                t = t + ttrig
+                t0_all_corrected.append(t)
+
+        else:
+            t0_all_corrected = t0_all
+
         t0 = []
-        for t in t0_all:
+        for t in t0_all_corrected:
             t0.extend(t)
 
         t0_sort = np.sort(np.array(t0))
@@ -256,20 +282,79 @@ def waiting_times(datadir="./", nsims=10, trigfile="sgr1550_ttrig.dat"):
     n_all = []
     for i,w in enumerate(waitingtime_sample):
 
-        n,bins, patches = hist(log10(w), bins=30, range=[np.log10(0.0001), np.log10(1000.0)],
+        n,bins, patches = hist(log10(w), bins=30, range=[np.log10(0.0001), np.log10(330.0)],
                                color=cm.jet(i*20),alpha=0.6, normed=True)
         n_all.append(n)
 
-    axis([np.log10(0.0001), np.log10(1000.0), np.min([np.min(n) for n in n_all]), np.max([np.min(n) for n in n_all])])
+    axis([np.log10(0.0001), np.log10(330.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
 
     xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
     ylabel("total number of counts in a spike", fontsize=20)
     title("total number of counts in a spike versus rise time")
-    savefig("risetime_energy.png", format="png")
+    savefig("waitingtimes.png", format="png")
     close()
 
 
     return waitingtime_sample
+
+
+def risetime_duration(datadir="./", nsims=10):
+
+    parameters_red,bids = extract_sample(datadir, nsims)
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+
+    risetime_sample, skewness_sample, duration_sample, bkg_sample, amp_sample = [], [], [], [], []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        risetime_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
+
+        #risetime_all = risetime_all.flatten()
+        skewness_all = np.array([np.array([a.skew for a in s.all]) for s in sample])
+        #amplitude_all = amplitude_all.flatten()
+
+        amplitude_all = np.array([np.array([a.amp for a in s.all]) for s in sample])
+
+        bkg_all = np.array([s.bkg for s in sample])
+
+
+        risetime, skewness = [], []
+        for r,a in zip(risetime_all, skewness_all):
+            risetime.extend(r)
+            skewness.extend(a)
+
+        risetime_sample.append(risetime)
+        skewness_sample.append(skewness)
+
+    sp_all = []
+
+    fig = figure(figsize=(12,9))
+    ax = fig.add_subplot(111)
+    for i,(r,a) in enumerate(zip(risetime_sample, skewness_sample)):
+        a = np.array(a)/0.0005
+        sp = scipy.stats.spearmanr(r,a)
+        sp_all.append(sp)
+        scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
+
+    axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+          np.max([np.max(np.log10(r)) for r in risetime_sample]),
+          np.min([np.min(np.log10(a)) for r in skewness_sample]),
+          np.max([np.max(np.log10(a)) for a in skewness_sample])])
+
+    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+    ylabel("skewness parameter", fontsize=20)
+    title("skewness versus rise time")
+    savefig("risetime_skewness.png", format="png")
+    close()
+
+
+
+    return
 
 def skewness_dist(datadir="./", nsims=10):
 
@@ -331,6 +416,9 @@ def read_dnest_results(filename, datadir="./", trigfile=None):
 
     dfile = "%s%s" %(datadir, filename)
     alldata = np.loadtxt(dfile)
+    print("filename: " + str(filename))
+    print("shape alldata: " + str(alldata.shape))
+
 
 
     if not trigfile is None:
@@ -509,6 +597,7 @@ def parameter_sample(filename, datadir="./", trigfile=None):
 
     ### I need the parameters, the number of components, and the background parameter
     pars_all = sample_dict["parameters"]
+
     nbursts_all = sample_dict["nbursts"]
     bkg_all = sample_dict["bkg"]
 

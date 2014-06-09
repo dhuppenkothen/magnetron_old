@@ -20,17 +20,23 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
 
     for f in files:
         fsplit = f.split("_")
+<<<<<<< HEAD
         data = loadtxt("%s_%s_data.dat"%(fsplit[0], fsplit[1]))
+=======
+        data = loadtxt("%s_%s_all_data.dat"%(fsplit[0], fsplit[1]))
+>>>>>>> c06a6cd... Small local changes from laptop
         fig = figure(figsize=(24,9))
         ax = fig.add_subplot(121)
         plot(data[:,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
         sample = atleast_2d(loadtxt(f))
 
+        print(f)
         print(sample.shape)
-        ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
+
+        ind = np.random.choice(np.arange(len(sample)), replace=False, size=nsims3)
         for i in ind:
-            print("shape data: " + str(len(data[:,0])))
-            print("shape sample: " + str(len(sample[i,-data.shape[0]:])))
+            #print("shape data: " + str(len(data[:,0])))
+            #print("shape sample: " + str(len(sample[i,-data.shape[0]:])))
             plot(data[:,0], sample[i,-data.shape[0]:], lw=1)
             #plot(data[:,0], np.ones(len(data[:,0]))*sample[i,0], lw=2)
         xlabel("Time since trigger [s]", fontsize=20)
@@ -48,17 +54,25 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
     return
 
 
+<<<<<<< HEAD
 def extract_sample(datadir="./", nsims=50, filter_weak=False):
+=======
+def extract_sample(datadir="./", nsims=5, trigfile=None):
+>>>>>>> c06a6cd... Small local changes from laptop
 
     files = glob.glob("%s*posterior*"%datadir)
     print("files: " + str(files))
 
     all_parameters, bids, nsamples = [], [], []
     for f in files:
+<<<<<<< HEAD
         fname = f.split("/")[-1]
         bid = fname.split("_")[0]
         bids.append(bid)
         parameters = parameter_sample(f, filter_weak=filter_weak)
+=======
+        parameters = parameter_sample(f, trigfile=trigfile)
+>>>>>>> c06a6cd... Small local changes from laptop
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
 
@@ -143,6 +157,7 @@ def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=T
                 fontsize=16)
 
 
+<<<<<<< HEAD
         xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
         ylabel("log(spike amplitude)", fontsize=20)
         title("spike amplitude versus rise time")
@@ -159,6 +174,9 @@ def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True
     else:
         parameters_red = sample
 
+=======
+    parameters_red = extract_sample(datadir, nsims, trigfile=None)
+>>>>>>> c06a6cd... Small local changes from laptop
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -322,6 +340,7 @@ def risetime_skewness(sample=None, datadir="./", nsims=5, makeplot=True, froot="
 
 
 
+<<<<<<< HEAD
 def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True, froot="test"):
 
     if sample is None and bids is None:
@@ -330,6 +349,11 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None,
         parameters_red = sample
 
 
+=======
+def waiting_times(datadir="./", nsims=10, trigfile="sgr1550_ttrig.dat"):
+
+    parameters_red = extract_sample(datadir, nsims, trigfile=trigfile)
+>>>>>>> c06a6cd... Small local changes from laptop
     if nsims > parameters_red.shape[1]:
         print("Number of available parameter sets smaller than nsims.")
         nsims = parameters_red.shape[1]
@@ -1215,7 +1239,11 @@ def fit_distribution(func, x, y, p0):
 ##### OLD CODE: NEED TO CHECK THIS! ##########
 
 
+<<<<<<< HEAD
 def read_dnest_results(filename, datadir="./", filter_smallest=False):
+=======
+def read_dnest_results(filename, datadir="./", trigfile=None):
+>>>>>>> c06a6cd... Small local changes from laptop
 
     """
     Read output from RJObject/DNest3 run and return in a format more
@@ -1233,6 +1261,22 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False):
     alldata = np.loadtxt(dfile)
     print("filename: " + str(filename))
     print("shape alldata: " + str(alldata.shape))
+
+
+
+    if not trigfile is None:
+        trigdata = burstmodel.conversion("%s%s"%(datadir,trigfile))
+        bids = np.array(trigdata[0])
+        ttrig_all = np.array([float(t) for t in trigdata[1]])
+
+        bid_data = filename.split("_")[0][2:]
+        #print("bid_data: " + str(bid_data))
+        bind = np.where(bids == bid_data)[0]
+        ttrig = ttrig_all[bind]
+        #print("ttrig: " + str(ttrig))
+
+    else:
+        ttrig = 0
 
 
     niter = len(alldata)
@@ -1268,7 +1312,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False):
     nbursts = alldata[:, 7]
 
     ## peak positions for all model components, some will be zero
-    pos_all = alldata[:, 8:8+compmax]
+    pos_all = np.array(alldata[:, 8:8+compmax]) + ttrig
 
     ## amplitudes for all model components, some will be zero
     amp_all = alldata[:, 8+compmax:8+2*compmax]
@@ -1388,10 +1432,14 @@ def position_histogram(sample_dict, btimes, tsearch=0.01, tfine=0.001, niter=100
     return
 
 
+<<<<<<< HEAD
 def parameter_sample(filename, datadir="./", filter_weak=False):
+=======
+def parameter_sample(filename, datadir="./", trigfile=None):
+>>>>>>> c06a6cd... Small local changes from laptop
 
     ### extract parameters from file
-    sample_dict = read_dnest_results(filename, datadir=datadir)
+    sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile)
 
     print("filter_weak " + str(filter_weak))
 

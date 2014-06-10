@@ -7,6 +7,9 @@ import parameters
 import word
 
 from pylab import *
+rc("font", size=20, family="serif", serif="Computer Sans")
+rc("text", usetex=True)
+
 import matplotlib.cm as cm
 import scipy.stats
 import scipy.optimize
@@ -69,7 +72,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False):
 
     return parameters_red, bids
 
-def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005):
+def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True):
 
     if sample is None:
         parameters_red, bids = extract_sample(datadir, nsims)
@@ -102,32 +105,43 @@ def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005):
 
 
     sp_all = []
+    popt_all, pcov_all = [], []
 
-    fig = figure(figsize=(12,9))
-    ax = fig.add_subplot(111)
     for i,(r,a) in enumerate(zip(risetime_sample, amplitude_sample)):
         a = np.array(a)/dt
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
-        logr = np.log10(r)
-        loga = np.log10(a)
-        scatter(logr,loga, color=cm.jet(i*50))
 
-    axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
-          np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(np.array(a)/dt)) for a in amplitude_sample]),
-          np.max([np.max(np.log10(np.array(a)/dt)) for a in amplitude_sample])])
+        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=None, sigma=None)
+        popt_all.append(popt)
+        pcov_all.append(pcov)
 
-    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
-    ylabel("log(spike amplitude)", fontsize=20)
-    title("spike amplitude versus rise time")
-    savefig("risetime_amplitude.png", format="png")
-    close()
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
+        for i,(r,a) in enumerate(zip(risetime_sample, amplitude_sample)):
+            a = np.array(a)/dt
+            #sp = scipy.stats.spearmanr(r,a)
+            #sp_all.append(sp)
+            logr = np.log10(r)
+            loga = np.log10(a)
+            scatter(logr,loga, color=cm.jet(i*50))
 
-    return risetime_sample, amplitude_sample, sp_all
+        axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+              np.max([np.max(np.log10(r)) for r in risetime_sample]),
+              np.min([np.min(np.log10(np.array(a)/dt)) for a in amplitude_sample]),
+              np.max([np.max(np.log10(np.array(a)/dt)) for a in amplitude_sample])])
+
+        xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+        ylabel("log(spike amplitude)", fontsize=20)
+        title("spike amplitude versus rise time")
+        savefig("risetime_amplitude.png", format="png")
+        close()
+
+        return risetime_sample, amplitude_sample, sp_all, popt_all
 
 
-def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005):
+def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True):
 
     if sample is None:
         parameters_red,bids = extract_sample(datadir, nsims)
@@ -169,31 +183,47 @@ def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005):
 
 
     sp_all = []
+    sp_all = []
 
-    fig = figure(figsize=(12,9))
-    ax = fig.add_subplot(111)
+
+    popt_all, pcov_all = [], []
+
+
     for i,(r,a) in enumerate(zip(risetime_sample, energy_sample)):
         a = np.array(a)/dt
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
-        scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
 
-    axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
-          np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(np.array(a)/dt)) for a in energy_sample]),
-          np.max([np.max(np.log10(np.array(a)/dt)) for a in energy_sample])])
+        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=None, sigma=None)
+        popt_all.append(popt)
+        pcov_all.append(pcov)
 
-    plot(np.log10(rx), np.log10(min_energy), lw=2, color="black", ls="dashed")
 
-    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
-    ylabel("total number of counts in a spike", fontsize=20)
-    title("total number of counts in a spike versus rise time")
-    savefig("risetime_energy.png", format="png")
-    close()
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
+        for i,(r,a) in enumerate(zip(risetime_sample, energy_sample)):
+            a = np.array(a)/dt
+            #sp = scipy.stats.spearmanr(r,a)
+            #sp_all.append(sp)
+            scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
 
-    return risetime_sample, energy_sample, sp_all
+        axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+              np.max([np.max(np.log10(r)) for r in risetime_sample]),
+              np.min([np.min(np.log10(np.array(a)/dt)) for a in energy_sample]),
+              np.max([np.max(np.log10(np.array(a)/dt)) for a in energy_sample])])
 
-def risetime_skewness(sample=None, datadir="./", nsims=5):
+        plot(np.log10(rx), np.log10(min_energy), lw=2, color="black", ls="dashed")
+
+        xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+        ylabel("total number of counts in a spike", fontsize=20)
+        title("total number of counts in a spike versus rise time")
+        savefig("risetime_energy.png", format="png")
+        close()
+
+    return risetime_sample, energy_sample, sp_all, popt_all
+
+def risetime_skewness(sample=None, datadir="./", nsims=5, makeplot=True):
 
     if sample is None:
         parameters_red,bids = extract_sample(datadir, nsims)
@@ -228,31 +258,43 @@ def risetime_skewness(sample=None, datadir="./", nsims=5):
         skewness_sample.append(skewness)
 
     sp_all = []
+    popt_all, pcov_all = [], []
 
-    fig = figure(figsize=(12,9))
-    ax = fig.add_subplot(111)
     for i,(r,a) in enumerate(zip(risetime_sample, skewness_sample)):
         a = np.array(a)
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
-        scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
 
-    axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
-          np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(a)) for a in skewness_sample]),
-          np.max([np.max(np.log10(a)) for a in skewness_sample])])
-
-    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
-    ylabel("skewness parameter", fontsize=20)
-    title("skewness versus rise time")
-    savefig("risetime_skewness.png", format="png")
-    close()
-
-    return risetime_sample, skewness_sample, sp_all
+        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=None, sigma=None)
+        popt_all.append(popt)
+        pcov_all.append(pcov)
 
 
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
+        for i,(r,a) in enumerate(zip(risetime_sample, skewness_sample)):
+            a = np.array(a)
+            #sp = scipy.stats.spearmanr(r,a)
+            #sp_all.append(sp)
+            scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
 
-def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None):
+        axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+              np.max([np.max(np.log10(r)) for r in risetime_sample]),
+              np.min([np.min(np.log10(a)) for a in skewness_sample]),
+              np.max([np.max(np.log10(a)) for a in skewness_sample])])
+
+        xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+        ylabel("skewness parameter", fontsize=20)
+        title("skewness versus rise time")
+        savefig("risetime_skewness.png", format="png")
+        close()
+
+    return risetime_sample, skewness_sample, sp_all, popt_all
+
+
+
+def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True):
 
     if sample is None and bids is None:
         parameters_red, bids = extract_sample(datadir, nsims)
@@ -266,7 +308,7 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None)
         print("Resetting nsims to %i."%nsims)
 
     waitingtime_sample = []
-    print("nsims: %i"%nsims)
+    #print("nsims: %i"%nsims)
 
     if not trigfile is None:
         data = burstmodel.conversion(trigfile)
@@ -296,34 +338,272 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None)
             t0.extend(t)
 
         t0_sort = np.sort(np.array(t0))
-        print(t0_sort)
+        #print(t0_sort)
 
         waitingtime = t0_sort[1:] - t0_sort[:-1]
         waitingtime_sample.append(waitingtime)
 
 
-    fig = figure(figsize=(12,9))
-    ax = fig.add_subplot(111)
-    n_all = []
-    for i,w in enumerate(waitingtime_sample):
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
+        n_all = []
+        for i,w in enumerate(waitingtime_sample):
 
-        n,bins, patches = hist(log10(w), bins=30, range=[np.log10(0.0001), np.log10(330.0)],
-                               color=cm.jet(i*20),alpha=0.6, normed=True)
-        n_all.append(n)
+            n,bins, patches = hist(log10(w), bins=30, range=[np.log10(0.0001), np.log10(330.0)],
+                                   color=cm.jet(i*20),alpha=0.6, normed=True)
+            n_all.append(n)
 
-    axis([np.log10(0.0001), np.log10(330.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+        axis([np.log10(0.0001), np.log10(330.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
 
-    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
-    ylabel("total number of counts in a spike", fontsize=20)
-    title("total number of counts in a spike versus rise time")
-    savefig("waitingtimes.png", format="png")
-    close()
+        xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=20)
+        ylabel("p(waiting time)", fontsize=20)
+        title("waiting time distribution")
+        savefig("waitingtimes.png", format="png")
+        close()
 
 
     return waitingtime_sample
 
+def waitingtime_energy(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True, dt=0.0005):
 
-def risetime_duration(sample=None, datadir="./", nsims=10):
+    if sample is None and bids is None:
+        parameters_red, bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
+
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+    waitingtime_sample, energy_sample = [], []
+    #print("nsims: %i"%nsims)
+
+    if not trigfile is None:
+        data = burstmodel.conversion(trigfile)
+        bid_ttrig = np.array([t for t in data[0]])
+        ttrig_all = np.array([float(t) for t in data[1]])
+
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+
+        t0_all = np.array([np.array([a.t0 for a in s.all]) for s in sample])
+
+        t0_all_corrected = []
+        if not trigfile is None:
+            for j,t in enumerate(t0_all):
+                bid_ind = np.where(bid_ttrig == bids[j])[0]
+                ttrig = ttrig_all[bid_ind]
+                t = t + ttrig
+                t0_all_corrected.append(t)
+
+        else:
+            t0_all_corrected = t0_all
+
+        t0 = []
+        for t in t0_all_corrected:
+            t0.extend(t)
+
+
+        energy_all = np.array([np.array([a.energy for a in s.all]) for s in sample])
+        #amplitude_all = amplitude_all.flatten()
+
+        energy = []
+        for a in energy_all:
+            energy.extend(a)
+
+        sample_sort = sorted(zip(t0, energy))
+        t0_sort = np.array(sample_sort)[:,0]
+        energy_sort = np.array(sample_sort)[:,1]
+        #print(t0_sort)
+
+        waitingtime = t0_sort[1:] - t0_sort[:-1]
+        print("len(waitingtime): " + str(len(waitingtime)))
+        print("len(energy): " + str(len(energy)))
+        waitingtime_sample.append(waitingtime)
+
+        energy_sample.append(energy[:-1])
+
+
+    sp_plus_all = []
+    sp_minus_all = []
+    popt_plus_all, popt_minus_all = [], []
+
+    for i,(r,a) in enumerate(zip(waitingtime_sample, energy_sample)):
+        a = np.array(a)/dt
+        sp_plus = scipy.stats.spearmanr(r,a)
+        sp_minus = scipy.stats.spearmanr(r[:-1],a[1:])
+        sp_plus_all.append(sp_plus)
+        sp_minus_all.append(sp_minus)
+
+        popt_plus, pcov_plus = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=None, sigma=None)
+        popt_minus, pcov_minus = scipy.optimize.curve_fit(straight, np.log10(r[:-1]), np.log10(a[1:]), p0=None, sigma=None)
+
+        popt_plus_all.append(popt_plus)
+        popt_minus_all.append(popt_minus)
+
+
+    if makeplot:
+        fig = figure(figsize=(24,9))
+        for i,(r,a) in enumerate(zip(waitingtime_sample, energy_sample)):
+            a = np.array(a)/dt
+            #sp = scipy.stats.spearmanr(r,a)
+            #sp_all.append(sp)
+            ax1 = fig.add_subplot(121)
+            ax1.scatter(np.log10(r), np.log10(a), color=cm.jet(i*20), label=r"$dt_+$")\
+
+            #ax1.axis([np.min([np.min(np.log10(r)) for r in waitingtime_sample]),
+            #  np.max([np.max(np.log10(r)) for r in waitingtime_sample]),
+            #  np.min([np.min(np.log10(a)) for a in energy_sample]),
+            #  np.max([np.max(np.log10(a)) for a in energy_sample])])
+
+            xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=20)
+            ylabel("total number of counts", fontsize=20)
+
+            ax2 = fig.add_subplot(122)
+
+            ax2.scatter(np.log10(r[:-1]), np.log10(a[1:]),color=cm.jet(i*20), label=r"$dt_-$")
+
+            #axis([np.min([np.min(np.log10(r)) for r in waitingtime_sample]),
+            #      np.max([np.max(np.log10(r)) for r in waitingtime_sample]),
+            #      np.min([np.min(np.log10(a)) for a in energy_sample]),
+            #      np.max([np.max(np.log10(a)) for a in energy_sample])])
+
+            legend()
+            xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=20)
+        fig.suptitle("Waiting time versus energy", fontsize=26)
+        #    title("energy versus waiting time")
+        savefig("waitingtime_energy.png", format="png")
+        close()
+
+
+    return waitingtime_sample, energy_sample
+
+def waitingtime_amplitude(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True, dt=0.0005):
+
+    if sample is None and bids is None:
+        parameters_red, bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
+
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+    waitingtime_sample, amplitude_sample = [], []
+    #print("nsims: %i"%nsims)
+
+    if not trigfile is None:
+        data = burstmodel.conversion(trigfile)
+        bid_ttrig = np.array([t for t in data[0]])
+        ttrig_all = np.array([float(t) for t in data[1]])
+
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+
+        t0_all = np.array([np.array([a.t0 for a in s.all]) for s in sample])
+
+        t0_all_corrected = []
+        if not trigfile is None:
+            for j,t in enumerate(t0_all):
+                bid_ind = np.where(bid_ttrig == bids[j])[0]
+                ttrig = ttrig_all[bid_ind]
+                t = t + ttrig
+                t0_all_corrected.append(t)
+
+        else:
+            t0_all_corrected = t0_all
+
+        t0 = []
+        for t in t0_all_corrected:
+            t0.extend(t)
+
+
+        amplitude_all = np.array([np.array([a.amp for a in s.all]) for s in sample])
+        #amplitude_all = amplitude_all.flatten()
+
+        amplitude = []
+        for a in amplitude_all:
+            amplitude.extend(a)
+
+        sample_sort = sorted(zip(t0, amplitude))
+        t0_sort = np.array(sample_sort)[:,0]
+        energy_sort = np.array(sample_sort)[:,1]
+        #print(t0_sort)
+
+        waitingtime = t0_sort[1:] - t0_sort[:-1]
+        print("len(waitingtime): " + str(len(waitingtime)))
+        print("len(energy): " + str(len(amplitude)))
+        waitingtime_sample.append(waitingtime)
+
+        amplitude_sample.append(amplitude[:-1])
+
+
+    sp_plus_all = []
+    sp_minus_all = []
+    popt_plus_all, popt_minus_all = [], []
+
+    for i,(r,a) in enumerate(zip(waitingtime_sample, amplitude_sample)):
+        a = np.array(a)/dt
+        sp_plus = scipy.stats.spearmanr(r,a)
+        sp_minus = scipy.stats.spearmanr(r[:-1],a[1:])
+        sp_plus_all.append(sp_plus)
+        sp_minus_all.append(sp_minus)
+
+        popt_plus, pcov_plus = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=None, sigma=None)
+        popt_minus, pcov_minus = scipy.optimize.curve_fit(straight, np.log10(r[:-1]), np.log10(a[1:]), p0=None, sigma=None)
+
+        popt_plus_all.append(popt_plus)
+        popt_minus_all.append(popt_minus)
+
+
+    if makeplot:
+        fig = figure(figsize=(24,9))
+        for i,(r,a) in enumerate(zip(waitingtime_sample, amplitude_sample)):
+            a = np.array(a)/dt
+            #sp = scipy.stats.spearmanr(r,a)
+            #sp_all.append(sp)
+            ax1 = fig.add_subplot(121)
+            ax1.scatter(np.log10(r), np.log10(a), color=cm.jet(i*20), label=r"$dt_+$")\
+
+            #ax1.axis([np.min([np.min(np.log10(r)) for r in waitingtime_sample]),
+            #  np.max([np.max(np.log10(r)) for r in waitingtime_sample]),
+            #  np.min([np.min(np.log10(a)) for a in energy_sample]),
+            #  np.max([np.max(np.log10(a)) for a in energy_sample])])
+
+            xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=20)
+            ylabel("total number of counts", fontsize=20)
+
+            ax2 = fig.add_subplot(122)
+
+            ax2.scatter(np.log10(r[:-1]), np.log10(a[1:]),color=cm.jet(i*20), label=r"$dt_-$")
+
+            #axis([np.min([np.min(np.log10(r)) for r in waitingtime_sample]),
+            #      np.max([np.max(np.log10(r)) for r in waitingtime_sample]),
+            #      np.min([np.min(np.log10(a)) for a in energy_sample]),
+            #      np.max([np.max(np.log10(a)) for a in energy_sample])])
+
+            legend()
+            xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=20)
+
+        fig.suptitle("Waiting time versus amplitude", fontsize=26)
+        #    title("energy versus waiting time")
+        savefig("waitingtime_amplitude.png", format="png")
+        close()
+
+
+    return waitingtime_sample, amplitude_sample
+
+
+def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True):
 
 
     if sample is None:
@@ -359,29 +639,41 @@ def risetime_duration(sample=None, datadir="./", nsims=10):
         duration_sample.append(duration)
 
     sp_all = []
+    popt_all, pcov_all = [], []
 
-    fig = figure(figsize=(12,9))
-    ax = fig.add_subplot(111)
     for i,(r,a) in enumerate(zip(risetime_sample, duration_sample)):
         a = np.array(a)
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
-        scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
 
-    axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
-          np.max([np.max(np.log10(r)) for r in risetime_sample]),
-          np.min([np.min(np.log10(a)) for a in duration_sample]),
-          np.max([np.max(np.log10(a)) for a in duration_sample])])
+        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=None, sigma=None)
+        popt_all.append(popt)
+        pcov_all.append(pcov)
 
-    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
-    ylabel("spike duration", fontsize=20)
-    title("rise time versus total duration")
-    savefig("risetime_duration.png", format="png")
-    close()
 
-    return risetime, duration, sp_all
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
+        for i,(r,a) in enumerate(zip(risetime_sample, duration_sample)):
+            a = np.array(a)
+            #sp = scipy.stats.spearmanr(r,a)
+            #sp_all.append(sp)
+            scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
 
-def skewness_dist(sample=None, datadir="./", nsims=10):
+        axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+              np.max([np.max(np.log10(r)) for r in risetime_sample]),
+              np.min([np.min(np.log10(a)) for a in duration_sample]),
+              np.max([np.max(np.log10(a)) for a in duration_sample])])
+
+        xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+        ylabel("spike duration", fontsize=20)
+        title("rise time versus total duration")
+        savefig("risetime_duration.png", format="png")
+        close()
+
+    return risetime_sample, duration_sample, sp_all, popt_all
+
+def skewness_dist(sample=None, datadir="./", nsims=10, makeplot=True):
 
     if sample is None:
         parameters_red = extract_sample(datadir, nsims)
@@ -405,22 +697,23 @@ def skewness_dist(sample=None, datadir="./", nsims=10):
 
         skewness_sample.append(skewness)
 
-    fig = figure(figsize=(12,9))
-    ax = fig.add_subplot(111)
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
 
-    for i,w in enumerate(skewness_sample):
+        for i,w in enumerate(skewness_sample):
 
-        n,bins, patches = hist(log10(w), bins=30,
-                               color=cm.jet(i*20),alpha=0.6, normed=True)
-        #n_all.append(n)
+            n,bins, patches = hist(log10(w), bins=30,
+                                   color=cm.jet(i*20),alpha=0.6, normed=True)
+            #n_all.append(n)
 
-    #axis([, np.log10(1000.0), np.min([np.min(n) for n in n_all]), np.max([np.min(n) for n in n_all])])
+        #axis([, np.log10(1000.0), np.min([np.min(n) for n in n_all]), np.max([np.min(n) for n in n_all])])
 
-    xlabel(r"$\log{(\mathrm{skewness})}$ [s]", fontsize=20)
-    ylabel("p(skewness)", fontsize=20)
-    title("skewness parameter for a large number of spikes")
-    savefig("skewness_dist.png", format="png")
-    close()
+        xlabel(r"$\log{(\mathrm{skewness})}$ [s]", fontsize=20)
+        ylabel("p(skewness)", fontsize=20)
+        title("skewness parameter for a large number of spikes")
+        savefig("skewness_dist.png", format="png")
+        close()
 
 
     return skewness_sample
@@ -462,6 +755,139 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10):
     return
 
 
+def compare_samples(p1, p2, bids1, bids2, froot="test", label1="p1", label2="p2", dt=0.0005):
+    """
+    Compare different properties for two different parameter samples p1 and p2,
+    where p1 and p2, and bids1 and bids2 are the outputs of extract_sample for
+    various parameter sets
+
+    """
+
+    fig = figure(figsize=(24,8))
+    subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
+
+    ax1 = fig.add_subplot(131)
+
+    risetime1, energy1, sp_all1, popt_all1 = risetime_energy(p1,nsims=len(p1), makeplot=False)
+    risetime2, energy2, sp_all2, popt_all2 = risetime_energy(p2,nsims=len(p2), makeplot=False)
+
+
+    popt_all1 = np.array(popt_all1)
+    print(popt_all1)
+    popt_mean1 = np.mean(popt_all1, axis=0)
+    popt_std1 = np.std(popt_all1, axis=0)
+
+    popt_all2 = np.array(popt_all2)
+    print(popt_all2)
+    popt_mean2 = np.mean(popt_all2, axis=0)
+    popt_std2 = np.std(popt_all2, axis=0)
+
+
+    emodel1 = straight(np.log10(np.sort(risetime1[0])), *popt_mean1)
+    emodel2 = straight(np.log10(np.sort(risetime2[0])), *popt_mean2)
+
+
+    e1 = np.log10(np.array(energy1[0])/dt)
+    e2 = np.log10(np.array(energy2[0])/dt)
+
+
+    ax1.scatter(np.log10(risetime1[0]), e1, color="blue", marker="o", edgecolor="blue", label=label1)
+    ax1.scatter(np.log10(risetime2[0]), e2, color="red", marker="o", edgecolor="red", label=label2)
+
+    ax1.plot(np.sort(np.log10(risetime1[0])), emodel1, lw=4, color="navy", ls="dashed")
+    ax1.plot(np.sort(np.log10(risetime2[0])), emodel2, lw=4, color="darkred", ls="dashed")
+
+       ### compute lower limit for rise times
+    rx = np.logspace(np.min(np.log10(risetime1[0])), np.max(np.log10(risetime1[0])), num=100)
+    min_energy = (1.0/dt)*rx
+    ax1.plot(np.log10(rx), np.log10(min_energy), lw=2, color="black", ls="dashed")
+
+    ax1.set_xlim([np.min(np.log10(risetime1[0])), np.max(np.log10(risetime1[0]))])
+    ax1.set_ylim([np.min(e1), np.max(e1)])
+
+    ax1.text(-1.5,0.7, r"power law index $\gamma_1 = %.2f \pm %.2f$"%(popt_mean1[0],popt_std1[0]),
+            verticalalignment='center', horizontalalignment='center', color='blue',
+            fontsize=16)
+
+    ax1.text(-1.5,0.5, r"power law index $\gamma_2 = %.2f \pm %.2f$"%(popt_mean2[0], popt_std2[0]),
+            verticalalignment='center', horizontalalignment='center', color='red',
+            fontsize=16)
+
+    legend(prop={"size":16})
+
+    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+    ylabel("total number of counts in a spike", fontsize=20)
+    title("total number of counts in a spike versus rise time")
+
+
+    risetime1, duration1, sp_all1, popt_all1 = risetime_duration(p1, nsims=len(p1), makeplot=False)
+    risetime2, duration2, sp_all2, popt_all2 = risetime_duration(p2, nsims=len(p2), makeplot=False)
+
+    popt_all1 = np.array(popt_all1)
+    print(np.shape(popt_all1))
+    popt_mean1 = np.mean(popt_all1, axis=0)
+    popt_std1 = np.std(popt_all1, axis=0)
+    print(np.shape(popt_mean1))
+
+    popt_all2 = np.array(popt_all2)
+    print(np.shape(popt_all2))
+    popt_mean2 = np.mean(popt_all2, axis=0)
+    popt_std2 = np.std(popt_all2, axis=0)
+    print(np.shape(popt_mean2))
+
+
+    emodel1 = straight(np.log10(np.sort(risetime1[0])), *popt_mean1)
+    emodel2 = straight(np.log10(np.sort(risetime2[0])), *popt_mean2)
+
+    ax2 = fig.add_subplot(132)
+
+    ax2.scatter(np.log10(risetime1[0]), np.log10(duration1[0]), color="blue", marker="o", edgecolor="blue", label=label1)
+    ax2.scatter(np.log10(risetime2[0]), np.log10(duration2[0]), color="red", marker="o", edgecolor="red", label=label2)
+
+    ax2.plot(np.sort(np.log10(risetime1[0])), emodel1, lw=4, color="navy", ls="dashed")
+    ax2.plot(np.sort(np.log10(risetime2[0])), emodel2, lw=4, color="darkred", ls="dashed")
+
+    ax2.set_xlim([np.min(np.log10(risetime1[0])), np.max(np.log10(risetime1[0]))])
+    ax2.set_ylim([np.min(np.log10(duration1[0])), np.max(np.log10(duration1[0]))])
+    ax2.legend(prop={"size":16})
+
+    ax2.text(-1.5,-3.9, r"power law index $\gamma_1 = %.2f \pm %.2f$"%(popt_mean1[0],popt_std1[0]),
+            verticalalignment='center', horizontalalignment='center', color='blue',
+            fontsize=16)
+
+    ax2.text(-1.5,-4.2, r"power law index $\gamma_2 = %.2f \pm %.2f$"%(popt_mean2[0], popt_std2[0]),
+            verticalalignment='center', horizontalalignment='center', color='red',
+            fontsize=16)
+
+
+    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+    ylabel("Duration of the spike [s]", fontsize=20)
+    title("total number of counts in a spike versus rise time")
+
+
+    waitingtimes1 = waiting_times(p1, bids=bids1,nsims=len(p1), trigfile="sgr1550_ttrig.dat", makeplot=False)
+    waitingtimes2 = waiting_times(p2, bids=bids2,nsims=len(p2), trigfile="sgr1550_ttrig.dat", makeplot=False)
+
+
+    ax3 = fig.add_subplot(133)
+
+    n1, bins1, patches1 = ax3.hist(np.log10(waitingtimes1[0]), bins=50, range=[np.log10(0.0001), np.log10(10.0)],
+                                   color="blue", alpha=0.7, histtype="stepfilled", normed=True, label=label1)
+    n2, bins2, patches2 = ax3.hist(np.log10(waitingtimes2[0]), bins=50, range=[np.log10(0.0001), np.log10(10.0)],
+                                   color="red", alpha=0.7, histtype="stepfilled", normed=True, label=label2)
+
+    ax3.set_xlim([np.log10(0.0001), np.log10(10.0)])
+    ax3.set_ylim([0.0, np.max([np.max(n1), np.max(n2)])+0.1])
+    ax3.legend(prop={"size":16})
+
+    xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=20)
+    ylabel("p(waiting time)", fontsize=20)
+    title("waiting time distribution")
+
+    savefig("%s_comparison.png"%froot, format="png")
+    close()
+
+    return
 
 
 
@@ -490,7 +916,7 @@ def extract_brightest_bursts(min_countrate=100000.0):
         else:
             continue
 
-    return brightest
+    return brightest, brightest_posterior
 
 
 
@@ -503,14 +929,15 @@ def pl(x, a, b):
 
 def fit_distribution(func, x, y, p0):
 
-    def lsquare(params):
-        return y - func(x, *params)
+    xy_sorted = sorted(zip(x,y))
+    xy_sorted = np.array(xy_sorted)
+    x = xy_sorted[:,0]
+    y = xy_sorted[:,1]
 
-    popt, pcov, infodict, mesg, ier = scipy.optimize.leastsq(lsquare, p0, full_output=True)
 
-    print("nfev: " + str(infodict["nfev"]))
+    popt, pcov = scipy.optimize.curve_fit(func, x, y, p0=None, sigma=None, absolute_sigma=False)
 
-    print(mesg)
+
 
     return popt
 
@@ -712,8 +1139,8 @@ def parameter_sample(filename, datadir="./", filter_weak=False):
         else:
             pars_filtered = pars
 
-        print("len pars %i"%len(pars))
-        print("len filtered pars %i"%len(pars_filtered))
+        #print("len pars %i"%len(pars))
+        #print("len filtered pars %i"%len(pars_filtered))
 
         nbursts = len(pars_filtered)
 

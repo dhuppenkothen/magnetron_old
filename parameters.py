@@ -160,13 +160,13 @@ class TwoExpParameters(Parameters, object):
     def compute_duration(self, bkg=None):
 
         amp = self.amp
-        print("bkg: " + str(bkg))
-        print("amp: " + str(amp))
+        #print("bkg: " + str(bkg))
+        #print("amp: " + str(amp))
 
         if bkg is None:
             bkg = 0.01*amp
 
-        print("delta amp: %.4f"%(amp-bkg))
+        #print("delta amp: %.4f"%(amp-bkg))
 
         skew = self.skew
         scale = self.scale

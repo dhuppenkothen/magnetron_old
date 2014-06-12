@@ -72,7 +72,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False):
 
     return parameters_red, bids
 
-def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True):
+def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True, froot="test"):
 
     if sample is None:
         parameters_red, bids = extract_sample(datadir, nsims)
@@ -146,13 +146,13 @@ def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=T
         xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
         ylabel("log(spike amplitude)", fontsize=20)
         title("spike amplitude versus rise time")
-        savefig("risetime_amplitude.png", format="png")
+        savefig("%s_risetime_amplitude.png"%froot, format="png")
         close()
 
         return risetime_sample, amplitude_sample, sp_all, popt_all
 
 
-def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True):
+def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True, froot="test"):
 
     if sample is None:
         parameters_red,bids = extract_sample(datadir, nsims)
@@ -239,12 +239,12 @@ def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True
         xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
         ylabel("total number of counts in a spike", fontsize=20)
         title("total number of counts in a spike versus rise time")
-        savefig("risetime_energy.png", format="png")
+        savefig("%s_risetime_energy.png"%froot, format="png")
         close()
 
     return risetime_sample, energy_sample, sp_all, popt_all
 
-def risetime_skewness(sample=None, datadir="./", nsims=5, makeplot=True):
+def risetime_skewness(sample=None, datadir="./", nsims=5, makeplot=True, froot="test"):
 
     if sample is None:
         parameters_red,bids = extract_sample(datadir, nsims)
@@ -315,14 +315,14 @@ def risetime_skewness(sample=None, datadir="./", nsims=5, makeplot=True):
         xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
         ylabel("skewness parameter", fontsize=20)
         title("skewness versus rise time")
-        savefig("risetime_skewness.png", format="png")
+        savefig("%s_risetime_skewness.png"%froot, format="png")
         close()
 
     return risetime_sample, skewness_sample, sp_all, popt_all
 
 
 
-def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True):
+def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True, froot="test"):
 
     if sample is None and bids is None:
         parameters_red, bids = extract_sample(datadir, nsims)
@@ -387,13 +387,14 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None,
         xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=20)
         ylabel("p(waiting time)", fontsize=20)
         title("waiting time distribution")
-        savefig("waitingtimes.png", format="png")
+        savefig("%s_waitingtimes.png"%froot, format="png")
         close()
 
 
     return waitingtime_sample
 
-def waitingtime_energy(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True, dt=0.0005):
+def waitingtime_energy(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True,
+                       dt=0.0005, froot="test"):
 
     if sample is None and bids is None:
         parameters_red, bids = extract_sample(datadir, nsims)
@@ -522,13 +523,14 @@ def waitingtime_energy(sample=None, bids=None, datadir="./", nsims=10, trigfile=
             xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=20)
         fig.suptitle("Waiting time versus energy", fontsize=26)
         #    title("energy versus waiting time")
-        savefig("waitingtime_energy.png", format="png")
+        savefig("%s_waitingtime_energy.png"%froot, format="png")
         close()
 
 
     return waitingtime_sample, energy_sample
 
-def waitingtime_amplitude(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True, dt=0.0005):
+def waitingtime_amplitude(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True,
+                          dt=0.0005, froot="test"):
 
     if sample is None and bids is None:
         parameters_red, bids = extract_sample(datadir, nsims)
@@ -659,14 +661,14 @@ def waitingtime_amplitude(sample=None, bids=None, datadir="./", nsims=10, trigfi
 
         fig.suptitle("Waiting time versus amplitude", fontsize=26)
         #    title("energy versus waiting time")
-        savefig("waitingtime_amplitude.png", format="png")
+        savefig("%s_waitingtime_amplitude.png"%froot, format="png")
         close()
 
 
     return waitingtime_sample, amplitude_sample
 
 
-def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True):
+def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True, froot="test"):
 
 
     if sample is None:
@@ -686,10 +688,10 @@ def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True):
     for i in xrange(nsims):
 
         sample = parameters_red[:,i]
-        risetime_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
+        risetime_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
 
         #risetime_all = risetime_all.flatten()
-        duration_all = np.array([np.array([a.duration for a in s.all]) for s in sample])
+        duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
         #amplitude_all = amplitude_all.flatten()
 
 
@@ -738,12 +740,14 @@ def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True):
         xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
         ylabel("spike duration", fontsize=20)
         title("rise time versus total duration")
-        savefig("risetime_duration.png", format="png")
+        savefig("%s_risetime_duration.png"%froot, format="png")
         close()
 
     return risetime_sample, duration_sample, sp_all, popt_all
 
-def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.0005):
+
+
+def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.0005, p0=[1.5, 1.0], froot="test"):
 
 
     if sample is None:
@@ -763,10 +767,10 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
     for i in xrange(nsims):
 
         sample = parameters_red[:,i]
-        energy_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
+        energy_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
 
         #energy_all = energy_all.flatten()
-        duration_all = np.array([np.array([a.duration for a in s.all]) for s in sample])
+        duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
         #amplitude_all = amplitude_all.flatten()
 
 
@@ -786,10 +790,13 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
 
-        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=None, sigma=None)
+        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=[0.5,1.0], sigma=None)
         popt_all.append(popt)
         pcov_all.append(pcov)
 
+
+    popt_mean = np.mean(popt_all, axis=0)
+    popt_std = np.std(popt_all, axis=0)
 
     if makeplot:
         fig = figure(figsize=(12,9))
@@ -802,19 +809,24 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
 
         axis([np.min([np.min(np.log10(r)) for r in duration_sample]),
               np.max([np.max(np.log10(r)) for r in duration_sample]),
-              np.min([np.min(np.log10(a)) for a in energy_sample]),
-              np.max([np.max(np.log10(a)) for a in energy_sample])])
+              np.min([np.min(np.log10(np.array(a)/dt)) for a in energy_sample]),
+              np.max([np.max(np.log10(np.array(a)/dt)) for a in energy_sample])])
 
-        xlabel(r"$\log{(\mathrm{duration})}$ [s]", fontsize=20)
-        ylabel("spike energy", fontsize=20)
+        ax.text(0.8,0.1, r"power law index $\gamma = %.2f \pm %.2f$"%(popt_mean[0],popt_std[0]),
+                verticalalignment='center', horizontalalignment='center', color='black', transform=ax.transAxes,
+                fontsize=16)
+
+
+        xlabel(r"$\log_{10}{(\mathrm{duration})}$ [s]", fontsize=20)
+        ylabel(r"$\log_{10}{(\mathrm{spike\; energy})}$", fontsize=20)
         title("duration versus total energy")
-        savefig("duration_energy.png", format="png")
+        savefig("%s_duration_energy.png"%froot, format="png")
         close()
 
     return duration_sample, energy_sample, sp_all, popt_all
 
 
-def skewness_dist(sample=None, datadir="./", nsims=10, makeplot=True):
+def skewness_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="test"):
 
     if sample is None:
         parameters_red = extract_sample(datadir, nsims)
@@ -853,11 +865,31 @@ def skewness_dist(sample=None, datadir="./", nsims=10, makeplot=True):
         xlabel(r"$\log{(\mathrm{skewness})}$ [s]", fontsize=20)
         ylabel("p(skewness)", fontsize=20)
         title("skewness parameter for a large number of spikes")
-        savefig("skewness_dist.png", format="png")
+        savefig("%s_skewness_dist.png"%froot, format="png")
         close()
 
 
     return skewness_sample
+
+
+
+def all_correlations(sample=None, bids=None, datadir="./", trigfile="sgr1550_ttrig.dat", nsims=10, makeplot=True, froot="sgr1550"):
+
+    if sample is None and bids is None:
+        sample, bids = extract_sample(datadir, nsims)
+
+    risetime, amplitude, sp_all, popt_all = risetime_amplitude(sample, nsims=nsims, makeplot=makeplot, froot=froot)
+    risetime, energy, sp_all, popt_all = risetime_energy(sample, nsims=nsims, makeplot=makeplot, froot=froot)
+    risetime, skewness, sp_all, popt_all = risetime_skewness(sample, nsims=nsims, makeplot=makeplot, froot=froot)
+    risetime, duration, sp_all, popt_all = risetime_duration(sample, nsims=nsims, makeplot=makeplot, froot=froot)
+
+    waitingtimes = waiting_times(sample, bids,nsims=nsims, trigfile= trigfile, makeplot=makeplot, froot=froot)
+    waitingtime, energy= waitingtime_energy(sample, bids, nsims=nsims,trigfile=trigfile, makeplot=makeplot, froot=froot)
+    waitingtime, amplitude = waitingtime_amplitude(sample, bids, nsims=nsims,trigfile=trigfile, makeplot=makeplot, froot=froot)
+
+    duration, energy, sp_all, popt_all = energy_duration(sample, nsims=nsims, makeplot=makeplot, froot=froot)
+
+    return
 
 
 
@@ -875,7 +907,7 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10):
         print("Resetting nsims to %i."%nsims)
 
 
-    risetime_all, amplitude_all, energy_all, duration_all, waitingtime_all = [], [], [], [], []
+    sorted_data_all = []
 
     for pars in parameters_red:
 
@@ -886,11 +918,14 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10):
 
         waiting_times = np.array([t[1:]-t[:-1] for t in t0])
 
-        risetime_all.append(risetime)
-        duration_all.append(duration)
-        amplitude_all.append(amplitude)
-        waitingtime_all.append(waiting_times)
+        #risetime_all.append(risetime)
+        #duration_all.append(duration)
+        #amplitude_all.append(amplitude)
+        #waitingtime_all.append(waiting_times)
 
+        sorted_data = [sorted(zip(t,r,d,a,w)) for t,r,d,a,w in zip(t0, risetime, duration, amplitude, waiting_times)
+
+        sorted_data_all.append(sorted_data)
     ### I NEED TO FINISH THIS FUNCTION
 
     return
@@ -914,18 +949,18 @@ def compare_samples(p1, p2, bids1, bids2, froot="test", label1="p1", label2="p2"
 
 
     popt_all1 = np.array(popt_all1)
-    print(popt_all1)
+    #print(popt_all1)
     popt_mean1 = np.mean(popt_all1, axis=0)
     popt_std1 = np.std(popt_all1, axis=0)
 
     popt_all2 = np.array(popt_all2)
-    print(popt_all2)
+    #print(popt_all2)
     popt_mean2 = np.mean(popt_all2, axis=0)
     popt_std2 = np.std(popt_all2, axis=0)
 
 
-    emodel1 = straight(np.log10(np.sort(risetime1[0])), *popt_mean1)
-    emodel2 = straight(np.log10(np.sort(risetime2[0])), *popt_mean2)
+    emodel_energy1 = straight(np.log10(np.sort(risetime1[0])), *popt_mean1)
+    emodel_energy2 = straight(np.log10(np.sort(risetime2[0])), *popt_mean2)
 
 
     e1 = np.log10(np.array(energy1[0])/dt)
@@ -935,10 +970,10 @@ def compare_samples(p1, p2, bids1, bids2, froot="test", label1="p1", label2="p2"
     ax1.scatter(np.log10(risetime1[0]), e1, color="blue", marker="o", edgecolor="blue", label=label1)
     ax1.scatter(np.log10(risetime2[0]), e2, color="red", marker="o", edgecolor="red", label=label2)
 
-    ax1.plot(np.sort(np.log10(risetime1[0])), emodel1, lw=4, color="navy", ls="dashed")
-    ax1.plot(np.sort(np.log10(risetime2[0])), emodel2, lw=4, color="darkred", ls="dashed")
+    ax1.plot(np.sort(np.log10(risetime1[0])), emodel_energy1, lw=4, color="navy", ls="dashed")
+    ax1.plot(np.sort(np.log10(risetime2[0])), emodel_energy2, lw=4, color="darkred", ls="dashed")
 
-       ### compute lower limit for rise times
+    ### compute lower limit for rise times
     rx = np.logspace(np.min(np.log10(risetime1[0])), np.max(np.log10(risetime1[0])), num=100)
     min_energy = (1.0/dt)*rx
     ax1.plot(np.log10(rx), np.log10(min_energy), lw=2, color="black", ls="dashed")
@@ -946,12 +981,12 @@ def compare_samples(p1, p2, bids1, bids2, froot="test", label1="p1", label2="p2"
     ax1.set_xlim([np.min(np.log10(risetime1[0])), np.max(np.log10(risetime1[0]))])
     ax1.set_ylim([np.min(e1), np.max(e1)])
 
-    ax1.text(-1.5,0.7, r"power law index $\gamma_1 = %.2f \pm %.2f$"%(popt_mean1[0],popt_std1[0]),
-            verticalalignment='center', horizontalalignment='center', color='blue',
+    ax1.text(0.6,0.08, r"power law index $\gamma_1 = %.2f \pm %.2f$"%(popt_mean1[0],popt_std1[0]),
+            verticalalignment='center', horizontalalignment='center', color='blue',transform=ax1.transAxes,
             fontsize=16)
 
-    ax1.text(-1.5,0.5, r"power law index $\gamma_2 = %.2f \pm %.2f$"%(popt_mean2[0], popt_std2[0]),
-            verticalalignment='center', horizontalalignment='center', color='red',
+    ax1.text(0.6,0.05, r"power law index $\gamma_2 = %.2f \pm %.2f$"%(popt_mean2[0], popt_std2[0]),
+            verticalalignment='center', horizontalalignment='center', color='red',transform=ax1.transAxes,
             fontsize=16)
 
     legend(prop={"size":16})
@@ -961,49 +996,60 @@ def compare_samples(p1, p2, bids1, bids2, froot="test", label1="p1", label2="p2"
     title("total number of counts in a spike versus rise time")
 
 
-    risetime1, duration1, sp_all1, popt_all1 = risetime_duration(p1, nsims=len(p1), makeplot=False)
-    risetime2, duration2, sp_all2, popt_all2 = risetime_duration(p2, nsims=len(p2), makeplot=False)
+    duration1, energy1, sp_all1, popt_all1 = energy_duration(p1, nsims=len(p1), makeplot=False)
+    duration2, energy2, sp_all2, popt_all2 = energy_duration(p2, nsims=len(p2), makeplot=False)
+
+    #print("shape duration1: " + str(np.shape(duration1[0])))
+    #print("shape duration2: " + str(np.shape(duration2[0])))
+    #print("shape energy1: " + str(np.shape(energy1[0])))
+    #print("shape energy2: " + str(np.shape(energy2[0])))
 
     popt_all1 = np.array(popt_all1)
-    print(np.shape(popt_all1))
+    #print(np.shape(popt_all1))
     popt_mean1 = np.mean(popt_all1, axis=0)
     popt_std1 = np.std(popt_all1, axis=0)
-    print(np.shape(popt_mean1))
+    #print(np.shape(popt_mean1))
 
     popt_all2 = np.array(popt_all2)
-    print(np.shape(popt_all2))
+    #print(np.shape(popt_all2))
     popt_mean2 = np.mean(popt_all2, axis=0)
     popt_std2 = np.std(popt_all2, axis=0)
-    print(np.shape(popt_mean2))
+    #print(np.shape(popt_mean2))
 
+    print("popt_all1: " + str(popt_all1))
+    print("popt_mean1: " + str(popt_mean1))
+    print("popt_mean2: " + str(popt_mean2))
 
-    emodel1 = straight(np.log10(np.sort(risetime1[0])), *popt_mean1)
-    emodel2 = straight(np.log10(np.sort(risetime2[0])), *popt_mean2)
+    emodel_duration1 = straight(np.log10(np.sort(duration1[0])), *popt_mean1)
+    emodel_duration2 = straight(np.log10(np.sort(duration2[0])), *popt_mean2)
+
+    print(np.min(emodel_duration2))
+    print(np.max(emodel_duration2))
 
     ax2 = fig.add_subplot(132)
 
-    ax2.scatter(np.log10(risetime1[0]), np.log10(duration1[0]), color="blue", marker="o", edgecolor="blue", label=label1)
-    ax2.scatter(np.log10(risetime2[0]), np.log10(duration2[0]), color="red", marker="o", edgecolor="red", label=label2)
+    ax2.scatter(np.log10(np.array(duration1[0])), np.log10(np.array(energy1[0])/dt), color="blue", marker="o", edgecolor="blue", label=label1)
+    ax2.scatter(np.log10(np.array(duration2[0])), np.log10(np.array(energy2[0])/dt), color="red", marker="o", edgecolor="red", label=label2)
 
-    ax2.plot(np.sort(np.log10(risetime1[0])), emodel1, lw=4, color="navy", ls="dashed")
-    ax2.plot(np.sort(np.log10(risetime2[0])), emodel2, lw=4, color="darkred", ls="dashed")
+    ax2.plot(np.sort(np.log10(duration1[0])), emodel_duration1, lw=4, color="navy", ls="dashed")
+    ax2.plot(np.sort(np.log10(duration2[0])), emodel_duration2, lw=4, color="darkred", ls="dashed")
 
-    ax2.set_xlim([np.min(np.log10(risetime1[0])), np.max(np.log10(risetime1[0]))])
-    ax2.set_ylim([np.min(np.log10(duration1[0])), np.max(np.log10(duration1[0]))])
+    #ax2.set_xlim([np.min(np.log10(np.array(duration1[0]))), np.max(np.log10(np.array(duration1[0])))])
+    #ax2.set_ylim([np.min(np.log10(np.array(energy1[0])/dt)), np.max(np.log10(np.array(energy1[0])/dt))])
     ax2.legend(prop={"size":16})
 
-    ax2.text(-1.5,-3.9, r"power law index $\gamma_1 = %.2f \pm %.2f$"%(popt_mean1[0],popt_std1[0]),
-            verticalalignment='center', horizontalalignment='center', color='blue',
+    ax2.text(0.6, 0.08, r"power law index $\gamma_1 = %.2f \pm %.2f$"%(popt_mean1[0],popt_std1[0]),
+            verticalalignment='center', horizontalalignment='center', color='blue', transform=ax2.transAxes,
             fontsize=16)
 
-    ax2.text(-1.5,-4.2, r"power law index $\gamma_2 = %.2f \pm %.2f$"%(popt_mean2[0], popt_std2[0]),
-            verticalalignment='center', horizontalalignment='center', color='red',
+    ax2.text(0.6, 0.05, r"power law index $\gamma_2 = %.2f \pm %.2f$"%(popt_mean2[0], popt_std2[0]),
+            verticalalignment='center', horizontalalignment='center', color='red', transform=ax2.transAxes,
             fontsize=16)
 
 
-    xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
-    ylabel("Duration of the spike [s]", fontsize=20)
-    title("total number of counts in a spike versus rise time")
+    xlabel(r"$\log_{10}{(\mathrm{duration})}$ [s]", fontsize=20)
+    ylabel(r"$\log_{10}{(\mathrm{energy})}$ [s]", fontsize=20)
+    title("duration versus energy")
 
 
     waitingtimes1 = waiting_times(p1, bids=bids1,nsims=len(p1), trigfile="sgr1550_ttrig.dat", makeplot=False)

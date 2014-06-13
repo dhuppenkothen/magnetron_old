@@ -20,7 +20,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
 
     for f in files:
         fsplit = f.split("_")
-        data = loadtxt("%s_%s_all_data.dat"%(fsplit[0], fsplit[1]))
+        data = loadtxt("%s_%s_data.dat"%(fsplit[0], fsplit[1]))
         fig = figure(figsize=(24,9))
         ax = fig.add_subplot(121)
         plot(data[:,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
@@ -32,7 +32,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
             print("shape data: " + str(len(data[:,0])))
             print("shape sample: " + str(len(sample[i,-data.shape[0]:])))
             plot(data[:,0], sample[i,-data.shape[0]:], lw=1)
-            plot(data[:,0], np.ones(len(data[:,0]))*sample[i,0], lw=2)
+            #plot(data[:,0], np.ones(len(data[:,0]))*sample[i,0], lw=2)
         xlabel("Time since trigger [s]", fontsize=20)
         ylabel("Counts per bin", fontsize=20)
 
@@ -893,7 +893,7 @@ def all_correlations(sample=None, bids=None, datadir="./", trigfile="sgr1550_ttr
 
 
 
-def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10):
+def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.0005, froot="sgr1550"):
 
     if sample is None:
         parameters_red,bids = extract_sample(datadir, nsims)
@@ -915,23 +915,99 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10):
         duration = np.array([[a.duration for a in p.all] for p in pars])
         t0 = np.array([[a.t0 for a in p.all] for p in pars])
         amplitude = np.array([[a.amp for a in p.all] for p in pars])
+        energy = np.array([[a.energy for a in p.all] for p in pars])
+        waiting_times = np.array([np.array(t[1:])-np.array(t[:-1]) for t in t0])
 
-        waiting_times = np.array([t[1:]-t[:-1] for t in t0])
 
         #risetime_all.append(risetime)
         #duration_all.append(duration)
         #amplitude_all.append(amplitude)
         #waitingtime_all.append(waiting_times)
 
-        sorted_data = [sorted(zip(t,r,d,a,w)) for t,r,d,a,w in zip(t0, risetime, duration, amplitude, waiting_times)
+        sorted_data = [sorted(zip(t,r,d,a,e,w)) for t,r,d,a,e,w
+                       in zip(t0, risetime, duration, amplitude, energy, waiting_times)]
 
         sorted_data_all.append(sorted_data)
 
-
-    for i in xrange(nsims):
-        samp = sorted_data_all[:,i]
+    sorted_data_all = np.array(sorted_data_all)
 
 
+    ### columns and rows for plot
+    ncolumns = 3
+    nrows = int(nspikes/ncolumns)
+
+
+    ### if nspikes is not divisible by 3, I need another row
+    if float(nspikes/ncolumns) - nrows > 0:
+        nrows += 1
+
+
+    fig_rise = figure(figsize=(ncolumns*6.0,nrows*6.0))
+    fig_amp = figure(figsize=(ncolumns*6.0,nrows*6.0))
+    fig_dt = figure(figsize=(ncolumns*6.0,nrows*6.0))
+    fig_duration = figure(figsize=(ncolumns*6.0,nrows*6.0))
+    fig_energy = figure(figsize=(ncolumns*6.0,nrows*6.0))
+
+    #fig_rise, ax_rise_top = subplots(111, figsize=(ncolumns*6.0,nrows*6.0))
+    #fig_amp, ax_amp_top = subplots(111, figsize=(ncolumns*6.0,nrows*6.0))
+    #fig_dt, ax_dt_top = subplots(111,figsize=(ncolumns*6.0,nrows*6.0))
+    #fig_duration, ax_duration_top = subplots(111,figsize=(ncolumns*6.0,nrows*6.0))
+    #fig_energy, ax_energy_top = subplots(111,figsize=(ncolumns*6.0,nrows*6.0))
+    #fig_skew = subplots(111, figsize=(ncolumns*6.0,nrows*6.0))
+
+
+    for n in xrange(nspikes):
+        ax_rise = fig_rise.add_subplot(nrows, ncolumns, n)
+        ax_amp = fig_amp.add_subplot(nrows, ncolumns, n)
+        ax_dt = fig_dt.add_subplot(nrows, ncolumns, n)
+        ax_duration= fig_duration.add_subplot(nrows, ncolumns, n)
+        ax_energy = fig_energy.add_subplot(nrows, ncolumns, n)
+        #ax_skew = fig_skew.add_subplot(nrows, ncolumns, n)
+
+        for i in xrange(nsims):
+            samp = sorted_data_all[:,i]
+
+            rise = np.array([s[n][1] for s in samp if len(s)>n])
+            duration = np.array([s[n][2] for s in samp if len(s)>n])
+            amp = np.array([s[n][3] for s in samp if len(s)>n])/dt
+            energy = np.array([s[n][4] for s in samp if len(s)>n])/dt
+            waitingtime = np.array([s[n][5] for s in samp if len(s)>n])
+
+            ax_rise.hist(np.log10(rise), range=[np.log10(0.00005), np.log10(2.5)], bins=40,
+                         normed=True, alpha=0.6, color=cm.jet(i*20.0))
+            ax_amp.hist(np.log10(amp), range=[np.log10(1.0/dt), np.log10(3.5e5)], bins=40,
+                         normed=True, alpha=0.6, color=cm.jet(i*20.0))
+            ax_energy.hist(np.log10(energy), range=[np.log10(1.0/dt), np.log10(3.5e6)], bins=40,
+                         normed=True, alpha=0.6, color=cm.jet(i*20.0))
+            ax_duration.hist(np.log10(duration), range=[np.log10(0.00005), np.log10(2.5)], bins=40,
+                         normed=True, alpha=0.6, color=cm.jet(i*20.0))
+            ax_dt.hist(np.log10(waitingtime), range=[np.log10(0.0005), np.log10(330.0)], bins=40,
+                         normed=True, alpha=0.6, color=cm.jet(i*20.0))
+
+    #ax_rise_top.xlabel(r"$\log_{10}{(\mathrm{rise \; time})}$", fontsize=20)
+    #ax_rise_top.ylabel(r"$p(\log_{10}{(\mathrm{rise \; time})})$", fontsize=20)
+    savefig("%s_risetime_evolution.png"%froot, format='png')
+    close()
+
+    #ax_amp_top.xlabel(r"$\log_{10}{(\mathrm{amplitude})}$", fontsize=20)
+    #ax_amp_top.ylabel(r"$p(\log_{10}{(\mathrm{amplitude})})$", fontsize=20)
+    savefig("%s_amplitude_evolution.png"%froot, format="png")
+    close()
+
+    #ax_energy_top.xlabel(r"$\log_{10}{(\mathrm{energy})}$", fontsize=20)
+    #ax_energy_top.ylabel(r"$p(\log_{10}{(\mathrm{energy})})$", fontsize=20)
+    savefig("%s_energy_evolution.png"%froot, format="png")
+    close()
+
+    #ax_duration_top.xlabel(r"$\log_{10}{(\mathrm{duration})}$", fontsize=20)
+    #ax_duration_top.ylabel(r"$p(\log_{10}{(\mathrm{duration})})$", fontsize=20)
+    savefig("%s_duration_evolution.png"%froot, format="png")
+    close()
+
+    #ax_dt_top.xlabel(r"$\log_{10}{(\mathrm{waitingn \; time})}$", fontsize=20)
+    #ax_dt_top.ylabel(r"$p(\log_{10}{(\mathrm{waiting \; time})})$", fontsize=20)
+    savefig("%s_dt_evolution.png"%froot, format="png")
+    close()
 
     ### I NEED TO FINISH THIS FUNCTION
 

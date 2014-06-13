@@ -161,8 +161,22 @@ The data from a few example bursts are shown in Figure \ref{fig:example_bursts}.
 \section{Analysis Methods}
 
 
-\subsection{A hierarchical Bayesian model for magnetar bursts}
+\subsection{A Bayesian model for magnetar bursts}
 
+The likelihood is:
+
+\begin{equation}
+p(D|\theta, H) = \sum_i{(-f(\theta)_i  + D_i \log{(f(\theta)_i)} - \log{(\Gamma(D_i + 1)})}
+\end{equation}
+
+The prior is
+
+\begin{equation}
+p(\theta | H) = p(t_0) p(A| \mu_A) p(\sigma | \mu_\sigma) p(s | a,b) p(\mu_\sigma) p(\mu_A) p(a) p(b) \; ,
+\end{equation}
+
+where $\mu_A$ and $\mu_\sigma$ are the hyper parameters defining the scale of the exponential distribution used as a prior for the amplitude $A$ and the rise time $\sigma$, 
+and $a$ and $b$ define the boundaries of the uniform prior for the skewness $s$. The prior for $t_0$ is uniform between the start and end times of the burst, $t_\mathrm{start}$ and $t_\mathrm{end}$.
 
 
 \section{Model shapes}

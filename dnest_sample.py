@@ -926,7 +926,16 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10):
         sorted_data = [sorted(zip(t,r,d,a,w)) for t,r,d,a,w in zip(t0, risetime, duration, amplitude, waiting_times)
 
         sorted_data_all.append(sorted_data)
+
+
+    for i in xrange(nsims):
+        samp = sorted_data_all[:,i]
+
+
+
     ### I NEED TO FINISH THIS FUNCTION
+
+
 
     return
 

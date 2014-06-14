@@ -10,6 +10,7 @@
 \usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{amsbsy}
+\usepackage{bm}
 %\usepackage{hyperref}
 %\usepackage[stable]{footmisc}
 %\usepackage{color}
@@ -28,13 +29,15 @@
 \newcommand{\Uniform}{{\mathcal U}}
 \newcommand{\bg}{\mathrm{bg}}
 \newcommand{\word}{\phi}
+%\newcommand{\bs}{\boldsymbol}
 
 \begin{document}
 
 \title{Dissecting Magnetar Variability with Bayesian Hierarchical Models}
 
-\author{D. Huppenkothen\altaffilmark{1, 2}, B. Brewer\altaffilmark{}, D. Hogg\altaffilmark{}, I. Murray\altaffilmark{}, M. Frean\altaffilmark{}, A. L. Watts\altaffilmark{1}, Y.Levin\altaffilmark{},  L. Heil\altaffilmark{1}, C. Kouveliotou\altaffilmark{3,4}}
+\author{D. Huppenkothen\altaffilmark{1, 2}, B. Brewer\altaffilmark{}, D. Hogg\altaffilmark{}, I. Murray\altaffilmark{}, M. Frean\altaffilmark{}, C. Elenbaas\altaffilmark{1}, A. L. Watts\altaffilmark{1}, Y.Levin\altaffilmark{},  L. Heil\altaffilmark{1}, C. Kouveliotou\altaffilmark{3,4}}
 
+ %%% NEED TO ADD ALEXANDER VAN DER HORST?
  
 \altaffiltext{1}{Anton Pannekoek Institute for Astronomy, University of
   Amsterdam, Postbus 94249, 1090 GE Amsterdam, the Netherlands}
@@ -44,11 +47,6 @@
 
 \altaffiltext{}{Monash Center for Astrophysics and School of Physics, Monash University, Clayton, Victoria 3800, Australia}
 
-%\section*{A model for magnetar bursts}
-
-%\noindent
-%Huppenkothen, Murray, Hogg, Brewer, Frean \\
-%\textsl{2013 December}
 
 \begin{abstract}
 Magnetars are whatever and people need whatever.
@@ -74,7 +72,7 @@ The phenomenology of spike multiplicity, shape, and width is discussed.
 
 With current and upcoming telescopes monitoring the sky regularly across the entire electromagnetic spectrum, time domain astronomy is emerging as one of the key fields in which major new discoveries are being made.  A large fraction of astrophysical sources are known to be variable. The timescales span more than five orders of magnitude: fast oscillations in X-ray binaries (XRBs) change over milliseconds \citep[e.g.][]{xrb_khzqpos}, while red giants are believed to change over decades or even centuries \citep[e.g.][]{dasch_giants}. Variability studies have the potential to unravel fundamental physical processes: studying variability in XRBs can help us unravel accretion processes and constrain theories of viscosity. Similarly, giant flares from magnetars have the potential to map the neutron star interior via neutron star seismology. 
 
-While much of the variability exhibited for example in XRBs is accessible by standard Fourier methodology, this is not true for an important group of sources: for any transients with complex temporal structure where the relevant time scales of interest are of the same order as the typical time scales in the system,  this variability introduces considerable systematic errors into inferences made from this type of data with standard methods. Three examples stand out particularly: solar flares, $\gamma$-ray bursts (GRBs) and magnetar bursts. All three phenomena are characterised by emission at high (X-ray to soft $\gamma$-ray$) energies, bursts lasting from $\sim 1/10$ of a second to hundreds of seconds, and a complex temporal structure that varies strongly from burst to burst (for an example, see \ref{fig:burst example}). Fourier methods are hampered by the lack of knowledge of the overall structure of the burst, and consequently the lack of knowledge of both the shape and the statistical distribution of powers in the periodogram at low frequencies. Conversely, it is difficult to postulate a common model applicable to a large sample of light curves of these sources. Any light curve model must be flexible enough to account for differences between bursts. At the same time, there is little understanding of the underlying physical processes leading to variability in these bursts to inform a choice of model. Here, we aim to develop a probabilistic model for highly variable transient events, based on a decomposition of the light curve into simple shapes, without knowing the number of components in the model a priori. We demonstrate the power of this approach on a large sample of magnetar bursts, and, for the first time, connect variability in magnetar bursts to the time scales thought to govern the underlying physics.
+While much of the variability exhibited for example in XRBs is accessible by standard Fourier methodology, this is not true for an important group of sources: for any transients with complex temporal structure where the relevant time scales of interest are of the same order as the typical time scales in the system,  this variability introduces considerable systematic errors into inferences made from this type of data with standard methods. Three examples stand out particularly: solar flares, $\gamma$-ray bursts (GRBs) and magnetar bursts. All three phenomena are characterised by emission at high (X-ray to soft $\gamma$-ray) energies, bursts lasting from $\sim 1/10$ of a second to hundreds of seconds, and a complex temporal structure that varies strongly from burst to burst (for an example, see \ref{fig:burst example}). Fourier methods are hampered by the lack of knowledge of the overall structure of the burst, and consequently the lack of knowledge of both the shape and the statistical distribution of powers in the periodogram at low frequencies. Conversely, it is difficult to postulate a common model applicable to a large sample of light curves of these sources. Any light curve model must be flexible enough to account for differences between bursts. At the same time, there is little understanding of the underlying physical processes leading to variability in these bursts to inform a choice of model. Here, we aim to develop a probabilistic model for highly variable transient events, based on a decomposition of the light curve into simple shapes, without knowing the number of components in the model a priori. We demonstrate the power of this approach on a large sample of magnetar bursts, and, for the first time, connect variability in magnetar bursts to the time scales thought to govern the underlying physics.
 
 
 Neutron stars, the ultra-dense compact remnants of core-collapse supernovae, are the prime laboratory for studying nuclear 
@@ -159,7 +157,7 @@ physically relevant time scales from SGR bursts. We place the results in the con
 Bursts from SGR J1550-5418 triggered \Fermi/GBM for a total of $126$ times between 2008 October 3 and 2009 April 17, with $\sim 450$ bursts observed on its most active day, 2009 January 22, alone. 
 Each trigger records data from $30\,\mathrm{s}$ before each trigger to $300\,\mathrm{s}$ after each trigger, upon which the instrument cannot trigger for another $\sim 300 \,\mathrm{s}$. 
 After GBM is triggered, subsequent bursts within this time span do not trigger the instrument, but can be found in an untriggered burst search. The resulting data stream consists of 
-the arrival times of individual photons (time-tagged events, TTE), with a maximum time resolution of $\sim 2\mu\mathrm{s}$, sufficient for probing variability to very short time scales.
+the arrival times of individual photons (time-tagged events, TTE), with an intrinsic time resolution of $\sim 2\mu\mathrm{s}$, sufficient for probing variability to very short time scales.
 We use data from the $12$ NaI detectors, whose energy range of $8$ keV to $4$ MeV is sufficient, since SGR bursts rarely exhibit radiation above $200$ keV. Additionally, we only used detectors with viewing angles to the source $< 60^{\circ}$, and checked whether the source was occulted by the spacecraft and the other instrument, the Large Area Detector (LAT). We use the combined samples of bursts from \citet{vonkienlin2012} and \citet{vanderhorst2012}. 
 We extracted TTE data between $8 \, \mathrm{keV}$ and $200 \, \mathrm{keV}$ around each burst, starting at $t_{\mathrm{start}} - 0.1 \times\mathrm{T}90$ (the burst duration, $\mathrm{T}90$, is defined as the time in which the central $90\%$ of the photons, starting at $5\%$ and ending at $95\%$, reach the detector) and ending at $t_{\mathrm{start}} + 1.1\times\mathrm{T}90$ in order to ensure the entire burst is within our data set. Photon arrival times are barycentered, i.e. projected to the centre of mass of the solar system, to account for the effects of the relative motion of the space craft and the Earth.
 
@@ -193,29 +191,89 @@ but this will not correct the statistical distributions. We currently do not tak
 
 \section{Analysis Methods}
 
-In order to successfully model the complex temporal variability in magnetar bursts, any modelling procedure must satisfy the following criteria: (1) it must be flexible enough to be applicable to a large number of bursts with distinctly different morphologies. We achieve this by decomposing magnetar burst light curves into one or more components with simple shapes, which, taken together, make up a burst. (2) the procedure must be largely automated, and be capable of sampling both the number of components as well as the model parameters for each component without human intervention. The latter is achieved by setting up a Bayesian model, where the number of components is a parameter to be sampled together with the corresponding parameters of the individual components. We use diffusive nested sampling as implemented in DNest \citep{brewer2011} to approximate the posterior distribution over all parameters. From samples of the posterior distribution,
+In order to successfully model the complex temporal variability in magnetar bursts, any modelling procedure must satisfy the following criteria: (1) it must be flexible enough to be applicable to a large number of bursts with distinctly different morphologies. We achieve this by decomposing magnetar burst light curves into one or more components with simple shapes, which, taken together, make up a burst. (2) The procedure must be largely automated, and be capable of sampling both the number of components as well as the model parameters for each component without human intervention. The latter is achieved by setting up a Bayesian model, where the number of components is a parameter to be sampled together with the corresponding parameters of the individual components. We use diffusive nested sampling as implemented in DNest \citep{brewer2011} to approximate the posterior distribution over all parameters. From samples of the posterior distribution,
 we can then study the properties of individual burst components, as well as their properties for a given burst.
 
-\subsection{A hierarchical Bayesian model for magnetar bursts}
+\subsection{A Bayesian model for magnetar burst light curves}
+\label{sec:model}
 
-For a light curve with Poisson-distributed counts $\bm{\counts} = \{\counts_i\}$ and a model $H$ we can compute the posterior probability over all model parameters in the following way:
+For a light curve with $K$ Poisson-distributed counts $\bm{\counts} = \{\counts_i\}$ and a model $H$ we can compute the posterior probability over all model parameters in the following way:
 
 \begin{equation}
-p(N, \bm{\alpha}, }\{\bm{\theta}_i \} \given \bm{\counts}, H) = \frac{p(\bm{\counts} \given N, \bm{\alpha}, }\{\bm{\theta}_i \}, H) p(N, \bm{\alpha}, \{\bm{\theta}_i \} \given H)}{p(\bm{\counts} | H} \, .
+p(N, \bm{\alpha},\{\bm{\theta}_i \} \given \bm{\counts}, H) = \frac{p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_i \}, H) p(N, \bm{\alpha}, \{\bm{\theta}_i \} \given H)}{p(\bm{\counts} | H)} \, .
 \end{equation}
 
-Here, $N$ is the number of model components, with the corresponding set of model components $\{\theta_i\}$. $\theta_i$ may be a scalar, for models with a single parameter, or a vector.
-The scalar or vector $\bm{\alpha}$ encodes the potential hyper parameters used to describe the prior distributions of parameters in $\{\theta_i\}$. $H$ encodes the prior choices we have
+Here, $N$ is the number of model components, with the corresponding set of model components $\{\bm{\theta}_i\} = \{ \bm{\theta}_1, \bm{\theta}_2, ..., \bm{\theta}_N \}$. Each $\bm{\theta}_i$ may be a scalar, for models with a single parameter, or a vector.
+The scalar or vector $\bm{\alpha}$ encodes the potential hyper parameters used to describe the prior distributions of parameters in $\{\bm{\theta}_i\}$. $H$ encodes the prior choices we have
 made about the model that are not part of the inference problem at this stage: for example, the choice of shape for prior distributions and the model shape used to represent the light curve.
 
 We use a Poisson likelihood to describe the data,
 
+\begin{eqnarray}
+\likelihood(N, \bm{\alpha}, \{\bm{\theta}_i \}) & = & p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_i \}, H) \\ \nonumber
+ &= & \prod\limits_{j=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_j} }{y_j! }} \; ,
+\end{eqnarray}
+
+which only depends on the parameters of the individual model components, $\bm{\theta}_i$. In general, the interim priors for the model 
+parameters $\{\bm{\theta}_i\}$ will depend on the priors for the hyper parameters defining their prior distributions, $\bm{\alpha}$, such that the
+overall prior for this model is
+
 \begin{equation}
-\likelihood(N, \bm{\alpha}, }\{\bm{\theta}_i \}) = p(\bm{\counts} \given N, \bm{\alpha}, }\{\bm{\theta}_i \}, H) = \prod\limits_{j=0}^{N}
+p(N, \bm{\alpha}, \{\bm{\theta}_i \} \given H) = p(N)p(\alpha\given N)p(\{\bm{\theta}_i\}\given \alpha, N) \; .
 \end{equation}
 
+Under the assumption that $\bm{\alpha}$ and $N$ are independent, and that the interim priors of the individual model components are
+independent and identically distributed, we can re-write this equation as:
 
-\section{Model shapes}
+\begin{equation}
+p(N, \bm{\alpha}, \{\bm{\theta}_i \} \given H) = p(N)p(\alpha) \prod\limits_{i=0}^{N}  p(\{\bm{\theta}_i\}\given \alpha) \; .
+\end{equation}
+
+Thus, the posterior probability density becomes
+
+\begin{eqnarray}
+p(N, \bm{\alpha}, &&\{\bm{\theta}_i \}  \given \bm{\counts}, H) = \\ 
+&& \frac{\prod\limits_{j=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_j} }{y_j! }} p(N)p(\alpha) \prod\limits_{i=0}^{N}  p(\{\bm{\theta}_i\}\given \alpha)}{p(\bm{\counts} | H)}  \nonumber
+\end{eqnarray}
+
+where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisation constant in the usual way: 
+
+\begin{eqnarray}
+p(\bm{\counts} | H) & = & \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_i \})} \times \\ \nonumber
+&& p(N)p(\alpha) \prod\limits_{i=0}^{N}  p(\{\bm{\theta}_i\}\given \alpha) d\bm{\alpha} dN d\bm{\theta}_1 ... d\bm{\theta}_N \; .
+\end{eqnarray}
+
+The marginal likelihood involves integration in a high-dimensional parameter space, which is analytically intractable for all but the
+simplest cases. Here, we use Diffusive Nested Sampling to efficiently traverse parameter space and approximate the marginal 
+likelihood as well as sample from the posterior probability density. 
+Nested sampling [SKILLING REF HERE] samples parameter space by uniformly sampling $M$ points (particles) from the space allowed by the prior. 
+One then computes the likelihood values associated with each particle, and the particle with the lowest likelihood is discarded. A new point
+can be generated, for example, via Markov Chain Monte Carlo (MCMC), subject to the hard constraint that the
+likelihood of the new point must be larger than the likelihood of the discarded one. In this way, the population iterates progressively towards
+regions of higher likelihood. At the same time, one may assign a value $X  \in [0, 1]$ to the discarded particle. This effectively provides a 
+mapping from parameter space into $[0,1]$, such that the evaluation of the marginal likelihood simplifies to a one-dimensional 
+integral tractable with numerical integration methods.
+
+The MCMC step is the key challenge in any Nested Sampling algorithm, and classical MCMC often fails for probability distributions that
+are highly multi-modal or contain phase transitions. It is here that Diffusive Nested Sampling provides a reliable alternative \citep[for details, see][]{brewer2011}. 
+Instead of recording the end point of an MCMC chain as the new particle, the likelihoods of parameter sets visited during the MCMC exploration step
+ are recorded. One can then compute the $1-e^{-1}$ quantile, and record this value as the new likelihood contour, such that the prior space
+ under consideration contracts by a factor of $\sim e$. Instead of enforcing a hard likelihood constraint, one now samples a mixture of the 
+ two regions, and the particle may escape into the lower-likelihood region, where it can explore more freely. Once enough samples are accumulated,
+ one again computes the $1-e^{-1}$ quantile, and constructs a new likelihood contour. This process is repeated, and as in the classical Nested Sampling
+ approach, the population contracts towards regions of high likelihood, but it will do so even for complex probability distributions subject to multi-modality
+ or phase transitions.
+
+
+\subsection{Model shapes}
+
+The model defined in Section \ref{sec:model} is fairly general: it is valid for any Poisson-distributed light curve thought to be composed several individual components of
+the same shape, but with potentially different individual parameters (such as amplitudes and widths). 
+We have made only two assumptions so far: the priors for the number of components $N$ and the hyper parameters $\bm{\alpha}$ are independent,
+and the priors on the parameters of the model for the individual components are independent of each other and identically distributed. 
+Here, we now refine this model for magnetar bursts specifically. However, changing the model shape for use with different source classes (e.g. GRBs) is straightforward.
+
+For
 
 The model for the data in or near one burst is
 \begin{eqnarray}

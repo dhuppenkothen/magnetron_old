@@ -160,9 +160,13 @@ class TwoExpParameters(Parameters, object):
     def compute_duration(self, bkg=None):
 
         amp = self.amp
+        #print("bkg: " + str(bkg))
+        #print("amp: " + str(amp))
 
         if bkg is None:
             bkg = 0.01*amp
+
+        #print("delta amp: %.4f"%(amp-bkg))
 
         skew = self.skew
         scale = self.scale
@@ -170,10 +174,16 @@ class TwoExpParameters(Parameters, object):
         log_fall = np.log(amp/bkg)
         log_rise = np.log(bkg/amp)
 
-        fall_term = skew*scale*log_fall
-        rise_term = scale*log_rise
 
-        self.duration = fall_term - rise_term
+        t_start = self.t0 + scale*np.log(bkg/amp)
+        t_end = self.t0 + skew*scale*np.log(amp/bkg)
+
+        #fall_term = skew*scale*log_fall
+        #rise_term = scale*log_rise
+
+        #self.duration = fall_term - rise_term
+
+        self.duration = t_end - t_start
 
         return self.duration
 

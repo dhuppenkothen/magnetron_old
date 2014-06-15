@@ -62,18 +62,18 @@ double ClassicMassInf1D::perturb_parameters()
 
 double ClassicMassInf1D::log_pdf(const std::vector<double>& vec) const
 {
-	if(vec[0] < x_min || vec[0] > x_max || vec[1] < 1. || vec[2] < min_width
+	if(vec[0] < x_min || vec[0] > x_max || vec[1] < 0.0 || vec[2] < min_width
 		|| log(vec[3]) < (a-b) || log(vec[3]) > (a + b))
 		return -1E300;
 
-	return -log(mu) - (vec[1] - 1.)/mu - log(mu_widths)
+	return -log(mu) - vec[1]/mu - log(mu_widths)
 			- (vec[2] - min_width)/mu_widths - log(2.*b*vec[3]);
 }
 
 void ClassicMassInf1D::from_uniform(std::vector<double>& vec) const
 {
 	vec[0] = x_min + (x_max - x_min)*vec[0];
-	vec[1] = 1.0 -mu*log(1. - vec[1]);
+	vec[1] = -mu*log(1. - vec[1]);
 	vec[2] = min_width - mu_widths*log(1. - vec[2]);
 	vec[3] = exp(a - b + 2.*b*vec[3]);
 }
@@ -81,7 +81,7 @@ void ClassicMassInf1D::from_uniform(std::vector<double>& vec) const
 void ClassicMassInf1D::to_uniform(std::vector<double>& vec) const
 {
 	vec[0] = (vec[0] - x_min)/(x_max - x_min);
-	vec[1] = 1. - exp(-(vec[1]-1.0)/mu);
+	vec[1] = 1. - exp(-vec[1]/mu);
 	vec[2] = 1. - exp(-(vec[2] - min_width)/mu_widths);
 	vec[3] = (log(vec[3]) + b - a)/(2.*b);
 }

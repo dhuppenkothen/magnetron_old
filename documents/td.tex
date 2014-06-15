@@ -258,6 +258,12 @@ imposes a time scale onto the data, which means that the data then deviate away 
 Dead time is harder to quantify and account for than saturation. It is possible to correct count rates based on simulations of the instrument (REF, Bhat et al, 2013),
 but this will not correct the statistical distributions. We currently do not take dead time into account in our analysis. 
 
+In addition to dead time, saturation may significantly alter the shape of the arriving bursts. Saturation occurs when the number of arriving photons per second
+measured in a single GBM detector exceed the maximum data throughput rate of the science data bus. In this case, transmitted rates are capped at a 
+count rate of $3.5 \times 10^{5} \, \mathrm{photons} \; \mathrm{s}^{-1}$, any photons exceeding that number are lost. For very bright bursts, this leads
+to a flat-topped spikes truncated at the maximum count rate. Any bursts with count rates this high are excluded from the sample, as the model we
+consider is not designed to represent these features. 
+
 We currently use light curves with a time resolution of $0.5\,\mathrm{ms}$. The time resolution is chosen small enough to preserve features
 in the data on short time scales, while at the same time have a reasonable number of counts per time bin. 
 Burst durations are defined in $T90$, the time in which $90\%$ of photons arrive at the detector, with $0.2T90$ added on either side
@@ -450,8 +456,20 @@ The prior on the skewness parameter $s_k$ is a uniform distribution with a mean 
 that the log-skewness must lie in the range $(a-b) < \log{(s)} < (a+b)$. A definition in terms of mean and half-width ensures
 that positive and negative skews are equally likely.
 
+The prior on the background parameter, finally, depends on the data itself. It is log-uniform, with boundaries between 
+$\log{(10^{-3}\mu_\counts)} < \log{(\counts_{\mathrm{bg}})} < \log{(10^{3} \mu_\counts)}$, where $\mu_\counts$ is the average count
+rate in a burst. Note that this is, in principle, not a valid prior: the prior for the parameters should not depend on the data
+itself. In practice, it is convenient as long as one does not need to compute the marginal likelihood. In a more in-depth analysis
+involving the marginal likelihood where, for example, one might test whether any results change with a change of prior, or where different component models
+might be compared, one would need to discard this prior for one that is formally valid.
+
 The priors on the hyper parameters $\mu_{A}$ and $\mu_{\mathrm{\tau}}$ are log-uniform. The prior range for
-$\mu_{\tau}$ depends on the length of the data set, such that $10^{-3}t_{\mathrm{burst}} < 
+$\mu_{\tau}$ depends on the length of the data set, such that $\log{(10^{-3}t_{\mathrm{burst}})} < \log{(\mu_{\tau})} < \log{(10^{3}t_\mathrm{burst})}$.
+Like the prior on the background count rate $\counts_{\mathrm{bg}}$, the hyper prior on the width of the amplitude prior distribution
+depends on the count rate in a burst, $\log{(10^{-3}\mu_\counts)} < \log{(\mu_{A})} < \log{(10^{3} \mu_\counts)}$. The same reasoning applies as
+for the background prior, such that for a more complicated analysis involving the marginal likelihood it needs to be replaced
+by a prior that is formally valid.
+
 %where $\Poisson(\counts\given\mean)$ is the Poisson probability of getting count $y$ given mean rate $\mean$,
 %  $\pars$ is the vector or blob of all model parameters,
 %  $\mean_{\bg}$ is the background (DC) level in the bin,

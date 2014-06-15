@@ -98,6 +98,37 @@ def plot_example_bursts():
 
     return
 
+
+def plot_example_dnest_lightcurve():
+
+    data = loadtxt("090122173_+241.347_all_data.dat")
+    fig = figure(figsize=(24,9))
+    ax = fig.add_subplot(121)
+    plot(data[:,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
+    sample = atleast_2d(loadtxt("090122173_+241.347_posterior_sample.txt"))
+
+    print(sample.shape)
+    ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
+    for i in ind:
+        plot(data[:,0], sample[i,-data.shape[0]:], lw=1)
+    xlabel("Time since trigger [s]", fontsize=20)
+    ylabel("Counts per bin", fontsize=20)
+
+    ax = fig.add_subplot(122)
+    nbursts = sample[:, 7]
+
+    hist(nbursts, bins=30, range=[np.min(nbursts), np.max(nbursts)], histtype='stepfilled')
+    xlabel("Number of spikes per burst", fontsize=20)
+    ylabel("N(samples)", fontsize=20)
+    savefig("example_dnest_result.png", format="png")
+    close()
+
+    return
+
+
+
+
+
 def parameter_distributions(filename, namestr="allbursts"):
 
     """

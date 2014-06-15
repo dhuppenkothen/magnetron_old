@@ -2,8 +2,7 @@
 import glob
 import argparse
 import burstmodel
-
-
+import numpy as np
 
 def main():
 
@@ -15,6 +14,7 @@ def main():
         fname = filecomponents[-1]
         froot = fname[:-9]
 
+        print("I am on file " + str(fname))
 
         if instrument == 'gbm':
             times, counts = burstmodel.read_gbm_lightcurves(f)
@@ -25,10 +25,11 @@ def main():
 
 
         all_means, all_err, all_postmax, all_quants, all_theta_init = \
-            bm.find_spikes(nmax=10, nwalker=nwalker, niter=niter, burnin=100, namestr=froot, scale_locked=scale,
+            bm.find_spikes(nmax=10, nwalker=nwalker, niter=niter, burnin=200, namestr=froot, scale_locked=scale,
                            skew_locked=skew)
 
 
+        all_quants = np.array(all_quants)
         bm.plot_quants(all_postmax, all_quants, namestr=froot)
 
         #posterior_dict = {'samples':all_sampler, 'means':all_means, 'err':all_err, 'quants':all_quants,
@@ -43,6 +44,7 @@ def main():
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Model magnetar bursts with spikes!')
+
 
     modechoice = parser.add_mutually_exclusive_group(required = True)
     modechoice.add_argument('-a', '--all', action='store_true', dest='all', help='run on all files in the directory')

@@ -197,7 +197,40 @@ we can then study the properties of individual burst components, as well as thei
 \subsection{A Bayesian model for magnetar burst light curves}
 \label{sec:model}
 
-For a light curve with $K$ Poisson-distributed counts $\bm{\counts} = \{\counts_i\}$ and a model $H$ we can compute the posterior probability over all model parameters in the following way:
+For a light curve with $K$ Poisson-distributed counts $\bm{\counts} = \{\counts_i\}$, we define a model as a superposition of $K$ individual components:
+
+%The model for the data in or near one burst is
+\begin{eqnarray}
+%p(\counts_n\given\pars) &=& \Poisson(\counts_n\given\mean_n)
+%\\
+\mean_n &=& \mean_{\bg} + \sum_{k=1}^K \mean_{nk}
+\\
+\mean_{nk} &\equiv& \int_{t_n-\Delta t/2}^{t_n+\Delta t/2} A_k\,\word(\frac{t'-t_k}{\tau})\,\dd t' \; ,
+%\begin{equation}
+%\word(\xi) &=& \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right. \, ,
+%\end{equation}
+\end{eqnarray}
+
+where $\mean_{nk}$ is the mean count rate of the $k^{\mathrm{th}}$ model component in time bin $n$, 
+$\mean_bg$ is the background count rate of that bin,
+and the mean count rate $\mean_{nk}$ in a bin $n$ is defined as the integral over a functional form defining the shape of
+the model component $\word$ over the the width of that time bin. The component $\word$ is a generic (dimensionless) shape,
+and can be modified by an amplitude parameter $A_k$ and a parameter setting the width $\tau$, in addition to
+parameters such as the time offset $t_k$ and intrinsic parameters further describing the component's shape.
+We will define a component model $\word$ for magnetar bursts in Section \ref{sec:wordmodel} below, and
+restrict ourselves here to a general description of the model.
+ 
+%where $\Poisson(\counts\given\mean)$ is the Poisson probability of getting count $y$ given mean rate $\mean$,
+%  $\pars$ is the vector or blob of all model parameters,
+%  $\mean_{\bg}$ is the background (DC) level in the bin,
+%  $t_n$ is the time of the center of the bin,
+%  $\Delta$ is the full width of the bin,
+%  $K$ is the number of words (spikes) $k$ making up the burst,
+%  $\phi(\xi)$ is the dimensionless word function,
+%  $A_k, t_k$ are the amplitudes and time offsets of the words,
+%  and $s, \tau$ set the shape (asymmetry or skew) and rise time of the words.
+  
+We can compute the posterior probability over all model parameters in the following way:
 
 \begin{equation}
 p(N, \bm{\alpha},\{\bm{\theta}_i \} \given \bm{\counts}, H) = \frac{p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_i \}, H) p(N, \bm{\alpha}, \{\bm{\theta}_i \} \given H)}{p(\bm{\counts} | H)} \, .
@@ -264,6 +297,19 @@ Instead of recording the end point of an MCMC chain as the new particle, the lik
  approach, the population contracts towards regions of high likelihood, but it will do so even for complex probability distributions subject to multi-modality
  or phase transitions.
 
+Diffusive nested sampling as implemented in {\it DNest}\footnote{insert link to DNest github page here} can return both an estimate for the marginal likelihood,
+suitable for model selection purposes, as well as a samples drawn from the posterior pdf for a given burst. The latter is done by letting a particle explore
+the final mixture of levels freely. 
+We can make inferences about individual parameters in the model from these samples in the usual way by marginalising over nuisance parameters (e.g. 
+hyper parameters $\bm{\alpha}$. Additionally, for many bursts, we can make inferences over the parameters from many components. In the simplest way,
+this can be done by picking a parameter set from the MCMC run for each burst, and using this ensemble of individual samples from many bursts 
+to compute the quantity of interest (say, a correlation between two model parameters). This procedure can be repeated, such that we build up a sample
+for the quantity in question. Note, however, that by posing that individual bursts have no knowledge of each other - we fit the model for each burst separately - 
+this imposes a strong prior on this quantity, suggesting that there is, in fact, no correlation present. 
+For the type of exploratory data analysis considered here, this is sufficient. A formally correct implementation would have to include a Bayesian hierarchical model,
+where many bursts are considered in the same model, with appropriate priors on any quantities to be measured across samples of many bursts. This can, in turn,
+be extended again to make inferences across, for example, different magnetars. The latter two steps are beyond the scope of this work, but will be explored in the future.
+
 
 \subsection{Model shapes}
 
@@ -273,47 +319,79 @@ We have made only two assumptions so far: the priors for the number of component
 and the priors on the parameters of the model for the individual components are independent of each other and identically distributed. 
 Here, we now refine this model for magnetar bursts specifically. However, changing the model shape for use with different source classes (e.g. GRBs) is straightforward.
 
-For
+Magnetar bursts are short event composed of one or more sharp, spike-like features (see Figure \ref{fig:example_bursts} for various examples). We model these features
+with a sharp spike consisting of an exponential rise and an exponential decay of the type:
 
-The model for the data in or near one burst is
+%The model for the data in or near one burst is
+%\begin{eqnarray}
+%p(\counts_n\given\pars) &=& \Poisson(\counts_n\given\mean_n)
+%\\
+%\mean_n &=& \mean_{\bg} + \sum_{k=1}^K \mean_{nk}
+%\\
+%\mean_{nk} &\equiv& \int_{t_n-\Delta/2}^{t_n+\Delta/2} A_k\,\word(\frac{t'-t_k}{\tau})\,\dd t'
+%\\
+\begin{equation}
+\word(\xi) = \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right. \, ,
+\end{equation}
+%\end{eqnarray}
+
+where $\word(\xi)$ is a dimensionless component function depending on the arbitrary time parameter $\xi$ and a skewness
+parameter $s$. By giving each component $k$ in the model a time offset $t_k$ (equivalent to the time of the peak), 
+an amplitude $A_k$ and an exponential rise timescale $\tau$ in addition to the skewness parameter $s$, 
+these spikes can become a representation of the spikes observed in magnetar burst light curves. 
+
+For each component $k$, we have a set of free parameters $\{t_k, A_k, \tau_k, s_k \},$, for each model, i.e. each
+linear combination of components, we have a set of free parameters $\{\mean_{bg}, {t_k, A_k, \tau_k, s_k} \}$.
+The priors for these components are independent and identically distributed, such that priors are the same for
+a given type of parameter between components. 
+Because bursts are defined in such a way that the observed count rate must drop back to the background before the
+start and the end of each burst, we can simply define the prior on the time offset such that $t_k$ must lie between
+the start and end times of the burst light curve, $t_{\mathrm{start}} < t_k < t_\mathrm{end}$. 
+For the amplitude $A_k$ and the rise timescale $\tau_k$, we choose exponential priors:
+
 \begin{eqnarray}
-p(\counts_n\given\pars) &=& \Poisson(\counts_n\given\mean_n)
-\\
-\mean_n &=& \mean_{\bg} + \sum_{k=1}^K \mean_{nk}
-\\
-\mean_{nk} &\equiv& \int_{t_n-\Delta/2}^{t_n+\Delta/2} A_k\,\word(\frac{t'-t_k}{\tau})\,\dd t'
-\\
-\word(\xi) &=& \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right. \, ,
+p(A \given \mu_A) &=& e^{(A/\mu_A)} \\
+p(\tau \given \mu_{\tau} & = & e^{(\frac{\tau - \tau_{\mathrm{min}}}{\mu_{\mathrm{\tau}}})} \; ,
 \end{eqnarray}
 
-where $\Poisson(\counts\given\mean)$ is the Poisson probability of getting count $y$ given mean rate $\mean$,
-  $\pars$ is the vector or blob of all model parameters,
-  $\mean_{\bg}$ is the background (DC) level in the bin,
-  $t_n$ is the time of the center of the bin,
-  $\Delta$ is the full width of the bin,
-  $K$ is the number of words (spikes) $k$ making up the burst,
-  $\phi(\xi)$ is the dimensionless word function,
-  $A_k, t_k$ are the amplitudes and time offsets of the words,
-  and $s, \tau$ set the shape (asymmetry or skew) and rise time of the words.
+where $\mu_A$ and $\mu_{\mathrm{\tau}}$ are hyper parameters describing the width of the exponential distribution.
+We set a minimum possible rise time scale $\tau_{\mathrm{min}}$ to be a fraction of the light curve's time resolution,
+$\tau_{\mathrm{min}} = \Delta t/10$: the time resolution effectively limits the information on the rise time we can extract.
+
+The prior on the skewness parameter $s_k$ is a uniform distribution with a mean of $a$ and a half-width of $b$, such
+that the log-skewness must lie in the range $(a-b) < \log{(s)} < (a+b)$. A definition in terms of mean and half-width ensures
+that positive and negative skews are equally likely.
+
+The priors on the hyper parameters $\mu_{A}$ and $\mu_{\mathrm{\tau}}$ are log-uniform. The prior range for
+$\mu_{\tau}$ depends on the length of the data set, such that $10^{-3}t_{\mathrm{burst}} < 
+%where $\Poisson(\counts\given\mean)$ is the Poisson probability of getting count $y$ given mean rate $\mean$,
+%  $\pars$ is the vector or blob of all model parameters,
+%  $\mean_{\bg}$ is the background (DC) level in the bin,
+%  $t_n$ is the time of the center of the bin,
+%  $\Delta$ is the full width of the bin,
+%  $K$ is the number of words (spikes) $k$ making up the burst,
+%  $\phi(\xi)$ is the dimensionless word function,
+%  $A_k, t_k$ are the amplitudes and time offsets of the words,
+%  and $s, \tau$ set the shape (asymmetry or skew) and rise time of the words.
   
-Various parameters can be left free completely, or can be tied together between words:
+%Various parameters can be left free completely, or can be tied together between words:
  
-\begin{equation}
-\theta \equiv [,\{t_k, \tau_k, A_k, s_k \}_{k=1}^K, \mean_{\bg} ]
-\end{equation}
+%\begin{equation}
+%\theta \equiv [,\{t_k, \tau_k, A_k, s_k \}_{k=1}^K, \mean_{\bg} ]
+%\end{equation}
 
-for complete freedom of word parameters between words,
+%for complete freedom of word parameters between words,
 
-\begin{equation}
-\theta \equiv [,\{t_k, A_k, s_k \}_{k=1}^K,  \tau_k, \mean_{\bg} ]
-\end{equation}
+%\begin{equation}
+%\theta \equiv [,\{t_k, A_k, s_k \}_{k=1}^K,  \tau_k, \mean_{\bg} ]
+%\end{equation}
 
-for tying the rise time together within a burst, and
+%for tying the rise time together within a burst, and
 
-\begin{equation}
-\theta \equiv [,\{t_k, A_k\}_{k=1}^K, \tau_k, s_k , \mean_{\bg} ]\end{equation}
+%\begin{equation}
+%\theta \equiv [,\{t_k, A_k\}_{k=1}^K, \tau_k, s_k , \mean_{\bg} ]\end{equation}
 
-for a model where both the rise time and the skewness are tied together for all words within a burst.
+%for a model where both the rise time and the skewness are tied together for all words within a burst.
 
 %\begin{figure*}[h]
 %\begin{center}
@@ -324,52 +402,52 @@ for a model where both the rise time and the skewness are tied together for all 
 %\end{figure*}
 
   
-Figure \ref{fig:example_words} shows the shape of a word
-  and an example of a burst generated by our model.
+%Figure \ref{fig:example_words} shows the shape of a word
+%  and an example of a burst generated by our model.
 
-The model for a large set of bursts is whatever.
-[We should probably, in the above, index bursts $m$,
-  and maybe even magnetar $j$.]
+%The model for a large set of bursts is whatever.
+%[We should probably, in the above, index bursts $m$,
+%  and maybe even magnetar $j$.]
 
-\emph{Notes to selves:}
-At one point we figured we could \emph{fix} shape parameter $s$
-  to be the same for all the words in all the bursts from one magnetar,
-  but permit the duration $\tau$ to vary.
-However, as we worked in our coding session we moved more in the direction
-  of thinking in terms of ``rise time'' $\tau$ and decay time $s\,\tau$.
-It might be better to parameterize that way.
-One possible point of discovery would be that the rise times
-  are fundamental to each magnetar,
-  but decay times vary.
-(For instance.)
+%\emph{Notes to selves:}
+%At one point we figured we could \emph{fix} shape parameter $s$
+%  to be the same for all the words in all the bursts from one magnetar,
+%  but permit the duration $\tau$ to vary.
+%However, as we worked in our coding session we moved more in the direction
+%  of thinking in terms of ``rise time'' $\tau$ and decay time $s\,\tau$.
+%It might be better to parameterize that way.
+%One possible point of discovery would be that the rise times
+%  are fundamental to each magnetar,
+%  but decay times vary.
+%(For instance.)
 
-The prior pdfs are
-\begin{eqnarray}
-p(\ln\lambda_{\bg}) &=& \Uniform(\ln\lambda_{\bg}\given a_1, a_2)
-\\
-p(\ln s) &=& \Uniform(\ln s\given a_3, a_4)
-\\
-p(\ln\tau) &=& \Uniform(\ln\tau\given a_5, a_6)
-\\
-p(\ln A_k) &=& \Uniform(\ln A_k\given a_7, a_8)
-\\
-p(t_k) &=& \Uniform(t_k\given a_9, a_{10})
-\quad,
-\end{eqnarray}
-where $\Uniform(x\given a, b)$ is the uniform distribution for $x$ in the range $a<x<b$.
+%The prior pdfs are
+%\begin{eqnarray}
+%p(\ln\lambda_{\bg}) &=& \Uniform(\ln\lambda_{\bg}\given a_1, a_2)
+%\\
+%p(\ln s) &=& \Uniform(\ln s\given a_3, a_4)
+%\\
+%p(\ln\tau) &=& \Uniform(\ln\tau\given a_5, a_6)
+%\\
+%p(\ln A_k) &=& \Uniform(\ln A_k\given a_7, a_8)
+%\\
+%p(t_k) &=& \Uniform(t_k\given a_9, a_{10})
+%\quad,
+%\end{eqnarray}
+%where $\Uniform(x\given a, b)$ is the uniform distribution for $x$ in the range $a<x<b$.
 
-We use \project{emcee} (CITE) to perform MCMC sampling.
-[We initialize the MCMC walkers how?]
+%We use \project{emcee} (CITE) to perform MCMC sampling.
+%[We initialize the MCMC walkers how?]
 
-Finally, there is the issue of how to set the number $K$ of words in each burst.
-We take a ``cross-validation'' approach [take that, BJB],
-  in which we ask what value of $K$ does the best job at making posterior predictions
-  about left-out data.
-[We construct this validation test how?]
-Figure [what figure?] shows an example burst,
-  fit with $K=1$, $2$, $3$, $4$, and $5$ words.
-It also shows the result of the posterior-prediction validation
-  that selects $K=4$ as the best choice for this burst.
+%Finally, there is the issue of how to set the number $K$ of words in each burst.
+%We take a ``cross-validation'' approach [take that, BJB],
+%  in which we ask what value of $K$ does the best job at making posterior predictions
+%  about left-out data.
+%[We construct this validation test how?]
+%Figure [what figure?] shows an example burst,
+%  fit with $K=1$, $2$, $3$, $4$, and $5$ words.
+%It also shows the result of the posterior-prediction validation
+%  that selects $K=4$ as the best choice for this burst.
 
 \section{Results}
 

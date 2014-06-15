@@ -229,7 +229,7 @@ def find_weights(p_samples):
         return False
 
 
-def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=250):
+def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
 
     times, counts = burstmodel.read_gbm_lightcurves(filename)
 

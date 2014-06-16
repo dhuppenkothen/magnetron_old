@@ -425,13 +425,14 @@ with a sharp spike consisting of an exponential rise and an exponential decay of
 %\mean_{nk} &\equiv& \int_{t_n-\Delta/2}^{t_n+\Delta/2} A_k\,\word(\frac{t'-t_k}{\tau})\,\dd t'
 %\\
 \begin{equation}
-\word(\xi) = \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right. \, ,
+\word(t) = A \left\{\begin{array}{ll}\exp(t-t_{\mathrm{offset}}/\tau) & \mbox{for $t < t_{\mathrm{offset}}$}\\ 
+\exp(-(t-t_{\mathrm{offset}})/(\tau s)) & \mbox{for $t \geq t_\mathrm{offset}$}\end{array}\right. \, ,
 \end{equation}
 %\end{eqnarray}
 
-where $\word(\xi)$ is a dimensionless component function depending on the arbitrary time parameter $\xi$ and a skewness
-parameter $s$. By giving each component $k$ in the model a time offset $t_k$ (equivalent to the time of the peak), 
-an amplitude $A_k$ and an exponential rise timescale $\tau$ in addition to the skewness parameter $s$, 
+where $\word(ti)$ is the component function depending on time parameter $t$ and a skewness
+parameter $s$. By giving each component $k$ in the model a time offset $t_{\mathrm{offset},k}$ (equivalent to the time of the peak), 
+an amplitude $A_k$ and an exponential rise timescale $\tau_k$ in addition to the skewness parameter $s_k$, 
 these spikes can become a representation of the spikes observed in magnetar burst light curves (see Figure \ref{fig:component_example}
 for an example of the model).
 
@@ -584,6 +585,8 @@ We show an example of a burst light curve, together with random draws from the p
 %  that selects $K=4$ as the best choice for this burst.
 
 \section{Results}
+
+
 
 \section{Discussion}
 

@@ -693,15 +693,18 @@ def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True, froot=
         sample = parameters_red[:,i]
         risetime_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
 
+        print('risetime_all: ' + str(risetime_all[0]))
         #risetime_all = risetime_all.flatten()
         duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
         #amplitude_all = amplitude_all.flatten()
 
+        print("duration_all: " + str(duration_all[0]))
 
         risetime, duration = [], []
         for r,a in zip(risetime_all, duration_all):
             risetime.extend(r)
             duration.extend(a)
+
 
         risetime_sample.append(risetime)
         duration_sample.append(duration)
@@ -711,6 +714,8 @@ def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True, froot=
 
     for i,(r,a) in enumerate(zip(risetime_sample, duration_sample)):
         a = np.array(a)
+        #print("len(a): " + str(a))
+        #print("len(r): " + str(r))
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
 
@@ -779,13 +784,13 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
         #amplitude_all = amplitude_all.flatten()
 
 
-        risetime, energy = [], []
-        for r,a in zip(energy_all, duration_all):
-            risetime.extend(r)
-            energy.extend(a)
+        energy, duration = [], []
+        for e,d in zip(energy_all, duration_all):
+            energy.extend(e)
+            duration.extend(d)
 
-        energy_sample.append(risetime)
-        duration_sample.append(energy)
+        energy_sample.append(energy)
+        duration_sample.append(duration)
 
     sp_all = []
     popt_all, pcov_all = [], []
@@ -904,13 +909,13 @@ def nspike_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="sgr15
         n_all = []
         for i,w in enumerate(nspikes_sample):
 
-            n,bins, patches = hist(w, bins=30, range=[1, 100],
+            n,bins, patches = hist(w, bins=50, range=[1, 50],
                                    color=cm.jet(i*20),alpha=0.6, normed=True)
             n_all.append(n)
 
-        axis([1, 100, np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+        axis([1, 50, np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
 
-        xlabel(r"$\log{(\mathrm{number\; of \; components})}$", fontsize=24)
+        xlabel(r"number of components", fontsize=24)
         ylabel("p(number of components)", fontsize=24)
         title("distribution of the number of components per burst")
         savefig("%s_nspikes.png"%froot, format="png")
@@ -938,16 +943,17 @@ def nspikes_energy(sample=None, datadir="./", nsims=10, makeplot=True, froot="sg
     for i in xrange(nsims):
 
         sample = parameters_red[:,i]
-        nspikes_all = np.array([(s.all) for s in sample])
+        nspikes_all = np.array([len(s.all) for s in sample])
         nspikes_sample.append(nspikes_all)
 
-        energy_all = np.array([np.sum(np.array([a.energy for a in s.all])) for s in sample])
+        energy_all = np.array([np.sum(np.array([a.energy for a in s.all if a.energy > 0.0])) for s in sample])
 
+        #print('energy_all: ' + str(energy_all))
 
         nspikes_sample.append(nspikes_all)
         energy_sample.append(energy_all)
 
-    print("nspikes_sample: " + str(energy_sample))
+    #print("nspikes_sample: " + str(energy_sample))
 
     if makeplot:
         fig = figure(figsize=(12,9))
@@ -958,10 +964,13 @@ def nspikes_energy(sample=None, datadir="./", nsims=10, makeplot=True, froot="sg
             #sp_all.append(sp)
             scatter(r,np.log10(a), color=cm.jet(i*20))
 
-        axis([1,
-              100,
-              np.min([np.min(np.log10(np.array(a)/dt)) for a in energy_sample]),
-              np.max([np.max(np.log10(np.array(a)/dt)) for a in energy_sample])])
+        min_energy = np.array([np.min(np.log10(np.array([a_temp for a_temp in a if a_temp>0])/dt)) for a in energy_sample])
+        max_energy = np.array([np.max(np.log10(np.array([a_temp for a_temp in a if a_temp>0])/dt)) for a in energy_sample])
+
+        #print("min_energy: " + str(min_energy))
+        #print("max_energy: " + str(max_energy))
+
+        axis([0,20, np.min(min_energy), np.max(max_energy)])
 
         #ax.text(0.8,0.1, r"power law index $\gamma = %.2f \pm %.2f$"%(popt_mean[0],popt_std[0]),
         #        verticalalignment='center', horizontalalignment='center', color='black', transform=ax.transAxes,
@@ -1059,10 +1068,56 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.00
 
 
     fig_rise = figure(figsize=(ncolumns*6.0,nrows*6.0))
+    ax_rise_top = fig_rise.add_subplot(111)
+    ax_rise_top.spines['top'].set_color('none')
+    ax_rise_top.spines['bottom'].set_color('none')
+    ax_rise_top.spines['left'].set_color('none')
+    ax_rise_top.spines['right'].set_color('none')
+    ax_rise_top.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+
+
     fig_amp = figure(figsize=(ncolumns*6.0,nrows*6.0))
+    ax_amp_top = fig_amp.add_subplot(111)
+
+    ax_amp_top.spines['top'].set_color('none')
+    ax_amp_top.spines['bottom'].set_color('none')
+    ax_amp_top.spines['left'].set_color('none')
+    ax_amp_top.spines['right'].set_color('none')
+    ax_amp_top.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+
+
+
     fig_dt = figure(figsize=(ncolumns*6.0,nrows*6.0))
+    ax_dt_top = fig_dt.add_subplot(111)
+
+    ax_dt_top.spines['top'].set_color('none')
+    ax_dt_top.spines['bottom'].set_color('none')
+    ax_dt_top.spines['left'].set_color('none')
+    ax_dt_top.spines['right'].set_color('none')
+    ax_dt_top.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+
+
+
     fig_duration = figure(figsize=(ncolumns*6.0,nrows*6.0))
+    ax_duration_top = fig_duration.add_subplot(111)
+
+    ax_duration_top.spines['top'].set_color('none')
+    ax_duration_top.spines['bottom'].set_color('none')
+    ax_duration_top.spines['left'].set_color('none')
+    ax_duration_top.spines['right'].set_color('none')
+    ax_duration_top.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+
+
+
     fig_energy = figure(figsize=(ncolumns*6.0,nrows*6.0))
+    ax_energy_top = fig_energy.add_subplot(111)
+
+    ax_energy_top.spines['top'].set_color('none')
+    ax_energy_top.spines['bottom'].set_color('none')
+    ax_energy_top.spines['left'].set_color('none')
+    ax_energy_top.spines['right'].set_color('none')
+    ax_energy_top.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+
 
     #fig_rise, ax_rise_top = subplots(111, figsize=(ncolumns*6.0,nrows*6.0))
     #fig_amp, ax_amp_top = subplots(111, figsize=(ncolumns*6.0,nrows*6.0))
@@ -1073,11 +1128,11 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.00
 
 
     for n in xrange(nspikes):
-        ax_rise = fig_rise.add_subplot(nrows, ncolumns, n)
-        ax_amp = fig_amp.add_subplot(nrows, ncolumns, n)
-        ax_dt = fig_dt.add_subplot(nrows, ncolumns, n)
-        ax_duration= fig_duration.add_subplot(nrows, ncolumns, n)
-        ax_energy = fig_energy.add_subplot(nrows, ncolumns, n)
+        ax_rise = fig_rise.add_subplot(nrows, ncolumns, n+1)
+        ax_amp = fig_amp.add_subplot(nrows, ncolumns, n+1)
+        ax_dt = fig_dt.add_subplot(nrows, ncolumns, n+1)
+        ax_duration= fig_duration.add_subplot(nrows, ncolumns, n+1)
+        ax_energy = fig_energy.add_subplot(nrows, ncolumns, n+1)
         #ax_skew = fig_skew.add_subplot(nrows, ncolumns, n)
 
         for i in xrange(nsims):
@@ -1091,46 +1146,151 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.00
 
             ax_rise.hist(np.log10(rise), range=[np.log10(0.00005), np.log10(2.5)], bins=40,
                          normed=True, alpha=0.6, color=cm.jet(i*20.0))
+
             ax_amp.hist(np.log10(amp), range=[np.log10(1.0/dt), np.log10(3.5e5)], bins=40,
                          normed=True, alpha=0.6, color=cm.jet(i*20.0))
+
             ax_energy.hist(np.log10(energy), range=[np.log10(1.0/dt), np.log10(3.5e6)], bins=40,
                          normed=True, alpha=0.6, color=cm.jet(i*20.0))
+
             ax_duration.hist(np.log10(duration), range=[np.log10(0.00005), np.log10(2.5)], bins=40,
                          normed=True, alpha=0.6, color=cm.jet(i*20.0))
+
             ax_dt.hist(np.log10(waitingtime), range=[np.log10(0.0005), np.log10(330.0)], bins=40,
                          normed=True, alpha=0.6, color=cm.jet(i*20.0))
 
-    #ax_rise_top.xlabel(r"$\log_{10}{(\mathrm{rise \; time})}$", fontsize=20)
-    #ax_rise_top.ylabel(r"$p(\log_{10}{(\mathrm{rise \; time})})$", fontsize=20)
-    savefig("%s_risetime_evolution.png"%froot, format='png')
-    close()
+        ax_rise.set_title("Spike %i"%(n+1))
+        ax_amp.set_title("Spike %i"%(n+1))
+        ax_energy.set_title("Spike %i"%(n+1))
+        ax_duration.set_title("Spike %i"%(n+1))
+        ax_dt.set_title("Spike %i"%(n+1))
 
-    #ax_amp_top.xlabel(r"$\log_{10}{(\mathrm{amplitude})}$", fontsize=20)
-    #ax_amp_top.ylabel(r"$p(\log_{10}{(\mathrm{amplitude})})$", fontsize=20)
-    savefig("%s_amplitude_evolution.png"%froot, format="png")
-    close()
 
-    #ax_energy_top.xlabel(r"$\log_{10}{(\mathrm{energy})}$", fontsize=20)
-    #ax_energy_top.ylabel(r"$p(\log_{10}{(\mathrm{energy})})$", fontsize=20)
-    savefig("%s_energy_evolution.png"%froot, format="png")
-    close()
-
-    #ax_duration_top.xlabel(r"$\log_{10}{(\mathrm{duration})}$", fontsize=20)
-    #ax_duration_top.ylabel(r"$p(\log_{10}{(\mathrm{duration})})$", fontsize=20)
-    savefig("%s_duration_evolution.png"%froot, format="png")
-    close()
-
-    #ax_dt_top.xlabel(r"$\log_{10}{(\mathrm{waitingn \; time})}$", fontsize=20)
-    #ax_dt_top.ylabel(r"$p(\log_{10}{(\mathrm{waiting \; time})})$", fontsize=20)
+    ax_dt_top.set_xlabel(r"$\log_{10}{(\mathrm{waiting \; time})}$", fontsize=20)
+    ax_dt_top.set_ylabel(r"$p(\log_{10}{(\mathrm{waiting \; time})})$", fontsize=20)
     savefig("%s_dt_evolution.png"%froot, format="png")
     close()
 
-    ### I NEED TO FINISH THIS FUNCTION
+    ax_duration_top.set_xlabel(r"$\log_{10}{(\mathrm{duration})}$", fontsize=20)
+    ax_duration_top.set_ylabel(r"$p(\log_{10}{(\mathrm{duration})})$", fontsize=20)
+    savefig("%s_duration_evolution.png"%froot, format="png")
+    close()
 
+    ax_energy_top.set_xlabel(r"$\log_{10}{(\mathrm{energy})}$", fontsize=20)
+    ax_energy_top.set_ylabel(r"$p(\log_{10}{(\mathrm{energy})})$", fontsize=20)
+    savefig("%s_energy_evolution.png"%froot, format="png")
+    close()
+
+    ax_amp_top.set_xlabel(r"$\log_{10}{(\mathrm{amplitude})}$", fontsize=20)
+    ax_amp_top.set_ylabel(r"$p(\log_{10}{(\mathrm{amplitude})})$", fontsize=20)
+    savefig("%s_amplitude_evolution.png"%froot, format="png")
+    close()
+
+    ax_rise_top.set_xlabel(r"$\log_{10}{(\mathrm{rise \; time})}$", fontsize=20)
+    ax_rise_top.set_ylabel(r"$p(\log_{10}{(\mathrm{rise \; time})})$", fontsize=20)
+    savefig("%s_risetime_evolution.png"%froot, format='png')
+    close()
 
 
     return
 
+
+def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.0005, froot="test"):
+
+    if sample is None:
+        parameters_red,bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
+
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+
+    energy_sample, duration_sample, amp_sample = [], [],  []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        energy_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
+
+        #energy_all = energy_all.flatten()
+        duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
+        #amplitude_all = amplitude_all.flatten()
+
+        amp_all = np.array([np.array([a.amp for a in s.all if a.duration > 0.0]) for s in sample])
+
+        duration, energy, amp = [], [], []
+        for d,e,a in zip(duration_all, energy_all, amp_all):
+            duration.extend(d)
+            energy.extend(e)
+            amp.extend(a)
+
+
+        energy_sample.append(energy)
+        duration_sample.append(duration)
+        amp_sample.append(amp)
+
+
+    if makeplot:
+        fig = figure(figsize=(24,8))
+
+        ### first subplot: differential duration distribution
+        ax = fig.add_subplot(131)
+        n_all = []
+        for i,d in enumerate(duration_sample):
+
+            n,bins, patches = ax.hist(log10(d), bins=40, range=[np.log10(0.0005/10.0), np.log10(2.0)],
+                                   color=cm.jet(i*20),alpha=0.6, normed=False)
+            n_all.append(n)
+
+        axis([np.log10(0.0005/10.0), np.log10(2.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+        ax.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$", fontsize=24)
+        ax.set_ylabel("p($\log_{10}{(\mathrm{Duration})}$)", fontsize=24)
+        ax.set_title("Differential Duration Distribution", fontsize=24)
+
+        ax1 = fig.add_subplot(132)
+        n_all = []
+        min_a, max_a = [], []
+        for i,a in enumerate(amp_sample):
+            a = np.array(a)/dt
+            min_a.append(np.min(np.log10(a)))
+            max_a.append(np.max(np.log10(a)))
+            n,bins, patches = ax1.hist(log10(a), bins=40, range=[3.0, 6.0],
+                                   color=cm.jet(i*20),alpha=0.6, normed=False)
+            n_all.append(n)
+
+        axis([np.min(min_a), np.max(max_a), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+        ax1.set_xlabel(r"$\log_{10}{(\mathrm{Amplitude})}$", fontsize=24)
+        ax1.set_ylabel("p($\log_{10}{(\mathrm{Amplitude})}$)", fontsize=24)
+        ax1.set_title("Differential Amplitude Distribution", fontsize=24)
+
+        ax2 = fig.add_subplot(133)
+        n_all = []
+        min_e, max_e = [], []
+        for i,e in enumerate(energy_sample):
+            e = np.array(e)/dt
+
+            min_e.append(np.min(np.log10(e)))
+            max_e.append(np.max(np.log10(e)))
+
+            n,bins, patches = ax2.hist(e, bins=40, range=[-1.0, 4.0],
+                                   color=cm.jet(i*20),alpha=0.6, normed=False)
+            n_all.append(n)
+
+        axis([np.min(min_e), np.max(max_e), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+        ax2.set_xlabel(r"$\log_{10}{(\mathrm{Energy})}$", fontsize=24)
+        ax2.set_ylabel("p($\log_{10}{(\mathrm{Energy})}$)", fontsize=24)
+        ax2.set_title("Differential Energy Distribution", fontsize=24)
+
+
+        savefig("%s_diff_dist.png"%froot, format="png")
+        close()
+
+
+    return
 
 def compare_samples(p1, p2, bids1, bids2, froot="test", label1="p1", label2="p2", dt=0.0005):
     """
@@ -1348,27 +1508,30 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
     #options = burstmodel.conversion("%sOPTIONS.txt" %dnestdir)
 
     alldata = np.loadtxt(filename)
-    print("filename: " + str(filename))
-    print("shape alldata: " + str(alldata.shape))
+    #print("filename: " + str(filename))
+    #print("shape alldata: " + str(alldata.shape))
 
 
 
     if not trigfile is None:
         trigdata = burstmodel.conversion("%s%s"%(datadir,trigfile))
         bids = np.array(trigdata[0])
+        #print("bids: " + str(bids))
         ttrig_all = np.array([float(t) for t in trigdata[1]])
 
+        #print("ttrig_all: " + str(ttrig_all))
         fsplit = filename.split("/")[-1]
         bid_data = fsplit.split("_")[0]
-        print("bid_data: " + str(bid_data))
-        bind = np.where(bids == bid_data)[0]
+        #print("bid_data: " + str(bid_data))
+        bind = np.where(bids == bid_data)[0][0]
+        #print("bind: " + str(bind))
         ttrig = ttrig_all[bind]
-        print("ttrig: " + str(ttrig))
+        #print("ttrig: " + str(ttrig))
 
     else:
         ttrig = 0
 
-
+    #print("ttrig: " + str(ttrig))
     niter = len(alldata)
 
     ## background parameter
@@ -1382,7 +1545,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
     ## total number of model components permissible in the model
     compmax = alldata[:,2]
     compmax = list(set(compmax))[0]
-    print("compmax: " + str(compmax))
+    #print("compmax: " + str(compmax))
 
     ## hyper-parameter (mean) of the exponential distribution used
     ## as prior for the spike amplitudes
@@ -1401,7 +1564,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
 
     ## distribution over number of model components
     nbursts = alldata[:, 7]
-    print(nbursts)
+    #print(nbursts)
 
     ## peak positions for all model components, some will be zero
     pos_all = np.array(alldata[:, 8:8+compmax])
@@ -1481,7 +1644,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     ### extract parameters from file
     sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile)
 
-    print("filter_weak " + str(filter_weak))
+    #print("filter_weak " + str(filter_weak))
 
     ### I need the parameters, the number of components, and the background parameter
     pars_all = sample_dict["parameters"]
@@ -1497,7 +1660,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
         else:
             pars_filtered = pars
 
-        print("len pars %i"%len(pars))
+        #print("len pars %i"%len(pars))
         #print("len filtered pars %i"%len(pars_filtered))
 
         nbursts = len(pars_filtered)

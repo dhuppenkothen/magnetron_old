@@ -5,7 +5,7 @@ import glob
 # Another quick hack to eye-ball the data - Iain.
 
 
-filenames = glob.glob("*.dat")
+filenames = glob.glob("test*.dat")
 #filenames = [filenames[0]]
 
 all_data = []

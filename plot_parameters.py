@@ -12,7 +12,7 @@ import cPickle as pickle
 
 import word
 import burstmodel
-
+import parameters
 
 ##### GET DATA FROM PICKLED PYTHON OBJECT (FROM PROCESSING PIPELINE)
 #
@@ -49,11 +49,18 @@ class WordPosteriorSample(object):
             k = np.float(fdata[2][-2:])
         return bid, bst, k
 
-    def read_from_file(self):
+    def read_from_file(self, niter=None):
         data = getpickle(self.file)
         samples = data["sampler"]
         postmax = data["max"]
-        return samples, postmax
+        if niter is None:
+            try:
+                niter = data["niter"]
+            except KeyError:
+                raise Exception("niter needs to be either present in sample file or given explicitly in "
+                                "command line arguments! Aborting ...")
+
+        return samples, postmax, niter
 
 
 class AllPosteriorSamples(object):
@@ -88,27 +95,39 @@ class AllPosteriorSamples(object):
 
         return all_models_sorted
 
-    def samples(self):
+    def samples(self, niter=None):
 
-        all_data = [a.read_from_file() for a in self.all_models]
+        all_data = [a.read_from_file(niter) for a in self.all_models]
         all_samples = [a[0] for a in all_data]
         all_postmax = [a[1] for a in all_data]
+        if niter is None:
+            all_niter = [a[2] for a in all_data]
+        else:
+            all_niter = np.ones(len(all_postmax))*niter
 
-        return all_samples, all_postmax
+        return all_samples, all_postmax, all_niter
 
-    def quants(self, samples, interval = 0.9):
+    def quants(self, samples, interval = 0.9, scale_locked=False, skew_locked=False,
+               log=True, bkg=True):
 
+        print(scale_locked)
+        print(skew_locked)
         all_quants = []
         #print('samples: ' + str(samples))
-        for s in samples:
+        for i,s in enumerate(samples):
+
             if np.shape(s)[0] > np.shape(s)[1]:
                 s = np.transpose(s)
 
-            quants = burstmodel.BurstModel._quantiles(s, 0.9)
+            quants = self.bm._quantiles(s, i, scale_locked=scale_locked, skew_locked=skew_locked,
+                                        log=log, bkg=bkg)
             all_quants.append(quants)
 
+        all_quants = np.array(all_quants)
         return all_quants
 
+
+#### DEPRECATED! USE bm.plot_results INSTEAD!
     def plot_model(self, samples, postmax = None, nsamples = 1000, scale_locked=False, skew_locked=False,
                    model = word.TwoExp):
 
@@ -332,7 +351,7 @@ class AllPosteriorSamples(object):
 
 
 
-def plot_all_bursts(scale_locked = False, skew_locked = False):
+def plot_all_bursts(scale_locked = False, skew_locked = False, nsamples= 1000, niter=None):
 
     print('I am in plot_all_bursts')
     filenames = glob.glob("*posterior.dat")
@@ -342,71 +361,123 @@ def plot_all_bursts(scale_locked = False, skew_locked = False):
     bsts = [f.split("_")[1] for f in filenames]
 
 
-
     #print(bids)
     #print(bsts)
 
-    bids = list(set(bids))
+    bids = set(bids)
     bsts = list(set(bsts))
-    if not bid == None:
-        bids = [bid]
+
+    #print('bid: ' + str(bid))
+    #if not bid is None:
+    #    print('I am in bid is none')
+    #    bids = [bid]
 
     #print(bids)
     #print(bsts)
 
-    print(filenames)
+    #print(filenames)
 
-    scale_postmax, scale_cl, scale_cu = [], [], []
-    skew_postmax, skew_cl, skew_cu = [], [], []
+    scale_postmax, scale_cl, scale_m, scale_cu = [], [], [], []
+    skew_postmax, skew_cl, skew_m, skew_cu = [], [], [], []
+    t0_postmax, t0_cl, t0_m, t0_cu = [], [], [], []
+    amp_postmax, amp_cl, amp_m, amp_cu = [], [], [], []
+
+    print("niter: " + str(niter))
 
     for i in bids:
         for j in bsts:
-            print('bid: ' + str(i))
-            print("bst: " + str(j))
+
             burst = AllPosteriorSamples(filenames, i,j)
             if len(burst.all_models) == 0:
                 continue
             else:
+                print('bid: ' + str(i))
+                print("bst: " + str(j))
+                burst.times, burst.counts = burstmodel.read_gbm_lightcurves(i + "_" + j + "_data.dat")
+                burst.bm = burstmodel.BurstModel(burst.times, burst.counts)
                 print('Extracting samples ...')
-                samples, postmax = burst.samples()
+                samples, postmax, niter = burst.samples(niter)
                 print("... done. Making quantiles ...")
-                all_quants = burst.quants(samples, interval=0.9)
+                all_quants = burst.quants(samples, interval=0.9, scale_locked=scale_locked, skew_locked=skew_locked)
                 print("... done. Now plotting parameters.")
                 #print("scale_locked: " + str(scale_locked))
                 #print("skew_locked: " + str(skew_locked))
                 #print('bid: ' + str(burst.bid))
                 #print('bst: ' + str(burst.bst))
                 #print("bid after making quantiles: " + str(bid))
-                allmax_scale, all_cl_scale, all_cu_scale, allmax_skew, all_cl_skew, all_cu_skew = \
-                        burst.plot_quants(all_quants, scale_locked = scale_locked, skew_locked = skew_locked)
+                if scale_locked:
+                    #print("postmax attributes: " + str([p.__dict__ for p in postmax]))
+                    scale_postmax.append([p.scale for p in postmax[1:]])
+                    scale_cl.append([p.scale for p in all_quants[1:, 0]])
+                    scale_m.append([p.scale for p in all_quants[1:, 1]])
+                    scale_cu.append([p.scale for p in all_quants[1:, 2]])
+                else:
+                    scale_postmax.append([[a.scale for a in p.all] for p in postmax[1:]])
+                    scale_cl.append([[a.scale for a in p.all] for p in all_quants[1:, 0]])
+                    scale_m.append([[a.scale for a in p.all] for p in all_quants[1:, 1]])
+                    scale_cu.append([[a.scale for a in p.all] for p in all_quants[1:, 2]])
+                if skew_locked:
+                    skew_postmax.append([p.skew for p in postmax[1:]])
+                    skew_cl.append([p.skew for p in all_quants[1:, 0]])
+                    scale_m.append([p.skew for p in all_quants[1:, 1]])
+                    skew_cu.append([p.skew for p in all_quants[1:, 2]])
+                else:
+                    skew_postmax.append([[a.skew for a in p.all] for p in postmax[1:]])
+                    skew_cl.append([[a.skew for a in p.all] for p in all_quants[1:, 0]])
+                    skew_m.append([[a.skew for a in p.all] for p in all_quants[1:], 1])
+                    skew_cu.append([[a.skew for a in p.all] for p in all_quants[1:, 2]])
 
-                scale_postmax.append(allmax_scale)
-                skew_postmax.append(allmax_skew)
-                scale_cl.append(all_cl_scale)
-                scale_cu.append(all_cu_scale)
-                skew_cl.append(all_cl_skew)
-                skew_cu.append(all_cu_skew)
+                amp_postmax.append([[a.amp for a in p.all] for p in postmax[1:]])
+                amp_cl.append([[a.amp for a in p.all] for p in all_quants[1:, 0]])
+                amp_m.append([[a.amp for a in p.all] for p in all_quants[1:, 1]])
+                amp_cu.append([[a.amp for a in p.all] for p in all_quants[1:, 2]])
+
+                t0_postmax.append([[a.t0 for a in p.all] for p in postmax[1:]])
+                t0_cl.append([[a.t0 for a in p.all] for p in all_quants[1:, 0]])
+                t0_m.append([[a.t0 for a in p.all] for p in all_quants[1:, 1]])
+                t0_cu.append([[a.t0 for a in p.all] for p in all_quants[1:, 2]])
+
+                #allmax_scale, all_cl_scale, all_cu_scale, allmax_skew, all_cl_skew, all_cu_skew = \
+                #        burst.plot_quants(all_quants, scale_locked = scale_locked, skew_locked = skew_locked)
+
+                #burst.bm.plot_quants(postmax, all_quants, namestr=burst.bid + "_" + burst.bst + "_")
+                #scale_postmax.append(allmax_scale)
+                #skew_postmax.append(allmax_skew)
+                #scale_cl.append(all_cl_scale)
+                #scale_cu.append(all_cu_scale)
+                #skew_cl.append(all_cl_skew)
+                #skew_cu.append(all_cu_skew)
                 #print("bid after plotting quantiles: " + str(bid))
-                print("Plotting light curves:")
+                #print("Plotting light curves:")
                 burst.read_data(dir=data_dir + "/")
                 #print("shape(samples): " + str(np.shape(samples)))
-                print("bid after reading in data: " + str(bid))
-                for (s,p) in zip(samples[1:], postmax[1:]):
-                    burst.plot_model(s, postmax =p, nsamples = nsamples, scale_locked=scale_locked,
-                                     skew_locked=skew_locked, model = word.TwoExp)
+                #print("bid after reading in data: " + str(bid))
+                for k,(s,p,n) in enumerate(zip(samples[1:], postmax[1:], niter[1:])):
+                    burst.bm.plot_chains(s, n, namestr= i + "_" + j + "_k" + str(k+1))
+                    burst.bm.plot_results(s, postmax =p, nsamples = nsamples, scale_locked=scale_locked, nbins=10,
+                                     skew_locked=skew_locked, model = word.TwoExp, bkg=True, log=True, bin=True,
+                                     namestr=i + "_" + j + "_")
                 print("And all done! Hoorah!")
                 print("bid at the end: " + str(bid))
-    all_limits = {'scale_max': scale_postmax, 'skew_max':skew_postmax, 'scale_cl':scale_cl, 'scale_cu':scale_cu,
-                  'skew_cl':skew_cl, 'skew_cu':skew_cu}
+    all_limits = {"t0_max":t0_postmax, 'scale_max': scale_postmax, "amp_max":amp_postmax, 'skew_max':skew_postmax,
+                  "t0_cl":t0_cl, "t0_m":t0_m, "t0_cu":t0_cu, 'scale_cl':scale_cl, "scale_m":scale_m,
+                  'scale_cu':scale_cu, "amp_cl":amp_cl, "amp_m":amp_m, "amp_cu":amp_cu ,
+                  'skew_cl':skew_cl, 'skew_m':skew_m, 'skew_cu':skew_cu}
     f = open('allbursts_postparas.dat', 'w')
     pickle.dump(all_limits, f)
     f.close()
 
     return
 
+
+
+
+
+
+
 def main():
     print('I am in main!')
-    plot_all_bursts(scale, skew)
+    plot_all_bursts(scale, skew, nsamples, niter)
 
     return
 
@@ -426,6 +497,8 @@ if __name__ == "__main__":
 
     parser.add_argument('-n', '--nsamples', action="store", dest="nsamples", required=False, default=1000,
                         type=int, help="Number of samples to be used in average light curve.")
+    parser.add_argument('-i', '--niter', action="store", dest="niter", required=False, type=int,
+                        help="Number of iterations in MCMC run")
 
     clargs = parser.parse_args()
     scale = clargs.scale
@@ -433,5 +506,7 @@ if __name__ == "__main__":
     data_dir = clargs.data_dir
     bid = clargs.bid
     nsamples = clargs.nsamples
+    niter = clargs.niter
+    print("niter: " + str(niter))
 
     main()

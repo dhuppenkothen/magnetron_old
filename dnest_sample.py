@@ -29,7 +29,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
         print(f)
         print(sample.shape)
 
-        ind = np.random.choice(np.arange(len(sample)), replace=False, size=nsims3)
+        ind = np.random.choice(np.arange(len(sample)), replace=False, size=nsims)
         for i in ind:
             #print("shape data: " + str(len(data[:,0])))
             #print("shape sample: " + str(len(sample[i,-data.shape[0]:])))
@@ -55,7 +55,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
 def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_ttrig.dat"):
 
     files = glob.glob("%s*posterior*"%datadir)
-    print("files: " + str(files))
+    #print("files: " + str(files))
 
     all_parameters, bids, nsamples = [], [], []
     for f in files:
@@ -72,7 +72,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_
         print("Resetting nsims to %i" %nsims)
 
     parameters_red = np.array([np.random.choice(p, replace=False, size=nsims) for p in all_parameters])
-    print("shape of reduced parameter array: " + str(parameters_red.shape))
+    #print("shape of reduced parameter array: " + str(parameters_red.shape))
 
     return parameters_red, bids
 
@@ -671,7 +671,7 @@ def waitingtime_amplitude(sample=None, bids=None, datadir="./", nsims=10, trigfi
     return waitingtime_sample, amplitude_sample
 
 
-def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True, froot="test"):
+def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True, froot="test", dt=0.0005):
 
 
     if sample is None:
@@ -730,9 +730,11 @@ def risetime_duration(sample=None, datadir="./", nsims=10, makeplot=True, froot=
             #sp_all.append(sp)
             scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
 
-        axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+        ### minimum values for duration and rise time are set by prior:
+        ### rise time cannot be shorter than dt/10.0, thus neither can the duration
+        axis([np.log10(dt/10.0),
               np.max([np.max(np.log10(r)) for r in risetime_sample]),
-              np.min([np.min(np.log10(a)) for a in duration_sample]),
+              np.log10(dt/10.0),
               np.max([np.max(np.log10(a)) for a in duration_sample])])
 
         ax.text(0.8,0.1, r"power law index $\gamma = %.2f \pm %.2f$"%(popt_mean[0],popt_std[0]),
@@ -810,7 +812,7 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
             #sp_all.append(sp)
             scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
 
-        axis([np.min([np.min(np.log10(r)) for r in duration_sample]),
+        axis([np.log10(dt/10.0),
               np.max([np.max(np.log10(r)) for r in duration_sample]),
               np.min([np.min(np.log10(np.array(a)/dt)) for a in energy_sample]),
               np.max([np.max(np.log10(np.array(a)/dt)) for a in energy_sample])])
@@ -875,8 +877,113 @@ def skewness_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="tes
     return skewness_sample
 
 
+def nspike_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="sgr1550"):
 
-def all_correlations(sample=None, bids=None, datadir="./", trigfile="sgr1550_ttrig.dat", nsims=10, makeplot=True, froot="sgr1550"):
+    if sample is None:
+        parameters_red,bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
+
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+
+    nspikes_sample = []
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        nspikes_all = np.array([len(s.all) for s in sample])
+        nspikes_sample.append(nspikes_all)
+
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
+        n_all = []
+        for i,w in enumerate(nspikes_sample):
+
+            n,bins, patches = hist(w, bins=30, range=[1, 100],
+                                   color=cm.jet(i*20),alpha=0.6, normed=True)
+            n_all.append(n)
+
+        axis([1, 100, np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+
+        xlabel(r"$\log{(\mathrm{number\; of \; components})}$", fontsize=24)
+        ylabel("p(number of components)", fontsize=24)
+        title("distribution of the number of components per burst")
+        savefig("%s_nspikes.png"%froot, format="png")
+        close()
+
+    return nspikes_sample
+
+
+def nspikes_energy(sample=None, datadir="./", nsims=10, makeplot=True, froot="sgr1550", dt=0.0005):
+
+
+    if sample is None:
+        parameters_red,bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
+
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+
+    nspikes_sample, energy_sample = [], []
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        nspikes_all = np.array([(s.all) for s in sample])
+        nspikes_sample.append(nspikes_all)
+
+        energy_all = np.array([np.sum(np.array([a.energy for a in s.all])) for s in sample])
+
+
+        nspikes_sample.append(nspikes_all)
+        energy_sample.append(energy_all)
+
+    print("nspikes_sample: " + str(energy_sample))
+
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
+        for i,(r,a) in enumerate(zip(nspikes_sample, energy_sample)):
+            a = np.array(a)/dt
+            #sp = scipy.stats.spearmanr(r,a)
+            #sp_all.append(sp)
+            scatter(r,np.log10(a), color=cm.jet(i*20))
+
+        axis([1,
+              100,
+              np.min([np.min(np.log10(np.array(a)/dt)) for a in energy_sample]),
+              np.max([np.max(np.log10(np.array(a)/dt)) for a in energy_sample])])
+
+        #ax.text(0.8,0.1, r"power law index $\gamma = %.2f \pm %.2f$"%(popt_mean[0],popt_std[0]),
+        #        verticalalignment='center', horizontalalignment='center', color='black', transform=ax.transAxes,
+        #        fontsize=16)
+
+
+        xlabel(r"$n_{\mathrm{spikes}}$", fontsize=24)
+        ylabel(r"$\log_{10}{(\mathrm{burst\; energy})}$", fontsize=24)
+        title("duration versus total energy")
+        savefig("%s_nspikes_energy.png"%froot, format="png")
+        close()
+
+
+    return nspikes_sample, energy_sample
+
+
+
+
+
+
+def all_correlations(sample=None, bids=None, datadir="./", trigfile="sgr1550_ttrig.dat", nsims=10, dt=0.0005,
+                     makeplot=True, froot="sgr1550"):
 
     if sample is None and bids is None:
         sample, bids = extract_sample(datadir, nsims)
@@ -884,13 +991,19 @@ def all_correlations(sample=None, bids=None, datadir="./", trigfile="sgr1550_ttr
     risetime, amplitude, sp_all, popt_all = risetime_amplitude(sample, nsims=nsims, makeplot=makeplot, froot=froot)
     risetime, energy, sp_all, popt_all = risetime_energy(sample, nsims=nsims, makeplot=makeplot, froot=froot)
     risetime, skewness, sp_all, popt_all = risetime_skewness(sample, nsims=nsims, makeplot=makeplot, froot=froot)
-    risetime, duration, sp_all, popt_all = risetime_duration(sample, nsims=nsims, makeplot=makeplot, froot=froot)
+    risetime, duration, sp_all, popt_all = risetime_duration(sample, nsims=nsims, makeplot=makeplot,
+                                                             froot=froot, dt=dt)
 
     waitingtimes = waiting_times(sample, bids,nsims=nsims, trigfile= trigfile, makeplot=makeplot, froot=froot)
     waitingtime, energy= waitingtime_energy(sample, bids, nsims=nsims,trigfile=trigfile, makeplot=makeplot, froot=froot)
-    waitingtime, amplitude = waitingtime_amplitude(sample, bids, nsims=nsims,trigfile=trigfile, makeplot=makeplot, froot=froot)
+    waitingtime, amplitude = waitingtime_amplitude(sample, bids, nsims=nsims,trigfile=trigfile,
+                                                   makeplot=makeplot, froot=froot)
 
-    duration, energy, sp_all, popt_all = energy_duration(sample, nsims=nsims, makeplot=makeplot, froot=froot)
+    duration, energy, sp_all, popt_all = energy_duration(sample, nsims=nsims, makeplot=makeplot, froot=froot,
+                                                         dt=dt)
+
+    nspikes = nspike_dist(sample, nsims=nsims, datadir=datadir, makeplot=makeplot, froot=froot)
+    nspikes, energies = nspikes_energy(sample, datadir=datadir, nsims=nsims, makeplot=makeplot, froot=froot, dt=dt)
 
     return
 
@@ -1288,6 +1401,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
 
     ## distribution over number of model components
     nbursts = alldata[:, 7]
+    print(nbursts)
 
     ## peak positions for all model components, some will be zero
     pos_all = np.array(alldata[:, 8:8+compmax])
@@ -1361,55 +1475,6 @@ def extract_real_spikes(sample_dict, min_scale=1.0e-4):
     return sample_dict
 
 
-def position_histogram(sample_dict, btimes, tsearch=0.01, tfine=0.001, niter=1000):
-
-    """
-    Make a histogram of the distribution of position parameters.
-    sample_dict: dictionary with output from Dnest run
-    btimes: burst start and end times
-    tsearch: length of segment over which to integrate probability
-    tfine: histogram bin size
-    niter: number of iterations in the DNest run
-    """
-
-    ## extract parameters
-    positions = []
-    if "filtered parameters" in sample_dict.keys():
-        fparams = sample_dict["filtered parameters"]
-    else:
-        fparams = sample_dict["parameters"]
-
-    ## extract positions only
-    for fpar in fparams:
-        ptemp = [f[0] for f in fpar]
-        positions.extend(ptemp)
-
-    ## burst duration
-
-    tstart = btimes[0]
-    tend = btimes[1]
-
-    tseg = tend - tstart
-
-    ## number of bins in histogram
-    nbins = int(tseg/tfine)+1
-    range = np.arange(nbins)*tfine + tstart[0]
-
-    ## make histogram
-    n, bins = np.histogram(positions, bins=range, normed=True)
-    n_normed = n*np.diff(bins)
-
-    ## number of histogram bins to integrate
-    nsearch = int(tsearch/tfine)
-
-    nsum_all = []
-    for i in xrange(len(n[:-nsearch])):
-        n_temp = n_normed[i:i+nsearch]
-        nsum_all.append(np.sum(n_temp))
-
-
-    return
-
 
 def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat"):
 
@@ -1432,7 +1497,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
         else:
             pars_filtered = pars
 
-        #print("len pars %i"%len(pars))
+        print("len pars %i"%len(pars))
         #print("len filtered pars %i"%len(pars_filtered))
 
         nbursts = len(pars_filtered)

@@ -52,7 +52,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
     return
 
 
-def extract_sample(datadir="./", nsims=50, filter_weak=False):
+def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_ttrig.dat"):
 
     files = glob.glob("%s*posterior*"%datadir)
     print("files: " + str(files))
@@ -62,7 +62,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False):
         fname = f.split("/")[-1]
         bid = fname.split("_")[0]
         bids.append(bid)
-        parameters = parameter_sample(f, filter_weak=filter_weak)
+        parameters = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile)
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
 
@@ -1220,7 +1220,7 @@ def fit_distribution(func, x, y, p0):
 ##### OLD CODE: NEED TO CHECK THIS! ##########
 
 
-def read_dnest_results(filename, datadir="./", filter_smallest=False):
+def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="sgr1550_ttrig.dat"):
 
     """
     Read output from RJObject/DNest3 run and return in a format more
@@ -1234,8 +1234,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False):
 
     #options = burstmodel.conversion("%sOPTIONS.txt" %dnestdir)
 
-    dfile = "%s%s" %(datadir, filename)
-    alldata = np.loadtxt(dfile)
+    alldata = np.loadtxt(filename)
     print("filename: " + str(filename))
     print("shape alldata: " + str(alldata.shape))
 
@@ -1246,11 +1245,12 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False):
         bids = np.array(trigdata[0])
         ttrig_all = np.array([float(t) for t in trigdata[1]])
 
-        bid_data = filename.split("_")[0][2:]
-        #print("bid_data: " + str(bid_data))
+        fsplit = filename.split("/")[-1]
+        bid_data = fsplit.split("_")[0]
+        print("bid_data: " + str(bid_data))
         bind = np.where(bids == bid_data)[0]
         ttrig = ttrig_all[bind]
-        #print("ttrig: " + str(ttrig))
+        print("ttrig: " + str(ttrig))
 
     else:
         ttrig = 0
@@ -1269,6 +1269,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False):
     ## total number of model components permissible in the model
     compmax = alldata[:,2]
     compmax = list(set(compmax))[0]
+    print("compmax: " + str(compmax))
 
     ## hyper-parameter (mean) of the exponential distribution used
     ## as prior for the spike amplitudes
@@ -1289,7 +1290,8 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False):
     nbursts = alldata[:, 7]
 
     ## peak positions for all model components, some will be zero
-    pos_all = np.array(alldata[:, 8:8+compmax]) + ttrig
+    pos_all = np.array(alldata[:, 8:8+compmax])
+
 
     ## amplitudes for all model components, some will be zero
     amp_all = alldata[:, 8+compmax:8+2*compmax]
@@ -1304,7 +1306,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False):
     paras_real = []
 
     for p,a,sc,sk in zip(pos_all, amp_all, scale_all, skew_all):
-        paras_real.append([(pos,scale,amp,skew) for pos,amp,scale,skew in zip(p,a,sc,sk) if pos != 0.0])
+        paras_real.append([(pos+ttrig,scale,amp,skew) for pos,amp,scale,skew in zip(p,a,sc,sk) if pos != 0.0])
 
 
     sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax, "parameters":paras_real}
@@ -1409,7 +1411,7 @@ def position_histogram(sample_dict, btimes, tsearch=0.01, tfine=0.001, niter=100
     return
 
 
-def parameter_sample(filename, datadir="./", filter_weak=False):
+def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat"):
 
     ### extract parameters from file
     sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile)

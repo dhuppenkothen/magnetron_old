@@ -98,7 +98,7 @@ def example_model():
     #title("\n".join(textwrap.wrap(r'three words, /w Poisson, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$, $A=60, 100, 50$, $s=5,1,0.1$', 60)))
     ax.set_title(r'three words, /w Poisson, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$,' + "\n" + r'$A=60, 100, 50$, $s=5,1,0.1$', fontsize=13)
 
-    savefig("documents/example_words.png", format='png')
+    savefig("documents/example_words.pdf", format='pdf')
     close()
 
     return
@@ -115,7 +115,7 @@ def plot_example_bursts():
 
     alltimes, allcounts, allbintimes, allbincountrate= [], [], [], []
     for f in filenames:
-        times, counts = burstmodel.read_gbm_lightcurves(f)
+        times, counts = burstmodel.read_gbm_lightcurves("data/%s"%f)
         countrate = np.array(counts)/(times[1] - times[0])
         bintimes, bincountrate = burstmodel.rebin_lightcurve(times, countrate, 10)
         bintimes = bintimes - bintimes[0]
@@ -126,16 +126,29 @@ def plot_example_bursts():
         allbincountrate.append(bincountrate)
 
     fig = figure(figsize=(30,18))
-    subplots_adjust(top=0.95, bottom=0.05, left=0.05, right=0.97, wspace=0.1, hspace=0.2)
+    subplots_adjust(top=0.95, bottom=0.08, left=0.06, right=0.97, wspace=0.1, hspace=0.2)
+    ax = fig.add_subplot(111)    # The big subplot
+
+    # Turn off axis lines and ticks of the big subplot
+    ax.spines['top'].set_color('none')
+    ax.spines['bottom'].set_color('none')
+    ax.spines['left'].set_color('none')
+    ax.spines['right'].set_color('none')
+    ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+
+
     for i in range(6):
-        ax = fig.add_subplot(2,3,i)
-        ax.plot(allbintimes[i], allbincountrate[i]/10000.0, lw=2, color="black", linestyle='steps-mid')
+        ax1 = fig.add_subplot(2,3,i)
+        ax1.plot(allbintimes[i], allbincountrate[i]/10000.0, lw=2, color="black", linestyle='steps-mid')
         axis([allbintimes[i][0], allbintimes[i][-1], 0.0, np.max(allbincountrate[i])/10000.0+2])
         f = filenames[i].split("_")
         #xlabel("Time since trigger [s]")
         #ylabel(r"Count rate [$10^{4} \, \mathrm{cts}/\mathrm{s}$]")
         title("ObsID " + f[0] + r", $t_{\mathrm{start}} = $" + str(float(f[1])))
-    savefig("documents/example_bursts.png", format='png')
+
+    ax.set_xlabel("Time since burst start [s]", fontsize=34)
+    ax.set_ylabel(r"Count rate [$10^{4} \, \mathrm{counts} \; \mathrm{s}^{-1}$]", fontsize=34)
+    savefig("documents/example_bursts.pdf", format='pdf')
     plt.close()
 
     return
@@ -143,20 +156,20 @@ def plot_example_bursts():
 
 def plot_example_dnest_lightcurve():
 
-    data = loadtxt("090122173_+241.347_all_data.dat")
+    data = loadtxt("data/090122173_+241.347_all_data.dat")
     fig = figure(figsize=(24,9))
     subplots_adjust(top=0.9, bottom=0.1, left=0.06, right=0.97, wspace=0.1, hspace=0.1)
 
     ax = fig.add_subplot(121)
-    plot(data[:,0]-data[0,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
-    sample = atleast_2d(loadtxt("090122173_+241.347_posterior_sample.txt"))
+    plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2, color="black", linestyle="steps-mid")
+    sample = atleast_2d(loadtxt("data/090122173_+241.347_posterior_sample.txt"))
 
     print(sample.shape)
     ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
     for i in ind:
-        plot(data[:,0]-data[0,0], sample[i,-data.shape[0]:], lw=1)
-    xlabel("Time since burst start [s]", fontsize=20)
-    ylabel("Counts per bin", fontsize=20)
+        plot(data[:,0]-data[0,0], (sample[i,-data.shape[0]:]/0.0005)/1.e4, lw=1)
+    xlabel("Time since burst start [s]", fontsize=24)
+    ylabel(r"Count rate [$10^{4} \, \mathrm{counts} \, \mathrm{s}^{-1}$]", fontsize=24)
 
 
     ax = fig.add_subplot(122)
@@ -165,7 +178,7 @@ def plot_example_dnest_lightcurve():
     hist(nbursts, bins=30, range=[np.min(nbursts), np.max(nbursts)], histtype='stepfilled')
     xlabel("Number of spikes per burst", fontsize=24)
     ylabel("N(samples)", fontsize=24)
-    savefig("documents/example_dnest_result.png", format="png")
+    savefig("documents/example_dnest_result.pdf", format="pdf")
     close()
 
     return

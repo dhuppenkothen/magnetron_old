@@ -49,21 +49,21 @@
 
 
 \begin{abstract}
-Magnetars are whatever and people need whatever.
-Magnetars produce bursts,
-  each of which appears to be composed of a set of one or more spikes.
-Here we build a probabilistic generative model for the \Fermi\ GBM photon data on Magnetar bursts.
-The spikes appear to be somewhat asymmetric
-  (rise looks different from decay),
-  have various amplitudes,
-  but have widths that appear to be similar \emph{within} each burst.
-We model each burst as being composed of a mixture of spikes,
-  where each spike is a scaled, stretched, and shifted version of a universal dimensionless function.
-We perform probabilistic inference with a Poisson likelihood and vague priors to determine
-  the positions, amplitudes, and positions of the spikes,
-  the width of the spikes in each burst,
-  and the shape of the dimensionless spike function.
-The phenomenology of spike multiplicity, shape, and width is discussed.
+%Magnetars are whatever and people need whatever.
+%Magnetars produce bursts,
+%  each of which appears to be composed of a set of one or more spikes.
+%Here we build a probabilistic generative model for the \Fermi\ GBM photon data on Magnetar bursts.
+%The spikes appear to be somewhat asymmetric
+%  (rise looks different from decay),
+%  have various amplitudes,
+%  but have widths that appear to be similar \emph{within} each burst.
+%We model each burst as being composed of a mixture of spikes,
+%  where each spike is a scaled, stretched, and shifted version of a universal dimensionless function.
+%We perform probabilistic inference with a Poisson likelihood and vague priors to determine
+%  the positions, amplitudes, and positions of the spikes,
+%  the width of the spikes in each burst,
+%  and the shape of the dimensionless spike function.
+%The phenomenology of spike multiplicity, shape, and width is discussed.
 \end{abstract}
 
 \keywords{pulsars: individual (SGR J1550-5418), stars: magnetic fields, stars: neutron, X-rays: bursts, methods:statistics}
@@ -257,6 +257,13 @@ The second photon is thus either not recorded at all, or, on occasion, recorded 
 imposes a time scale onto the data, which means that the data then deviate away from the expected Poisson distribution. 
 Dead time is harder to quantify and account for than saturation. It is possible to correct count rates based on simulations of the instrument (REF, Bhat et al, 2013),
 but this will not correct the statistical distributions. We currently do not take dead time into account in our analysis. 
+\begin{figure*}[h]
+\begin{center}
+\includegraphics[width=18cm]{example_bursts.pdf}
+\caption{}
+\label{fig:example_bursts}
+\end{center}
+\end{figure*}
 
 In addition to dead time, saturation may significantly alter the shape of the arriving bursts. Saturation occurs when the number of arriving photons per second
 measured in a single GBM detector exceed the maximum data throughput rate of the science data bus. In this case, transmitted rates are capped at a 
@@ -275,13 +282,6 @@ to make sure the entire burst is included.
 %In what follows, the data for one burst are photon counts $\counts_n$ (integer) in $N$ bins $n$.
 %The data from a few example bursts are shown in Figure \ref{fig:example_bursts}.
 
-\begin{figure*}[h]
-\begin{center}
-\includegraphics[width=18cm]{example_bursts.png}
-\caption{}
-\label{fig:example_bursts}
-\end{center}
-\end{figure*}
 
 \section{Analysis Methods}
 
@@ -471,7 +471,7 @@ that positive and negative skews are equally likely.
 
 \begin{figure*}[h]
 \begin{center}
-\includegraphics[width=\textwidth]{example_dnest_result.png}
+\includegraphics[width=\textwidth]{example_dnest_result.pdf}
 \caption{An example burst from the magnetar SGR J1550-5418, in an observation taken on 2009 January 22 (ObsID 090122173). In the left
 panel, the light curve at high time resolution, $\Delta t = 5 \times 10^{-4}$, and model light curves for $10$ random draws from the posterior pdf. 
 On the right, the marginalised posterior pdf over the possible number of components in the model. The posterior for the number of components is 

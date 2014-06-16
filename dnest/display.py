@@ -1,6 +1,6 @@
 from pylab import *
 
-data = np.loadtxt('/Users/daniela/data/magnetars/sgr1550/magnetron/dnest/automatic_run2/todo/090122052_+065.014_all_data.dat')
+data = np.loadtxt('/Users/daniela/data/magnetars/sgr1900/extracted_bursts/dnest/ourania/70136-01-27-00_302461497.780_data.dat')
 posterior_sample = atleast_2d(loadtxt('posterior_sample.txt'))
 
 ion()

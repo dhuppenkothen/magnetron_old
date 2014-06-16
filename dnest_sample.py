@@ -37,6 +37,8 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
             #plot(data[:,0], np.ones(len(data[:,0]))*sample[i,0], lw=2)
         xlabel("Time since trigger [s]", fontsize=20)
         ylabel("Counts per bin", fontsize=20)
+        xlim([0.0, data[-1,0]-data[0,0]])
+
 
         ax = fig.add_subplot(122)
         nbursts = sample[:, 7]

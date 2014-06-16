@@ -4,6 +4,8 @@ import burstmodel
 import parameters
 
 from pylab import *
+from matplotlib.patches import FancyArrow
+
 rc("font", size=20, family="serif", serif="Computer Sans")
 rc("text", usetex=True)
 
@@ -12,6 +14,40 @@ import cPickle as pickle
 import textwrap
 
 
+
+def example_word():
+    """
+    Makes Figure 2 in the paper
+
+    """
+
+    t = linspace(-10., 10., 10001)
+    plot(t, word.TwoExp(t).model(parameters.TwoExpParameters(1.0, 0.5, 1., 3., log=False)), linewidth=2)
+    xlabel('Time [seconds]')
+    ylabel('Poisson Rate')
+    ylim([0., 1.1])
+    axvline(1., color='r', linestyle='--')
+    #title('A Word')
+
+    # Build an arrow.
+    ar1 = FancyArrow(1., 1.01*exp(-1.), -0.5, 0., length_includes_head=True,
+                    color='k', head_width=0.01, head_length=0.2, width=0.001, linewidth=1)
+    ar2 = FancyArrow(1., 0.99*exp(-1.), 1.5, 0., length_includes_head=True,
+                    color='k', head_width=0.01, head_length=0.2, width=0.001, linewidth=1)
+    ax = gca()
+    # Add the arrow to the axes.
+    ax.add_artist(ar1)
+    ax.add_artist(ar2)
+
+    # Add text
+    text(-0.4, 1.*exp(-1.), r'$\tau$')
+    text(2.7, 1.*exp(-1.), r'$\tau S$')
+
+    savefig('documents/word.pdf', bbox_inches='tight')
+#    show()
+    close()
+
+    return
 
 def example_model():
 
@@ -62,13 +98,17 @@ def example_model():
     #title("\n".join(textwrap.wrap(r'three words, /w Poisson, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$, $A=60, 100, 50$, $s=5,1,0.1$', 60)))
     ax.set_title(r'three words, /w Poisson, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$,' + "\n" + r'$A=60, 100, 50$, $s=5,1,0.1$', fontsize=13)
 
-    savefig("example_words.png", format='png')
+    savefig("documents/example_words.png", format='png')
     close()
 
     return
 
 
 def plot_example_bursts():
+    """
+    Makes Figure 1 of the paper
+
+    """
 
     filenames = ["090122218_+048.206_data.dat", "090122194_+058.836_data.dat", "090122173_+241.347_data.dat",
                  "090122283_+131.840_data.dat", "090122283_+247.198_data.dat", "090122044_-000.043_data.dat"]
@@ -78,22 +118,24 @@ def plot_example_bursts():
         times, counts = burstmodel.read_gbm_lightcurves(f)
         countrate = np.array(counts)/(times[1] - times[0])
         bintimes, bincountrate = burstmodel.rebin_lightcurve(times, countrate, 10)
+        bintimes = bintimes - bintimes[0]
+        times = times - times[0]
         alltimes.append(times)
         allcounts.append(counts)
         allbintimes.append(bintimes)
         allbincountrate.append(bincountrate)
 
     fig = figure(figsize=(30,18))
-    subplots_adjust(top=0.95, bottom=0.05, left=0.05, right=0.97, wspace=0.15, hspace=0.2)
+    subplots_adjust(top=0.95, bottom=0.05, left=0.05, right=0.97, wspace=0.1, hspace=0.2)
     for i in range(6):
-        subplot(2,3,i)
-        plot(allbintimes[i], allbincountrate[i]/10000.0, lw=2, color="black", linestyle='steps-mid')
+        ax = fig.add_subplot(2,3,i)
+        ax.plot(allbintimes[i], allbincountrate[i]/10000.0, lw=2, color="black", linestyle='steps-mid')
         axis([allbintimes[i][0], allbintimes[i][-1], 0.0, np.max(allbincountrate[i])/10000.0+2])
         f = filenames[i].split("_")
-        xlabel("Time since trigger [s]")
-        ylabel(r"Count rate [$10^{4} \, \mathrm{cts}/\mathrm{s}$]")
+        #xlabel("Time since trigger [s]")
+        #ylabel(r"Count rate [$10^{4} \, \mathrm{cts}/\mathrm{s}$]")
         title("ObsID " + f[0] + r", $t_{\mathrm{start}} = $" + str(float(f[1])))
-    savefig("example_bursts.png", format='png')
+    savefig("documents/example_bursts.png", format='png')
     plt.close()
 
     return
@@ -103,24 +145,27 @@ def plot_example_dnest_lightcurve():
 
     data = loadtxt("090122173_+241.347_all_data.dat")
     fig = figure(figsize=(24,9))
+    subplots_adjust(top=0.9, bottom=0.1, left=0.06, right=0.97, wspace=0.1, hspace=0.1)
+
     ax = fig.add_subplot(121)
-    plot(data[:,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
+    plot(data[:,0]-data[0,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
     sample = atleast_2d(loadtxt("090122173_+241.347_posterior_sample.txt"))
 
     print(sample.shape)
     ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
     for i in ind:
-        plot(data[:,0], sample[i,-data.shape[0]:], lw=1)
-    xlabel("Time since trigger [s]", fontsize=20)
+        plot(data[:,0]-data[0,0], sample[i,-data.shape[0]:], lw=1)
+    xlabel("Time since burst start [s]", fontsize=20)
     ylabel("Counts per bin", fontsize=20)
+
 
     ax = fig.add_subplot(122)
     nbursts = sample[:, 7]
 
     hist(nbursts, bins=30, range=[np.min(nbursts), np.max(nbursts)], histtype='stepfilled')
-    xlabel("Number of spikes per burst", fontsize=20)
-    ylabel("N(samples)", fontsize=20)
-    savefig("example_dnest_result.png", format="png")
+    xlabel("Number of spikes per burst", fontsize=24)
+    ylabel("N(samples)", fontsize=24)
+    savefig("documents/example_dnest_result.png", format="png")
     close()
 
     return

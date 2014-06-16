@@ -432,7 +432,20 @@ with a sharp spike consisting of an exponential rise and an exponential decay of
 where $\word(\xi)$ is a dimensionless component function depending on the arbitrary time parameter $\xi$ and a skewness
 parameter $s$. By giving each component $k$ in the model a time offset $t_k$ (equivalent to the time of the peak), 
 an amplitude $A_k$ and an exponential rise timescale $\tau$ in addition to the skewness parameter $s$, 
-these spikes can become a representation of the spikes observed in magnetar burst light curves. 
+these spikes can become a representation of the spikes observed in magnetar burst light curves (see Figure \ref{fig:component_example}
+for an example of the model).
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=9cm]{word.pdf}
+\caption{An example of the component model used for magnetar bursts: a spike is defined by an exponential rise with characteristic
+time scale $\tau$ and an exponential fall with a fall time scale $s\tau$, where $s$ is a skewness parameter that describes how the fall
+time is stretched ($s > 1$) of contracted ($s < 1$) compared to the rise time. Individual spikes are also characterised by a time offset
+$t$ describing the location of the peak count rate in a time series, and an amplitude $A$ describing the height of a peak.}
+\label{fig:dnest_example}
+\end{center}
+\end{figure}
+
 
 For each component $k$, we have a set of free parameters $\{t_k, A_k, \tau_k, s_k \},$, for each model, i.e. each
 linear combination of components, we have a set of free parameters $\{\mean_{bg}, {t_k, A_k, \tau_k, s_k} \}$.
@@ -456,6 +469,17 @@ The prior on the skewness parameter $s_k$ is a uniform distribution with a mean 
 that the log-skewness must lie in the range $(a-b) < \log{(s)} < (a+b)$. A definition in terms of mean and half-width ensures
 that positive and negative skews are equally likely.
 
+\begin{figure*}[h]
+\begin{center}
+\includegraphics[width=\textwidth]{example_dnest_result.png}
+\caption{An example burst from the magnetar SGR J1550-5418, in an observation taken on 2009 January 22 (ObsID 090122173). In the left
+panel, the light curve at high time resolution, $\Delta t = 5 \times 10^{-4}$, and model light curves for $10$ random draws from the posterior pdf. 
+On the right, the marginalised posterior pdf over the possible number of components in the model. The posterior for the number of components is 
+quite well constrained between $9$ and $17$ components.}
+\label{fig:dnest_example}
+\end{center}
+\end{figure*}
+
 The prior on the background parameter, finally, depends on the data itself. It is log-uniform, with boundaries between 
 $\log{(10^{-3}\mu_\counts)} < \log{(\counts_{\mathrm{bg}})} < \log{(10^{3} \mu_\counts)}$, where $\mu_\counts$ is the average count
 rate in a burst. Note that this is, in principle, not a valid prior: the prior for the parameters should not depend on the data
@@ -469,6 +493,10 @@ Like the prior on the background count rate $\counts_{\mathrm{bg}}$, the hyper p
 depends on the count rate in a burst, $\log{(10^{-3}\mu_\counts)} < \log{(\mu_{A})} < \log{(10^{3} \mu_\counts)}$. The same reasoning applies as
 for the background prior, such that for a more complicated analysis involving the marginal likelihood it needs to be replaced
 by a prior that is formally valid.
+
+We show an example of a burst light curve, together with random draws from the posterior distribution, in Figure \ref{fig:dnest_example}.
+
+
 
 %where $\Poisson(\counts\given\mean)$ is the Poisson probability of getting count $y$ given mean rate $\mean$,
 %  $\pars$ is the vector or blob of all model parameters,

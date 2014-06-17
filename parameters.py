@@ -157,26 +157,25 @@ class TwoExpParameters(Parameters, object):
 
         return self.energy
 
-    def compute_duration(self, bkg=None):
+    def compute_duration(self, fraction=0.01):
 
         amp = self.amp
-        print("bkg: " + str(bkg))
-        print("amp: " + str(amp))
+        #print("bkg: " + str(bkg))
+        #print("amp: " + str(amp))
 
-        if bkg is None:
-            bkg = 0.01*amp
+        #if bkg is None:
+        #    bkg = 0.01*amp
 
         #print("delta amp: %.4f"%(amp-bkg))
 
-        skew = self.skew
-        scale = self.scale
+        t_start = self.t0 + np.log(fraction)*self.scale
+        t_end = self.t0 - np.log(fraction)*self.scale*self.skew
+        #log_fall = np.log(amp/bkg)
+        #log_rise = np.log(bkg/amp)
 
-        log_fall = np.log(amp/bkg)
-        log_rise = np.log(bkg/amp)
 
-
-        t_start = self.t0 + scale*np.log(bkg/amp)
-        t_end = self.t0 + skew*scale*np.log(amp/bkg)
+        #t_start = self.t0 + scale*np.log(bkg/amp)
+        #t_end = self.t0 + skew*scale*np.log(amp/bkg)
 
         #fall_term = skew*scale*log_fall
         #rise_term = scale*log_rise

@@ -52,7 +52,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
     return
 
 
-def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_ttrig.dat"):
+def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None):
 
     files = glob.glob("%s*posterior*"%datadir)
     #print("files: " + str(files))
@@ -62,7 +62,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_
         fname = f.split("/")[-1]
         bid = fname.split("_")[0]
         bids.append(bid)
-        parameters = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile)
+        parameters = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile, bkg=bkg)
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
 
@@ -772,7 +772,7 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
         print("Resetting nsims to %i."%nsims)
 
 
-    energy_sample, duration_sample = [], []
+    energy_sample, duration_sample, amplitude_sample = [], [], []
 
     for i in xrange(nsims):
 
@@ -783,24 +783,34 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
         duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
         #amplitude_all = amplitude_all.flatten()
 
+        amplitude_all = np.array([np.array([a.amp for a in s.all if a.duration > 0.0]) for s in sample])
 
-        energy, duration = [], []
-        for e,d in zip(energy_all, duration_all):
+        #print("len energy: " + str(len(energy_all)))
+        #print("len amplitude: " + str(len(amplitude_all)))
+
+        energy, duration, amplitude = [], [], []
+        for a,e,d in zip(amplitude_all, energy_all, duration_all):
             energy.extend(e)
             duration.extend(d)
+            amplitude.extend(a)
+
+        #print("len energy: " + str(len(energy)))
+        #print("len amplitude: " + str(len(amplitude)))
+
 
         energy_sample.append(energy)
         duration_sample.append(duration)
+        amplitude_sample.append(amplitude)
 
     sp_all = []
     popt_all, pcov_all = [], []
 
-    for i,(r,a) in enumerate(zip(duration_sample, energy_sample)):
+    for i,(r,a,amp) in enumerate(zip(duration_sample, energy_sample, amplitude_sample)):
         a = np.array(a)/dt
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
 
-        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=[0.5,1.0], sigma=None)
+        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=[0.5,1.0], sigma=amp)
         popt_all.append(popt)
         pcov_all.append(pcov)
 
@@ -1014,6 +1024,8 @@ def all_correlations(sample=None, bids=None, datadir="./", trigfile="sgr1550_ttr
     nspikes = nspike_dist(sample, nsims=nsims, datadir=datadir, makeplot=makeplot, froot=froot)
     nspikes, energies = nspikes_energy(sample, datadir=datadir, nsims=nsims, makeplot=makeplot, froot=froot, dt=dt)
 
+    parameter_evolution(sample, datadir=datadir, nsims=nsims, nspikes=6, dt=dt, froot=froot)
+    differential_distributions(sample, datadir=datadir, nsims=nsims, makeplot=makeplot, dt=dt, froot=froot)
     return
 
 
@@ -1639,7 +1651,7 @@ def extract_real_spikes(sample_dict, min_scale=1.0e-4):
 
 
 
-def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat"):
+def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None):
 
     ### extract parameters from file
     sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile)
@@ -1650,7 +1662,14 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     pars_all = sample_dict["parameters"]
 
     nbursts_all = sample_dict["nbursts"]
-    bkg_all = sample_dict["bkg"]
+
+
+    ### if there's no artificial threshold for the amplitude, then set it to the background level
+    if bkg is None:
+        bkg_all = sample_dict["bkg"]
+    else:
+        bkg_all = np.ones(len(nbursts_all))*bkg
+
 
     parameters_all = []
     for pars,nbursts,bkg in zip(pars_all, nbursts_all, bkg_all):

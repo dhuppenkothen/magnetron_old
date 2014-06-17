@@ -83,7 +83,7 @@ All three phenomena are characterised by emission at high (X-ray to soft $\gamma
 complex temporal structure that varies strongly from burst to burst (for an example, see \ref{fig:burst_example}). Fourier methods are hampered by the lack of knowledge 
 of the overall structure of the burst, and consequently the lack of knowledge of both the shape and the statistical distribution of powers in the periodogram at low frequencies. Conversely, 
 it is difficult to postulate a common model applicable to a large sample of light curves of these sources. Any light curve model must be flexible enough to account for differences between bursts. 
-At the same time, there is little understanding of the underlying physical processes leading to variability in these bursts to inform a choice of model. Here, we aim to develop a probabilistic 
+At the same time, there is a distinct lack of understanding of the underlying physical processes leading to variability in these bursts to inform a choice of model. Here, we aim to develop a probabilistic 
 model for highly variable transient events, based on a decomposition of the light curve into simple shapes, without knowing the number of components in the model a priori. We demonstrate the 
 power of this approach on a large sample of magnetar bursts, and, for the first time, connect variability in magnetar bursts to the time scales thought to govern the underlying physics.
 
@@ -92,41 +92,53 @@ Neutron stars, the ultra-dense compact remnants of core-collapse supernovae, are
 physical processes in a parameter regime of density and pressure inaccessible to experiments on Earth. 
 Among the veritable zoo of neutron star phenomena, two stand out for their peculiar parameters: Soft Gamma Repeaters (SGRs),
 named after their hallmark recurring bursts in hard X-rays, and Anomalous X-ray Pulsars (AXPs), persistent pulsating X-ray
-sources with a conspicuous paucity of radio counterparts (although a total of three sources from both groups now
-have confirmed radio detections). 
+sources with a conspicuous paucity of radio counterparts \citep[although at this point, three sources out of a total of $26$ candidates 
+have confirmed radio detections: ][]{halpern2005,camilo2006,malofeev2010}. 
 
-While SGRs and AXPs were detected as separate phenomena, they share common properties: slow spin periods between
+While SGRs and AXPs were detected as separate phenomena, they share common properties \citep[for general overviews of both phenomena, see ][]{woods2006,mereghetti2011}: slow spin periods between
 $2 - 12 \, \mathrm{s}$, coupled with generally high period derivatives, lead to large inferred dipole magnetic fields of
 the order of $10^{14} \, \mathrm{G}$, well above the quantum-critical limit $B_{\mathrm{QED}} = 4.4 \times 10^{13} \, \mathrm{G}$,
-where quantum effects such as pair production and photon splitting become important (although three sources have been 
-identified with properties similar to SGRs and AXPs, but inferred dipole fields below this limit). 
+where quantum effects such as pair production and photon splitting become important \citep[although three sources have been 
+identified with properties similar to SGRs and AXPs, but inferred dipole fields below this limit;[]{vanderhorst2010,esposito2010,rea2010,rea2012,scholz2012,rea2014}. 
 
 Both AXPs and SGRs are believed to be the observable phenomena of the same underlying physical system: a highly magnetised
-neutron star, also called a magnetar. In the standard scenario, the observable X-ray emission, both persistent emission and bursts, 
+neutron star, also called a magnetar \citep{duncan1992,thompson1995}. In the original scenario, the observable X-ray emission, both persistent emission and bursts, 
 is powered by the slow evolution and decay of the source's strong magnetic field, instead of the loss of rotational energy as 
-is generally the case for standard radio pulsars. 
+is generally the case for standard radio pulsars \citep{thompson1995,thompson2001}. 
 
 SGR bursts are of particular interest for a variety of reasons. Most importantly, the observation of three giant flares, catastrophic
-outbursts in hard X-rays of energies up to $10^{47} \, \mathrm{erg}$, and the associated detection of quasi-periodic oscillations (QPOs)
-in the tails of these flares, have opened up a potential new way to look into the neutron star interior via asteroseismology. In the standard 
+outbursts in hard X-rays of energies up to $10^{47} \, \mathrm{erg}$\citep[e.g.][]{mazets1979,cline1998,hurley1999,feroci1999,palmer2005,hurley2004,hurley2005, borkowski2004, mereghetti2005,mazets2005,yamazaki2005,terasawa2005}, and the associated detection of quasi-periodic oscillations (QPOs)
+in the tails of these flares \citep{israel2005,strohmayer2005,strohmayer2006,watts2006}, have opened up a potential new way to look into the neutron star interior via asteroseismology. In the original 
 model, these giant flares are caused by a catastrophic re-ordering of the neutron star's internal field. As the magnetic field lines, frozen into
 the solid crust, move, the crust responds by fracturing when its breaking strain is exceeded by the forces exerted by the magnetic field.
 The energy released in this process is both released into the magnetosphere, where it forms a pair plasma that slowly radiates away and
 produces the observed emission, as well as seismic waves throughout the star. The frequencies of the oscillatory modes depend on
 the nuclear physics of the star's crust and core, making them a prime diagnostic for the conditions inside the star.
 
+The crust quake model of \citet{thompson1995} is not the only viable model
+for the production of magnetar giant flares. \citet{thompson1995} postulated a catastrophic untwisting the internal magnetic field, which leads to mechanical failure of the neutron star crust.
+However, it is possible for the internal magnetic field to unwind slowly, allowing the external magnetic field to follow suit without mechanical failure of the crust. 
+A catastrophic energy release could then occur in the magnetosphere itself, facilitated by explosive reconnection \citep{lyutikov2003,lyutikov2006,heyl2005,nakar2005,masada2010,gill2010}. 
+\citet{vanhoven2011} have shown that a giant flare 
+triggered in the magnetosphere could still excite large-scale shear motions in the crust. In this case, the giant flare would precede the crust quake, and not the other way around.
+A second argument for this alternative picture, akin more to solar flares than earthquakes, comes from calculations that indicate that the physical conditions in the crust
+do not allow for mechanical (brittle) failure \citep{jones2003,horowitz2009}. Instead, the crust is more likely to admit ductile failure and plastic deformation \citep{levin2012}.
+[WHAT DOES THIS MEAN FOR TIME SCALES IN BURSTS?]
+
 While giant flares are relatively rare phenomena (we have only observed $3$ in the last $35$ years), magnetars also show a complex
 behaviour of emitting much smaller, shorter recurrent bursts. These bursts are of the order of $<1\mathrm{s}$ long, with energies
 generally between $10^{38}\,\mathrm{erg}$ and $10^{41}\,\mathrm{erg}$, and have a complex temporal structure with single or
 multiple peaks that differs from one burst to the next. They are observed either appearing individually, or in burst 
-storms, where tens or hundreds of bursts can occur over a timescale of single days to weeks. The appearance of bursts appears to be
-random, but far more numerous than the giant flares: for the two best-observed magnetars, SGR 1806-20 and SGR 1900+14, the
+storms, where tens or hundreds of bursts can occur over a timescale of single days to weeks\citep{mazets1999,goetz2006b,israel2008,mereghetti2009,savchenko2010,israel2010,scholz2011,dib2012,vanderhorst2012,vonkienlin2012}. 
+The appearance of bursts appears to be random\citep{gogus1999,gogus2000}, but far more numerous than the giant flares: 
+for the two best-observed magnetars, SGR 1806-20 and SGR 1900+14, the
 data set spans thousands of such bursts. 
 
 One observation of particular interest concerns the overall distributions of these bursts: the differential distribution of fluence (integrated flux) and 
-the cumulative distribution of waiting times are similar to those observed in earth quakes and solar flares. Especially the fluence distribution
+the cumulative distribution of waiting times are similar to those observed in earth quakes and solar flares\citep{cheng1996}. Especially the fluence distribution
 can be well-modelled by a power law with a power-law index of $\sim 1.7$, believed to be a typical signature for a system obeying 
-self-organised criticality (SOC). In the SOC framework, the physical system in question continuously drives itself towards a critical state,
+self-organised criticality (SOC; \citealp{bak1987,bak1988}; for a recent introduction and review on SOC in astrophysics see \citealp{aschwanden2014}.). 
+In the SOC framework, the physical system in question continuously drives itself towards a critical state,
 without requiring fine tuning. When the critical state is reached, relaxation occurs via a catastrophic release of energy. The system returns
 to a subcritical state, and the cycle begins anew. The standard example of an SOC system is a sand pile: as sand grains are slowly dropped onto
 the pile, the slope of the sand pile steepens gradually. However, there is a critical slope, at which the sand pile can no longer support the 
@@ -150,13 +162,17 @@ needs to operate automatically without the user's intervention.
 In this paper, we propose a new method to model magnetar bursts as a linear combination of simple shapes. Both the number of components
 per burst as well as the model parameters for each components are free parameters, to be explored using Diffusive Nested Sampling.
 We apply this model to a large data set of bursts from SGR J1550-5418, observed with the Gamma-ray Burst Monitor (GBM) on board the 
-\Fermi spacecraft, 
-SGR J1550-5418 (also 1E 1547.0-5408) was first observed with the {\it Einstein} X-ray observatory \citep{lamb81}. Later observations with XMM-Newton revealed a soft X-ray spectrum and a possible association with a young supernova remnant suggesting that it might be an Anomalous X-ray Pulsar \citep[AXP][]{gelfand07}. The AXP nature was confirmed  by the subsequent detection of radio pulsations with a slow spin period of $P = 2.096\mathrm{s}$ and a spin-down of $\dot{P} = 2.318 \times 10^{-14}$, implying a magnetic field of $3.2 \times 10^{14} \, \mathrm{G}$ \citep{Camilo07}. 
+\Fermi spacecraft. SGR J1550-5418 (also 1E 1547.0-5408) was first observed with the {\it Einstein} X-ray observatory \citep{lamb1981}
+ and subsequently classified as an AXP based on its soft X-ray spectrum and possible association with a supernova remnant \citep{gelfand2007}.
+A radio detection of pulsations with a slow spin period of $P = 2.096\mathrm{s}$ and a spin-down of $\dot{P} = 2.318 \times 10^{-14}$, implying a magnetic field of $3.2 \times 10^{14} \, \mathrm{G}$ \citep{camilo2007}, confirmed its classification as a magnetar.
 
-SGR J1550-5418 exhibited three major bursting episodes: in October 2008, January 2009 and March/April 2009. The January episode was exceptional: the source showed hundreds of bursts within a single day, observed with several X-ray telescopes: the {\it Swift} Burst Alert Telescope (BAT) \citep{israel10, scholz11}, the \Fermi/GBM \citep{kaneko10,vonkienlin12,vanderhorst12}, the {\it Rossi X-ray Timing Explorer} (RXTE) \citep{dib12} and two main instruments on board the {\it INTEGRAL} spacecraft \citep{mereghetti09, savchenko10}).
-
-The high sensitivity of the instrument as well as the large number of observed bursts make this source an excellent target to demonstrate the power of the proposed methods. For the first time, we extract a wealth of 
-physically relevant time scales from SGR bursts. We place the results in the context of the SOC framework, and tie the extracted quantities to relevant physical parameters.
+In 2008 and 2009, SGR J1550-5418 exhibited three major bursting episodes (October 2008, January 2009 and March/April 2009), where the 2009 January episode is of special interest as a
+burst storm, where hundreds of bursts were observed within a single day with various X-ray telescopes ({\it Swift} Burst Alert Telescope (BAT), \citealp{israel2010, scholz2011}); the \Fermi Gamma-Ray Burst Monitor (GBM), \citealp{kaneko2010,vonkienlin2012,vanderhorst2012}; the {\it Rossi X-ray Timing Explorer} (RXTE), \citep{dib2012}, and two main instruments on board the {\it INTEGRAL} spacecraft \citealp{mereghetti2009, savchenko2010})
+ 
+ Here, we use a sample of bursts observed with {\it Fermi}/GBM during all three bursting episodes. The high sensitivity of the instrument as well as 
+ the large number of observed bursts make this source an excellent target to demonstrate the power of the proposed methods. For the first time, 
+ we extract a wealth of physically relevant time scales from SGR bursts. 
+ We place these timescales in the context of the SOC framework, and tie them to physical parameters in the system.
 
 
 %Magnetars make bursts.
@@ -177,94 +193,7 @@ We extracted TTE data between $8 \, \mathrm{keV}$ and $200 \, \mathrm{keV}$ arou
 We use light curves with a time resolution of $0.5\,\mathrm{ms}$. The time resolution is chosen small enough to preserve features
 in the data on short time scales, while at the same time have a reasonable number of counts per time bin. 
 
-\section{Introduction}
-
-Neutron stars, the ultra-dense compact remnants of core-collapse supernovae, are the prime laboratory for studying nuclear 
-physical processes in a parameter regime of density and pressure inaccessible to experiments on Earth. 
-Among the veritable zoo of neutron star phenomena, two stand out for their peculiar parameters: Soft Gamma Repeaters (SGRs),
-named after their hallmark recurring bursts in hard X-rays, and Anomalous X-ray Pulsars (AXPs), persistent pulsating X-ray
-sources with a conspicuous paucity of radio counterparts (although a total of three sources from both groups now
-have confirmed radio detections). 
-
-While SGRs and AXPs were detected as separate phenomena, they share common properties: slow spin periods between
-$2 - 12 \, \mathrm{s}$, coupled with generally high period derivatives, lead to large inferred dipole magnetic fields of
-the order of $10^{14} \, \mathrm{G}$, well above the quantum-critical limit $B_{\mathrm{QED}} = 4.4 \times 10^{13} \, \mathrm{G}$,
-where quantum effects such as pair production and photon splitting become important (although three sources have been 
-identified with properties similar to SGRs and AXPs, but inferred dipole fields below this limit). 
-
-Both AXPs and SGRs are believed to be the observable phenomena of the same underlying physical system: a highly magnetised
-neutron star, also called a magnetar. In the standard scenario, the observable X-ray emission, both persistent emission and bursts, 
-is powered by the slow evolution and decay of the source's strong magnetic field, instead of the loss of rotational energy as 
-is generally the case for standard radio pulsars. 
-
-SGR bursts are of particular interest for a variety of reasons. Most importantly, the observation of three giant flares, catastrophic
-outbursts in hard X-rays of energies up to $10^{47} \, \mathrm{erg}$, and the associated detection of quasi-periodic oscillations (QPOs)
-in the tails of these flares, have opened up a potential new way to look into the neutron star interior via asteroseismology. In the standard 
-model, these giant flares are caused by a catastrophic re-ordering of the neutron star's internal field. As the magnetic field lines, frozen into
-the solid crust, move, the crust responds by fracturing when its breaking strain is exceeded by the forces exerted by the magnetic field.
-The energy released in this process is both released into the magnetosphere, where it forms a pair plasma that slowly radiates away and
-produces the observed emission, as well as seismic waves throughout the star. The frequencies of the oscillatory modes depend on
-the nuclear physics of the star's crust and core, making them a prime diagnostic for the conditions inside the star.
-
-While giant flares are relatively rare phenomena (we have only observed $3$ in the last $35$ years), magnetars also show a complex
-behaviour of emitting much smaller, shorter recurrent bursts. These bursts are of the order of $<1\mathrm{s}$ long, with energies
-generally between $10^{38}\,\mathrm{erg}$ and $10^{41}\,\mathrm{erg}$, and have a complex temporal structure with single or
-multiple peaks that differs from one burst to the next. They are observed either appearing individually, or in burst 
-storms, where tens or hundreds of bursts can occur over a timescale of single days to weeks. The appearance of bursts appears to be
-random, but far more numerous than the giant flares: for the two best-observed magnetars, SGR 1806-20 and SGR 1900+14, the
-data set spans thousands of such bursts. 
-
-One observation of particular interest concerns the overall distributions of these bursts: the differential distribution of fluence (integrated flux) and 
-the cumulative distribution of waiting times are similar to those observed in earth quakes and solar flares. Especially the fluence distribution
-can be well-modelled by a power law with a power-law index of $\sim 1.7$, believed to be a typical signature for a system obeying 
-self-organised criticality (SOC). In the SOC framework, the physical system in question continuously drives itself towards a critical state,
-without requiring fine tuning. When the critical state is reached, relaxation occurs via a catastrophic release of energy. The system returns
-to a subcritical state, and the cycle begins anew. The standard example of an SOC system is a sand pile: as sand grains are slowly dropped onto
-the pile, the slope of the sand pile steepens gradually. However, there is a critical slope, at which the sand pile can no longer support the 
-additional grains dropped onto it, and relaxation occurs via an avalanche, returning the slope to a sub-critical state. 
-One advantage of describing a system in the SOC framework is that while the details of the process leading to the critical state and subsequent
-relaxation depend on the physical processes specific to the system, many of the overall statistical properties are universal.
-
-%%% STILL NEED TO TIE TOGETHER SOC STUFF WITH STUFF BELOW ON EXTRACTING TIME SCALES
-
-At present, it is not clear whether magnetar bursts are smaller-scale versions of the crust fracture process believed to produce a giant flare,
-or perhaps entirely magnetospheric events. In the latter scenario, the evolution of the magnetic field would operate on timescales
-slow enough for the crust to respond with plastic deformation rather than brittle fracture, and the energy release would proceed via
-explosive reconnection in the magnetosphere instead.
-
-%%% do these models predict different timescales, and can we say something here about distinguishing them?
-
-Because of the bursts' complex temporal morphology, differing from burst to burst, it is difficult to extract information from their temporal evolution. 
-Many bursts show a pattern of one or multiple spikes, where these spikes sometimes sit on top of each other. To extract parameters that could be related
-to physical quantities such as the rise time of each spike and the waiting time distribution between spikes, it is necessary to 
-extract both from the data in an unbiased way. At the same time, because of the much larger data set SGR bursts offer, this process
-needs to operate automatically without the user's intervention.
-
-In this paper, we propose a new method to model magnetar bursts as a linear combination of simple shapes. Both the number of components
-per burst as well as the model parameters for each components are free parameters, to be explored using Diffusive Nested Sampling.
-We apply this model to a large data set of bursts from XXX [WHICH MAGNETAR], and, for the first time, extract a wealth of 
-physically relevant time scales from SGR bursts. We place the results in the context of the SOC framework, and tie the extracted
-quantities to relevant physical parameters.
-
-%Magnetars make bursts.
-%Magnetar bursts have many spikes each.
-%The spikes look similar within each burst.
-%That motivates a very simple model,
-%  in which each burst is made up of a sum of spike models, which we call words.
-
-\section{Data}
-
-The ``raw'' data, for our purposes, are photon arrival times.
-For magnetar SGR J1550-5418, these come from triggered photon streams telemetered down from the \Fermi\ Gamma-ray Burst Monitor (GBM).
-\Fermi\/GBM is not a pointed instrument, but has twelve detectors observing the entire unocculted sky all the time. When a burst triggers the
-instrument (by increased count rate), GBM will link down data streams at the native time resolution of the instrument, $2\mu\mathrm{s}$ from 
-$30$ seconds before the trigger to $300$ seconds after the trigger, after which it cannot trigger for another $300$ seconds. 
-Because bursts may appear within $300$s of each other, one observation (equivalent to one trigger of length $330$s) may include more than one
-bursts, and one must find the untriggered bursts in the data.
-
-The data is affected by both dead time and saturation. Saturation cuts off the number of recorded photons at the maximum rate
-that the science data bus on board the spacecraft can transmit, $3.5 \times 10^{5} \, \mathrm{counts}/\mathrm{s}$ per detector. This means
-that exceptionally bright bursts will flatten out above that count rate. We exclude any bursts with count rates $>3.5\times10^{5} \, \mathrm{cts}/\mathrm{s}$.
+The data is affected by both dead time and saturation. 
 Dead time occurs because the instrument cannot record a second photon within $2.6\mu\mathrm{s}$ of arrival of a previous photon. 
 The second photon is thus either not recorded at all, or, on occasion, recorded as a single photon with the combined energy. This effectively 
 imposes a time scale onto the data, which means that the data then deviate away from the expected Poisson distribution. 
@@ -606,5 +535,9 @@ We show an example of a burst light curve, together with random draws from the p
 
 \paragraph{acknowledgements}
 We thank the organizers of MaxEnt2013.
+
+
+\bibliography{td}
+\bibliographystyle{apj}
 
 \end{document}

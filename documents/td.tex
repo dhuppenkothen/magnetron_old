@@ -11,7 +11,7 @@
 \usepackage{amsmath}
 \usepackage{amsbsy}
 \usepackage{bm}
-%\usepackage{hyperref}
+\usepackage{hyperref}
 %\usepackage[stable]{footmisc}
 %\usepackage{color}
 %\bibliographystyle{apj}
@@ -33,7 +33,7 @@
 
 \begin{document}
 
-\title{Dissecting Magnetar Variability with Bayesian Hierarchical Models}
+\title{Dissecting Magnetar Variability with Probabilistic Generative Models}
 
 \author{D. Huppenkothen\altaffilmark{1, 2}, B. Brewer\altaffilmark{}, D. Hogg\altaffilmark{}, I. Murray\altaffilmark{}, M. Frean\altaffilmark{}, C. Elenbaas\altaffilmark{1}, A. L. Watts\altaffilmark{1}, Y.Levin\altaffilmark{},  L. Heil\altaffilmark{1}, C. Kouveliotou\altaffilmark{3,4}}
 
@@ -80,12 +80,19 @@ While much of the variability exhibited for example in XRBs is accessible by sta
 with complex temporal structure where the relevant time scales of interest are of the same order as the typical time scales in the system,  this variability introduces considerable 
 systematic errors into inferences made from this type of data with standard methods. Three examples stand out particularly: solar flares, $\gamma$-ray bursts (GRBs) and magnetar bursts. 
 All three phenomena are characterised by emission at high (X-ray to soft $\gamma$-ray) energies, bursts lasting from $\sim 1/10$ of a second to hundreds of seconds, and a 
-complex temporal structure that varies strongly from burst to burst (for an example, see \ref{fig:burst_example}). Fourier methods are hampered by the lack of knowledge 
+complex temporal structure that varies strongly from burst to burst (for an example, see Figure \ref{fig:example_bursts}). Fourier methods are hampered by the lack of knowledge 
 of the overall structure of the burst, and consequently the lack of knowledge of both the shape and the statistical distribution of powers in the periodogram at low frequencies. Conversely, 
 it is difficult to postulate a common model applicable to a large sample of light curves of these sources. Any light curve model must be flexible enough to account for differences between bursts. 
 At the same time, there is a distinct lack of understanding of the underlying physical processes leading to variability in these bursts to inform a choice of model. Here, we aim to develop a probabilistic 
 model for highly variable transient events, based on a decomposition of the light curve into simple shapes, without knowing the number of components in the model a priori. We demonstrate the 
 power of this approach on a large sample of magnetar bursts, and, for the first time, connect variability in magnetar bursts to the time scales thought to govern the underlying physics.
+\begin{figure*}[h]
+\begin{center}
+\includegraphics[width=18cm]{example_bursts.pdf}
+\caption{}
+\label{fig:example_bursts}
+\end{center}
+\end{figure*}
 
 
 Neutron stars, the ultra-dense compact remnants of core-collapse supernovae, are the prime laboratory for studying nuclear 
@@ -199,13 +206,6 @@ The second photon is thus either not recorded at all, or, on occasion, recorded 
 imposes a time scale onto the data, which means that the data then deviate away from the expected Poisson distribution. 
 Dead time is harder to quantify and account for than saturation. It is possible to correct count rates based on simulations of the instrument (REF, Bhat et al, 2013),
 but this will not correct the statistical distributions. We currently do not take dead time into account in our analysis. 
-\begin{figure*}[h]
-\begin{center}
-\includegraphics[width=18cm]{example_bursts.pdf}
-\caption{}
-\label{fig:example_bursts}
-\end{center}
-\end{figure*}
 
 In addition to dead time, saturation may significantly alter the shape of the arriving bursts. Saturation occurs when the number of arriving photons per second
 measured in a single GBM detector exceed the maximum data throughput rate of the science data bus. In this case, transmitted rates are capped at a 
@@ -215,7 +215,7 @@ consider is not designed to represent these features.
 
 We currently use light curves with a time resolution of $0.5\,\mathrm{ms}$. The time resolution is chosen small enough to preserve features
 in the data on short time scales, while at the same time have a reasonable number of counts per time bin. 
-Burst durations are defined in $T90$, the time in which $90\%$ of photons arrive at the detector, with $0.2T90$ added on either side
+Burst durations are defined in $T_{90}$, the time in which $90\%$ of photons arrive at the detector, with $0.2T_{90}$ added on either side
 to make sure the entire burst is included. 
 
 %Data for the strongest-field magnetars SGR 1806-20 and SGR 1900+14 are recorded with the {\it Rossi} X-ray Timing Explorer (\RXTE), which someone
@@ -233,26 +233,26 @@ we can then study the properties of individual burst components, as well as thei
 \subsection{A Bayesian model for magnetar burst light curves}
 \label{sec:model}
 
-For a light curve with $K$ Poisson-distributed counts $\bm{\counts} = \{\counts_i\}$, we define a model as a superposition of $K$ individual components:
+For a light curve with $K$ Poisson-distributed counts $\bm{\counts} = \{\counts_k\}$, we define a model as a superposition of $N$ individual components:
 
 %The model for the data in or near one burst is
 \begin{eqnarray}
 %p(\counts_n\given\pars) &=& \Poisson(\counts_n\given\mean_n)
 %\\
-\mean_n &=& \mean_{\bg} + \sum_{k=1}^K \mean_{nk}
+\mean_n &=& \mean_{\bg} + \sum_{n=1}^N \mean_{nk}
 \\
-\mean_{nk} &\equiv& \int_{t_n-\Delta t/2}^{t_n+\Delta t/2} A_k\,\word(\frac{t'-t_k}{\tau})\,\dd t' \; ,
+\mean_{nk} &\equiv& \int_{t_n-\Delta t/2}^{t_n+\Delta t/2} A_n\,\word(\frac{t'-t_n}{\tau})\,\dd t' \; ,
 %\begin{equation}
 %\word(\xi) &=& \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right. \, ,
 %\end{equation}
 \end{eqnarray}
 
-where $\mean_{nk}$ is the mean count rate of the $k^{\mathrm{th}}$ model component in time bin $n$, 
-$\mean_bg$ is the background count rate of that bin,
+where $\mean_{nk}$ is the mean count rate of the $n^{\mathrm{th}}$ model component in time bin $k$, 
+$\mean_{bg}$ is the background count rate of that bin,
 and the mean count rate $\mean_{nk}$ in a bin $n$ is defined as the integral over a functional form defining the shape of
-the model component $\word$ over the the width of that time bin. The component $\word$ is a generic (dimensionless) shape,
-and can be modified by an amplitude parameter $A_k$ and a parameter setting the width $\tau$, in addition to
-parameters such as the time offset $t_k$ and intrinsic parameters further describing the component's shape.
+the model component $\word$ over the the width of that time bin. The component $\word$ is a generic shape,
+and can be modified by an amplitude parameter $A_n$ and a parameter setting the width $\tau_n$, in addition to
+parameters such as the time offset $t_n$ and intrinsic parameters further describing the component's shape.
 We will define a component model $\word$ for magnetar bursts in Section \ref{sec:wordmodel} below, and
 restrict ourselves here to a general description of the model.
  
@@ -263,59 +263,59 @@ restrict ourselves here to a general description of the model.
 %  $\Delta$ is the full width of the bin,
 %  $K$ is the number of words (spikes) $k$ making up the burst,
 %  $\phi(\xi)$ is the dimensionless word function,
-%  $A_k, t_k$ are the amplitudes and time offsets of the words,
+%  $A_n, t_n$ are the amplitudes and time offsets of the words,
 %  and $s, \tau$ set the shape (asymmetry or skew) and rise time of the words.
   
 We can compute the posterior probability over all model parameters in the following way:
 
 \begin{equation}
-p(N, \bm{\alpha},\{\bm{\theta}_i \} \given \bm{\counts}, H) = \frac{p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_i \}, H) p(N, \bm{\alpha}, \{\bm{\theta}_i \} \given H)}{p(\bm{\counts} | H)} \, .
+p(N, \bm{\alpha},\{\bm{\theta}_n \} \given \bm{\counts}, H) = \frac{p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_n \}, H) p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H)}{p(\bm{\counts} | H)} \, .
 \end{equation}
 
-Here, $N$ is the number of model components, with the corresponding set of model components $\{\bm{\theta}_i\} = \{ \bm{\theta}_1, \bm{\theta}_2, ..., \bm{\theta}_N \}$. Each $\bm{\theta}_i$ may be a scalar, for models with a single parameter, or a vector.
-The scalar or vector $\bm{\alpha}$ encodes the potential hyper parameters used to describe the prior distributions of parameters in $\{\bm{\theta}_i\}$. $H$ encodes the prior choices we have
+Here, $N$ is the number of model components, with the corresponding set of model components $\{\bm{\theta}_n\} = \{ \bm{\theta}_1, \bm{\theta}_2, ..., \bm{\theta}_N \}$. Each $\bm{\theta}_n$ may be a scalar, for models with a single parameter, or a vector.
+The scalar or vector $\bm{\alpha}$ encodes the potential hyper parameters used to describe the prior distributions of parameters in $\{\bm{\theta}_n\}$. $H$ encodes the prior choices we have
 made about the model that are not part of the inference problem at this stage: for example, the choice of shape for prior distributions and the model shape used to represent the light curve.
 
 We use a Poisson likelihood to describe the data,
 
 \begin{eqnarray}
-\likelihood(N, \bm{\alpha}, \{\bm{\theta}_i \}) & = & p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_i \}, H) \\ \nonumber
- &= & \prod\limits_{j=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_j} }{y_j! }} \; ,
+\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \}) & = & p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_n \}, H) \\ \nonumber
+ &= & \prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }} \; ,
 \end{eqnarray}
 
-which only depends on the parameters of the individual model components, $\bm{\theta}_i$. In general, the interim priors for the model 
-parameters $\{\bm{\theta}_i\}$ will depend on the priors for the hyper parameters defining their prior distributions, $\bm{\alpha}$, such that the
+which only depends on the parameters of the individual model components, $\{\bm{\theta}_n\}$. In general, the interim priors for the model 
+parameters $\{\bm{\theta}_n\}$ will depend on the priors for the hyper parameters defining their prior distributions, $\bm{\alpha}$, such that the
 overall prior for this model is
 
 \begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_i \} \given H) = p(N)p(\alpha\given N)p(\{\bm{\theta}_i\}\given \alpha, N) \; .
+p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N)p(\alpha\given N)p(\{\bm{\theta}_n\}\given \alpha, N) \; .
 \end{equation}
 
 Under the assumption that $\bm{\alpha}$ and $N$ are independent, and that the interim priors of the individual model components are
 independent and identically distributed, we can re-write this equation as:
 
 \begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_i \} \given H) = p(N)p(\alpha) \prod\limits_{i=0}^{N}  p(\{\bm{\theta}_i\}\given \alpha) \; .
+p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N)p(\alpha) \prod\limits_{n=0}^{N}  p(\{\bm{\theta}_n\}\given \alpha) \; .
 \end{equation}
 
 Thus, the posterior probability density becomes
 
 \begin{eqnarray}
-p(N, \bm{\alpha}, &&\{\bm{\theta}_i \}  \given \bm{\counts}, H) = \\ 
-&& \frac{\prod\limits_{j=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_j} }{y_j! }} p(N)p(\alpha) \prod\limits_{i=0}^{N}  p(\{\bm{\theta}_i\}\given \alpha)}{p(\bm{\counts} | H)}  \nonumber
+p(N, \bm{\alpha}, &&\{\bm{\theta}_n \}  \given \bm{\counts}, H) = \\ 
+&& \frac{\prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }} p(N)p(\alpha) \prod\limits_{n=0}^{N}  p(\{\bm{\theta}_n\}\given \alpha)}{p(\bm{\counts} | H)}  \nonumber
 \end{eqnarray}
 
 where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisation constant in the usual way: 
 
 \begin{eqnarray}
-p(\bm{\counts} | H) & = & \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_i \})} \times \\ \nonumber
-&& p(N)p(\alpha) \prod\limits_{i=0}^{N}  p(\{\bm{\theta}_i\}\given \alpha) d\bm{\alpha} dN d\bm{\theta}_1 ... d\bm{\theta}_N \; .
+p(\bm{\counts} | H) & = & \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
+&& p(N)p(\alpha) \prod\limits_{n=0}^{N}  p(\{\bm{\theta}_n\}\given \alpha) d\bm{\alpha} dN d\bm{\theta}_1 ... d\bm{\theta}_N \; .
 \end{eqnarray}
 
 The marginal likelihood involves integration in a high-dimensional parameter space, which is analytically intractable for all but the
-simplest cases. Here, we use Diffusive Nested Sampling to efficiently traverse parameter space and approximate the marginal 
+simplest cases. Here, we use Diffusive Nested Sampling \citep{brewer2011} to efficiently traverse parameter space and approximate the marginal 
 likelihood as well as sample from the posterior probability density. 
-Nested sampling [SKILLING REF HERE] samples parameter space by uniformly sampling $M$ points (particles) from the space allowed by the prior. 
+Nested sampling \citep{skilling2006} samples parameter space by uniformly sampling $M$ points (particles) from the space allowed by the prior. 
 One then computes the likelihood values associated with each particle, and the particle with the lowest likelihood is discarded. A new point
 can be generated, for example, via Markov Chain Monte Carlo (MCMC), subject to the hard constraint that the
 likelihood of the new point must be larger than the likelihood of the discarded one. In this way, the population iterates progressively towards
@@ -333,11 +333,11 @@ Instead of recording the end point of an MCMC chain as the new particle, the lik
  approach, the population contracts towards regions of high likelihood, but it will do so even for complex probability distributions subject to multi-modality
  or phase transitions.
 
-Diffusive nested sampling as implemented in {\it DNest}\footnote{insert link to DNest github page here} can return both an estimate for the marginal likelihood,
-suitable for model selection purposes, as well as a samples drawn from the posterior pdf for a given burst. The latter is done by letting a particle explore
-the final mixture of levels freely. 
+Diffusive nested sampling as implemented in {\it DNest3}\footnote{the code is available under the GNU public license at \hyperref[]{https://github.com/eggplantbren/DNest3}} can return both an estimate for the marginal likelihood,
+suitable for model selection purposes, as well as a samples drawn from the posterior probability density function (pdf) for a given burst. The latter is done by letting a particle explore
+the final mixture of levels freely via MCMC. 
 We can make inferences about individual parameters in the model from these samples in the usual way by marginalising over nuisance parameters (e.g. 
-hyper parameters $\bm{\alpha}$. Additionally, for many bursts, we can make inferences over the parameters from many components. In the simplest way,
+hyper parameters $\bm{\alpha}$). Additionally, for many bursts, we can make inferences over the parameters from many components. In the naive way,
 this can be done by picking a parameter set from the MCMC run for each burst, and using this ensemble of individual samples from many bursts 
 to compute the quantity of interest (say, a correlation between two model parameters). This procedure can be repeated, such that we build up a sample
 for the quantity in question. Note, however, that by posing that individual bursts have no knowledge of each other - we fit the model for each burst separately - 
@@ -348,15 +348,26 @@ be extended again to make inferences across, for example, different magnetars. T
 
 
 \subsection{Model shapes}
+\label{sec:wordmodel}
 
 The model defined in Section \ref{sec:model} is fairly general: it is valid for any Poisson-distributed light curve thought to be composed several individual components of
 the same shape, but with potentially different individual parameters (such as amplitudes and widths). 
-We have made only two assumptions so far: the priors for the number of components $N$ and the hyper parameters $\bm{\alpha}$ are independent,
+We have made only three assumptions so far: the likelihood follows a Poisson distribution, the priors for the number of components $N$ and the hyper parameters $\bm{\alpha}$ are independent,
 and the priors on the parameters of the model for the individual components are independent of each other and identically distributed. 
 Here, we now refine this model for magnetar bursts specifically. However, changing the model shape for use with different source classes (e.g. GRBs) is straightforward.
-
-Magnetar bursts are short event composed of one or more sharp, spike-like features (see Figure \ref{fig:example_bursts} for various examples). We model these features
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=9cm]{word.pdf}
+\caption{An example of the component model used for magnetar bursts: a spike is defined by an exponential rise with characteristic
+time scale $\tau$ and an exponential fall with a fall time scale $s\tau$, where $s$ is a skewness parameter that describes how the fall
+time is stretched ($s > 1$) of contracted ($s < 1$) compared to the rise time. Individual spikes are also characterised by a time offset
+$t$ describing the location of the peak count rate in a time series, and an amplitude $A$ describing the height of a peak.}
+\label{fig:word_example}
+\end{center}
+\end{figure}
+Magnetar bursts are short events composed of one or more sharp, spike-like features (see Figure \ref{fig:example_bursts} for various examples). We model these features
 with a sharp spike consisting of an exponential rise and an exponential decay of the type:
+
 
 %The model for the data in or near one burst is
 %\begin{eqnarray}
@@ -364,7 +375,7 @@ with a sharp spike consisting of an exponential rise and an exponential decay of
 %\\
 %\mean_n &=& \mean_{\bg} + \sum_{k=1}^K \mean_{nk}
 %\\
-%\mean_{nk} &\equiv& \int_{t_n-\Delta/2}^{t_n+\Delta/2} A_k\,\word(\frac{t'-t_k}{\tau})\,\dd t'
+%\mean_{nk} &\equiv& \int_{t_n-\Delta/2}^{t_n+\Delta/2} A_n\,\word(\frac{t'-t_n}{\tau})\,\dd t'
 %\\
 \begin{equation}
 \word(t) = A \left\{\begin{array}{ll}\exp(t-t_{\mathrm{offset}}/\tau) & \mbox{for $t < t_{\mathrm{offset}}$}\\ 
@@ -373,31 +384,21 @@ with a sharp spike consisting of an exponential rise and an exponential decay of
 %\end{eqnarray}
 
 where $\word(ti)$ is the component function depending on time parameter $t$ and a skewness
-parameter $s$. By giving each component $k$ in the model a time offset $t_{\mathrm{offset},k}$ (equivalent to the time of the peak), 
-an amplitude $A_k$ and an exponential rise timescale $\tau_k$ in addition to the skewness parameter $s_k$, 
-these spikes can become a representation of the spikes observed in magnetar burst light curves (see Figure \ref{fig:component_example}
+parameter $s$. By giving each component $n$ in the model a time offset $t_{\mathrm{offset},n}$ (equivalent to the time of the peak), 
+an amplitude $A_n$ and an exponential rise timescale $\tau_n$ in addition to the skewness parameter $s_n$, 
+these spikes can become a representation of the spikes observed in magnetar burst light curves (see Figure \ref{fig:word_example}
 for an example of the model).
 
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=9cm]{word.pdf}
-\caption{An example of the component model used for magnetar bursts: a spike is defined by an exponential rise with characteristic
-time scale $\tau$ and an exponential fall with a fall time scale $s\tau$, where $s$ is a skewness parameter that describes how the fall
-time is stretched ($s > 1$) of contracted ($s < 1$) compared to the rise time. Individual spikes are also characterised by a time offset
-$t$ describing the location of the peak count rate in a time series, and an amplitude $A$ describing the height of a peak.}
-\label{fig:dnest_example}
-\end{center}
-\end{figure}
 
 
-For each component $k$, we have a set of free parameters $\{t_k, A_k, \tau_k, s_k \},$, for each model, i.e. each
-linear combination of components, we have a set of free parameters $\{\mean_{bg}, {t_k, A_k, \tau_k, s_k} \}$.
+For each component $n$, we have a set of free parameters $\{t_n, A_n, \tau_n, s_n \},$, for each model, i.e. each
+linear combination of components, we have a set of free parameters $\{\mean_{bg}, \{t_n, A_n, \tau_n, s_n\} \}$.
 The priors for these components are independent and identically distributed, such that priors are the same for
 a given type of parameter between components. 
 Because bursts are defined in such a way that the observed count rate must drop back to the background before the
-start and the end of each burst, we can simply define the prior on the time offset such that $t_k$ must lie between
-the start and end times of the burst light curve, $t_{\mathrm{start}} < t_k < t_\mathrm{end}$. 
-For the amplitude $A_k$ and the rise timescale $\tau_k$, we choose exponential priors:
+start and the end of each burst, we can simply define the prior on the time offset such that $t_n$ must lie between
+the start and end times of the burst light curve, $t_{\mathrm{start}} < t_n < t_\mathrm{end}$. 
+For the amplitude $A_n$ and the rise timescale $\tau_n$, we choose exponential priors:
 
 \begin{eqnarray}
 p(A \given \mu_A) &=& e^{(A/\mu_A)} \\
@@ -408,9 +409,9 @@ where $\mu_A$ and $\mu_{\mathrm{\tau}}$ are hyper parameters describing the widt
 We set a minimum possible rise time scale $\tau_{\mathrm{min}}$ to be a fraction of the light curve's time resolution,
 $\tau_{\mathrm{min}} = \Delta t/10$: the time resolution effectively limits the information on the rise time we can extract.
 
-The prior on the skewness parameter $s_k$ is a uniform distribution with a mean of $a$ and a half-width of $b$, such
+The prior on the skewness parameter $s_n$ is a uniform distribution with a mean of $a$ and a half-width of $b$, such
 that the log-skewness must lie in the range $(a-b) < \log{(s)} < (a+b)$. A definition in terms of mean and half-width ensures
-that positive and negative skews are equally likely.
+that positive and negative skews are equally likely a priori.
 
 \begin{figure*}[h]
 \begin{center}
@@ -433,7 +434,7 @@ might be compared, one would need to discard this prior for one that is formally
 The priors on the hyper parameters $\mu_{A}$ and $\mu_{\mathrm{\tau}}$ are log-uniform. The prior range for
 $\mu_{\tau}$ depends on the length of the data set, such that $\log{(10^{-3}t_{\mathrm{burst}})} < \log{(\mu_{\tau})} < \log{(10^{3}t_\mathrm{burst})}$.
 Like the prior on the background count rate $\counts_{\mathrm{bg}}$, the hyper prior on the width of the amplitude prior distribution
-depends on the count rate in a burst, $\log{(10^{-3}\mu_\counts)} < \log{(\mu_{A})} < \log{(10^{3} \mu_\counts)}$. The same reasoning applies as
+depends on the count rate in a burst, $\mu_\counts$: $\log{(10^{-3}\mu_\counts)} < \log{(\mu_{A})} < \log{(10^{3} \mu_\counts)}$. The same reasoning applies as
 for the background prior, such that for a more complicated analysis involving the marginal likelihood it needs to be replaced
 by a prior that is formally valid.
 
@@ -448,25 +449,25 @@ We show an example of a burst light curve, together with random draws from the p
 %  $\Delta$ is the full width of the bin,
 %  $K$ is the number of words (spikes) $k$ making up the burst,
 %  $\phi(\xi)$ is the dimensionless word function,
-%  $A_k, t_k$ are the amplitudes and time offsets of the words,
+%  $A_n, t_n$ are the amplitudes and time offsets of the words,
 %  and $s, \tau$ set the shape (asymmetry or skew) and rise time of the words.
   
 %Various parameters can be left free completely, or can be tied together between words:
  
 %\begin{equation}
-%\theta \equiv [,\{t_k, \tau_k, A_k, s_k \}_{k=1}^K, \mean_{\bg} ]
+%\theta \equiv [,\{t_n, \tau_n, A_n, s_n \}_{k=1}^K, \mean_{\bg} ]
 %\end{equation}
 
 %for complete freedom of word parameters between words,
 
 %\begin{equation}
-%\theta \equiv [,\{t_k, A_k, s_k \}_{k=1}^K,  \tau_k, \mean_{\bg} ]
+%\theta \equiv [,\{t_n, A_n, s_n \}_{k=1}^K,  \tau_n, \mean_{\bg} ]
 %\end{equation}
 
 %for tying the rise time together within a burst, and
 
 %\begin{equation}
-%\theta \equiv [,\{t_k, A_k\}_{k=1}^K, \tau_k, s_k , \mean_{\bg} ]\end{equation}
+%\theta \equiv [,\{t_n, A_n\}_{k=1}^K, \tau_n, s_n , \mean_{\bg} ]\end{equation}
 
 %for a model where both the rise time and the skewness are tied together for all words within a burst.
 
@@ -506,9 +507,9 @@ We show an example of a burst light curve, together with random draws from the p
 %\\
 %p(\ln\tau) &=& \Uniform(\ln\tau\given a_5, a_6)
 %\\
-%p(\ln A_k) &=& \Uniform(\ln A_k\given a_7, a_8)
+%p(\ln A_n) &=& \Uniform(\ln A_n\given a_7, a_8)
 %\\
-%p(t_k) &=& \Uniform(t_k\given a_9, a_{10})
+%p(t_n) &=& \Uniform(t_n\given a_9, a_{10})
 %\quad,
 %\end{eqnarray}
 %where $\Uniform(x\given a, b)$ is the uniform distribution for $x$ in the range $a<x<b$.

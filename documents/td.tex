@@ -76,20 +76,25 @@ X-ray binaries (XRBs) change over milliseconds \citep[e.g.][]{xrb_khzqpos}, whil
 Variability studies have the potential to unravel fundamental physical processes: studying variability in XRBs can help us unravel accretion processes and constrain theories of viscosity and strong gravity. 
 Similarly, giant flares from magnetars have the potential to map the neutron star interior via neutron star seismology. 
 
-While much of the variability exhibited for example in XRBs can be analysed by standard Fourier methodology, this is not true for an important group of sources: for any transients 
+While much of the variability exhibited for example in XRBs can be characterised and made sense of using standard Fourier methodology, this is not true for an important group of sources: for any transients 
 with complex temporal structure that is a superposition of different processes. When attempting to disentangle the individual components (for example, a periodic signal from underlying stochastic variability)
 using standard methods, it is possible to introduce systematic errors into inferences made from this type of data. Three examples stand out particularly: solar flares, $\gamma$-ray bursts (GRBs) and magnetar bursts.  All three phenomena are characterised by bursts lasting from $\sim 1/10$ of a second to hundreds of seconds, and a 
 complex temporal structure that varies strongly from burst to burst (for an example, see Figure \ref{fig:example_bursts}). 
-Fourier methods fail when the underlying processes contributing to the observed light curve, especially deterministic components in combination with stochastic variability, are not well known. In this case,
+
+Fourier methods fail in particular when the underlying processes contributing to the observed light curve, especially deterministic 
+components in combination with stochastic variability, are not well known. In this case,
 the statistical distributions in the periodogram are not straightforward to model, thus making inferences about the variability in the source problematic. Conversely, 
 it is difficult to postulate a common model applicable to a large sample of light curves of these sources. Any light curve model must be flexible enough to account for differences between bursts. 
-At the same time, there is a distinct lack of understanding of the underlying physical processes leading to variability in these bursts to inform a choice of model. Here, we aim to develop a probabilistic 
+At the same time, there is a lack of understanding of the underlying physical processes leading to variability in these bursts to inform a choice of model. Here, we aim to develop a probabilistic 
 model for highly variable transient events, based on a decomposition of the light curve into simple shapes, without knowing the number of components in the model a priori. We demonstrate the 
 power of this approach on a large sample of magnetar bursts, and, for the first time, connect variability in magnetar bursts to the time scales thought to govern the underlying physics.
+
 \begin{figure*}[h]
 \begin{center}
 \includegraphics[width=18cm]{example_bursts.pdf}
-\caption{}
+\caption{Six example bursts observed with \fermi/GBM from the magnetar SGR J1550-5418. Bursts show a complex morphology of one or more
+spikes that differs drastically from burst to burst, making development of a common model for all burst light curves difficult. For details on the source
+and this sample, see Section \ref{sec:data}.}
 \label{fig:example_bursts}
 \end{center}
 \end{figure*}
@@ -185,6 +190,7 @@ We place these timescales in the context of the SOC framework, and tie them to p
 %  in which each burst is made up of a sum of spike models, which we call words.
 
 \section{The Burst Sample}
+\label{sec:data}
 
 SGR J1550-5418 (also 1E 1547.0-5408) was first observed with the {\it Einstein} X-ray observatory \citep{lamb1981}
 and subsequently classified as an AXP based on its soft X-ray spectrum and possible association with a supernova remnant \citep{gelfand2007}.
@@ -193,9 +199,8 @@ and subsequently classified as an AXP based on its soft X-ray spectrum and possi
 In 2008 and 2009, SGR J1550-5418 exhibited three major bursting episodes (October 2008, January 2009 and March/April 2009), where the 2009 January episode is of special interest as a
 burst storm. Hundreds of bursts were observed within a single day with various X-ray telescopes ({\it Swift} Burst Alert Telescope (BAT), \citealp{israel2010, scholz2011}); the \fermi Gamma-Ray Burst Monitor (GBM), \citealp{kaneko2010,vonkienlin2012,vanderhorst2012}; the {\it Rossi X-ray Timing Explorer} (RXTE), \citep{dib2012}, and two main instruments on board the {\it INTEGRAL} spacecraft \citealp{mereghetti2009, savchenko2010})
  
-Here, we use a sample of bursts observed with {\it Fermi}/GBM during all three bursting episodes. 
-
-Bursts from SGR J1550-5418 triggered \fermi/GBM for a total of $126$ times between 2008 October 3 and 2009 April 17, with $\sim 450$ bursts observed on its most active day, 2009 January 22, alone. 
+Here, we use a sample of bursts observed with {\it Fermi}/GBM during all three bursting episodes. Bursts from SGR J1550-5418 triggered \fermi/GBM for a total of $126$ 
+times between 2008 October 3 and 2009 April 17, with $\sim 450$ bursts observed on its most active day, 2009 January 22, alone. 
 Each trigger records data from $30\,\mathrm{s}$ before each trigger to $300\,\mathrm{s}$ after each trigger, upon which the instrument cannot trigger for another $\sim 300 \,\mathrm{s}$. 
 After GBM is triggered, subsequent bursts within this time span do not trigger the instrument, but can be found in an untriggered burst search. The resulting data stream consists of 
 the arrival times of individual photons (time-tagged events, TTE), with an intrinsic time resolution of $\sim 2\mu\mathrm{s}$, sufficient for probing variability to very short time scales.

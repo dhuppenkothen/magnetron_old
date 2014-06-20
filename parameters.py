@@ -77,6 +77,7 @@ class TwoExpParameters(Parameters, object):
         if not bkg is None:
             self.bkg = bkg
 
+
         return
 
 
@@ -148,7 +149,7 @@ class TwoExpParameters(Parameters, object):
         return parlist
 
     def compute_energy(self, bkg=0):
-        amp = self.amp - bkg
+        amp = self.amp
         norm = amp*self.scale
         first_term = 1.0
         second_term = self.skew
@@ -156,6 +157,14 @@ class TwoExpParameters(Parameters, object):
         self.energy = norm*(first_term + second_term)
 
         return self.energy
+
+    def compute_fluence(self, fluence, counts_sum):
+
+        count_energy = self.compute_energy()
+        count_ratio = count_energy/counts_sum
+        self.fluence = fluence*count_ratio
+
+        return self.fluence
 
     def compute_duration(self, fraction=0.01):
 
@@ -191,7 +200,8 @@ class TwoExpParameters(Parameters, object):
 
 class TwoExpCombined(Parameters, object):
 
-    def __init__(self, par, ncomp, parclass=TwoExpParameters, scale_locked=False, skew_locked=False, log=True, bkg=False):
+    def __init__(self, par, ncomp, parclass=TwoExpParameters, scale_locked=False,
+                 skew_locked=False, log=True, bkg=False):
 
         """
         This object stores parameters for combinations of instances of the TwoExp model defined in word.
@@ -217,6 +227,7 @@ class TwoExpCombined(Parameters, object):
         self.scale_locked = scale_locked
         self.skew_locked = skew_locked
         self.parclass = parclass
+
 
         ### number of parameters per component
         npar = parclass.npar
@@ -363,6 +374,15 @@ class TwoExpCombined(Parameters, object):
 
         return e_all
 
+    def compute_fluence(self, fluence, counts_sum):
+
+        f_all = []
+        for a in self.all:
+            f = a.compute_fluence(fluence, counts_sum)
+            f_all.append(f)
+
+        return f_all
+
     def compute_duration(self):
 
         e_all = []
@@ -373,7 +393,7 @@ class TwoExpCombined(Parameters, object):
             bkg = 0.0
         #print("bkg: %f"%bkg)
         for a in self.all:
-            e = a.compute_duration(bkg=bkg)
+            e = a.compute_duration()
             e_all.append(e)
 
         return e_all

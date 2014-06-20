@@ -226,7 +226,7 @@ to make sure the entire burst is included.
 
 
 \section{Analysis Methods}
-
+\label{sec:methods}
 In order to successfully model the complex temporal variability in magnetar bursts, any modelling procedure must satisfy the following criteria: (1) it must be flexible enough to be applicable to a large number of bursts with distinctly different morphologies. We achieve this by decomposing magnetar burst light curves into one or more components with simple shapes, which, taken together, make up a burst. (2) The procedure must be largely automated, and be capable of sampling both the number of components as well as the model parameters for each component without human intervention. The latter is achieved by setting up a Bayesian model, where the number of components is a parameter to be sampled together with the corresponding parameters of the individual components. We use diffusive nested sampling as implemented in DNest \citep{brewer2011} to approximate the posterior distribution over all parameters. From samples of the posterior distribution,
 we can then study the properties of individual burst components, as well as their properties for a given burst.
 
@@ -390,11 +390,11 @@ these spikes can become a representation of the spikes observed in magnetar burs
 for an example of the model).
 
 
-
 For each component $n$, we have a set of free parameters $\{t_n, A_n, \tau_n, s_n \},$, for each model, i.e. each
 linear combination of components, we have a set of free parameters $\{\mean_{bg}, \{t_n, A_n, \tau_n, s_n\} \}$.
-The priors for these components are independent and identically distributed, such that priors are the same for
-a given type of parameter between components. 
+We set a uniform prior on the number of components $N$, where $N$ may lie between $0$ and $100$. 
+The priors for the free parameters of the individual components are independent and identically distributed, such that priors 
+are the same for a given type of parameter between components. 
 Because bursts are defined in such a way that the observed count rate must drop back to the background before the
 start and the end of each burst, we can simply define the prior on the time offset such that $t_n$ must lie between
 the start and end times of the burst light curve, $t_{\mathrm{start}} < t_n < t_\mathrm{end}$. 
@@ -529,9 +529,52 @@ We show an example of a burst light curve, together with random draws from the p
 
 \section{Results}
 
+We performed a first exploration of the models for individual bursts as well as the whole {\it Fermi}/GBM
+sample by sampling from the posterior pdf for each individual burst light curve, and considering large
+samples from the parameter space. For inferences across bursts, as mentioned in Section \ref{sec:methods},
+this implies a strong prior against any potential correlations between parameters, because we have essentially
+considered the bursts to be separate entities. Here, we restrict ourselves to simple, qualitative tests, and
+leave a full Bayesian hierarchical model with the power to quantify the results presented below to future work. 
+ 
+
+\subsection{Exploratory Data Analysis}
+
+
+\subsection{Testing the Prior Assumptions}
+
+Here, we report on a first test of the impact of choosing a different prior for various model parameters on the 
+results we present. Because we have little prior information about the nature of magnetar bursts and the details of
+the underlying physical processes producing them, we choose uninformative priors for all model parameters. However,
+there is still some leeway in the choice of these prior distributions, and thus it merits investigation whether changing
+any priors will have an appreciable impact on the conclusions we derive. 
+
+
+- make distribution of no of model parameters, see whether it varies for different priors
+- check whether exponential prior is more likely to admit many models with small-amplitude spikes
+
+\subsection{Testing SOC Predictions Qualitatively}
+
 
 
 \section{Discussion}
+
+\subsection{Crust Fracture Calculations}
+
+
+\subsection{Magnetospheric Time Scales}
+
+
+\section{Conclusions}
+
+- for the first time model magnetar light curve variability in a probabilistic (unbiased?) way \\
+- proof of principle: can extract information relevant to physical processes in the system \\
+- can in principle extract time scales and find correlations between parameters that may be
+indicative of SOC processes \\
+- need a *lot* more work on theory, both explosive reconnection and crust fracture processes \\
+- this research supposed to be a stepping stone towards a better understanding, need to be
+more driven by theoretical developments! \\
+- future directions: hierarchical models for proper inference over many bursts, hierarchical inference
+over different sources, testing priors + model shapes in a more rigorous way.
 
 
 \paragraph{acknowledgements}

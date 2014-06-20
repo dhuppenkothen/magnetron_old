@@ -1,6 +1,7 @@
 
 import numpy as np
 import glob
+import shutil
 
 import burstmodel
 import parameters
@@ -13,6 +14,26 @@ rc("text", usetex=True)
 import matplotlib.cm as cm
 import scipy.stats
 import scipy.optimize
+
+
+
+def move_posteriors():
+    """
+    Random function that moves files already run through DNest into a folder ./finished/.
+    That folder had better exist!
+
+    """
+    pfiles = glob.glob("*posterior*")
+    for p in pfiles:
+        fsplit = f.split("_")
+        froot = "%s_%s*"%(fsplit[0], fsplit[1])
+        nfiles = glob.glob(froot)
+        for n in nfiles:
+            shutil.move(n, "./finished/")
+
+
+    return
+
 
 def plot_posterior_lightcurves(datadir="./", nsims=10):
 
@@ -55,7 +76,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
 def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None):
 
     files = glob.glob("%s*posterior*"%datadir)
-    #print("files: " + str(files))
+    print("files: " + str(files))
 
     all_parameters, bids, nsamples = [], [], []
     for f in files:
@@ -247,6 +268,98 @@ def risetime_energy(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True
         close()
 
     return risetime_sample, energy_sample, sp_all, popt_all
+
+
+def risetime_fluence(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True, froot="test"):
+
+    if sample is None:
+        parameters_red,bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+
+    risetime_sample, fluence_sample = [], []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        risetime_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
+
+        #risetime_all = risetime_all.flatten()
+        fluence_all = np.array([np.array([a.fluence for a in s.all]) for s in sample])
+        #amplitude_all = amplitude_all.flatten()
+
+        risetime, fluence = [], []
+        for r,a in zip(risetime_all, fluence_all):
+            risetime.extend(r)
+            fluence.extend(a)
+
+        risetime_sample.append(risetime)
+        fluence_sample.append(fluence)
+
+
+    ### compute lower limit for rise times
+    rx = np.logspace(np.min([np.min(np.log10(r)) for r in risetime_sample]),
+                     np.max([np.max(np.log10(r)) for r in risetime_sample]),
+                     num=1000)
+
+    min_fluence = (1.0/dt)*rx
+
+    sp_all = []
+
+
+    popt_all, pcov_all = [], []
+
+
+    for i,(r,a) in enumerate(zip(risetime_sample, fluence_sample)):
+        a = np.array(a)
+        sp = scipy.stats.spearmanr(r,a)
+        sp_all.append(sp)
+
+        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=None, sigma=None)
+        popt_all.append(popt)
+        pcov_all.append(pcov)
+
+    popt_mean = np.mean(np.array(popt_all), axis=0)
+    popt_std = np.std(np.array(popt_all), axis=0)
+
+
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
+        for i,(r,a) in enumerate(zip(risetime_sample, fluence_sample)):
+            a = np.array(a)
+            #sp = scipy.stats.spearmanr(r,a)
+            #sp_all.append(sp)
+            scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
+
+        axis([np.min([np.min(np.log10(r)) for r in risetime_sample]),
+              np.max([np.max(np.log10(r)) for r in risetime_sample]),
+              np.min([np.min(np.log10(np.array(a))) for a in fluence_sample]),
+              np.max([np.max(np.log10(np.array(a))) for a in fluence_sample])])
+
+
+        ax.text(0.8,0.1, r"power law index $\gamma = %.2f \pm %.2f$"%(popt_mean[0],popt_std[0]),
+                verticalalignment='center', horizontalalignment='center', color='black', transform=ax.transAxes,
+                fontsize=16)
+
+
+
+        plot(np.log10(rx), np.log10(min_fluence), lw=2, color="black", ls="dashed")
+
+        xlabel(r"$\log{(\mathrm{rise\; time})}$ [s]", fontsize=20)
+        ylabel("total number of counts in a spike", fontsize=20)
+        title("total number of counts in a spike versus rise time")
+        savefig("%s_risetime_fluence.png"%froot, format="png")
+        close()
+
+    return risetime_sample, fluence_sample, sp_all, popt_all
+
 
 def risetime_skewness(sample=None, datadir="./", nsims=5, makeplot=True, froot="test"):
 
@@ -777,7 +890,7 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
     for i in xrange(nsims):
 
         sample = parameters_red[:,i]
-        energy_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
+        energy_all = np.array([np.array([a.energy for a in s.all if a.duration > 0.0]) for s in sample])
 
         #energy_all = energy_all.flatten()
         duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
@@ -806,7 +919,7 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
     popt_all, pcov_all = [], []
 
     for i,(r,a,amp) in enumerate(zip(duration_sample, energy_sample, amplitude_sample)):
-        a = np.array(a)/dt
+        a = np.array(a)
         sp = scipy.stats.spearmanr(r,a)
         sp_all.append(sp)
 
@@ -822,7 +935,7 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
         fig = figure(figsize=(12,9))
         ax = fig.add_subplot(111)
         for i,(r,a) in enumerate(zip(duration_sample, energy_sample)):
-            a = np.array(a)/dt
+            a = np.array(a)
             #sp = scipy.stats.spearmanr(r,a)
             #sp_all.append(sp)
             scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
@@ -844,6 +957,96 @@ def energy_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.000
         close()
 
     return duration_sample, energy_sample, sp_all, popt_all
+
+
+def fluence_duration(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.0005, p0=[1.5, 1.0], froot="test"):
+
+
+    if sample is None:
+        parameters_red,bids = extract_sample(datadir, nsims)
+    else:
+        parameters_red = sample
+
+
+    if nsims > parameters_red.shape[1]:
+        print("Number of available parameter sets smaller than nsims.")
+        nsims = parameters_red.shape[1]
+        print("Resetting nsims to %i."%nsims)
+
+
+    fluence_sample, duration_sample, amplitude_sample = [], [], []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        fluence_all = np.array([np.array([a.fluence for a in s.all if a.duration > 0.0]) for s in sample])
+
+        #fluence_all = fluence_all.flatten()
+        duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
+        #amplitude_all = amplitude_all.flatten()
+
+        amplitude_all = np.array([np.array([a.amp for a in s.all if a.duration > 0.0]) for s in sample])
+
+        #print("len fluence: " + str(len(fluence_all)))
+        #print("len amplitude: " + str(len(amplitude_all)))
+
+        fluence, duration, amplitude = [], [], []
+        for a,e,d in zip(amplitude_all, fluence_all, duration_all):
+            fluence.extend(e)
+            duration.extend(d)
+            amplitude.extend(a)
+
+        #print("len fluence: " + str(len(fluence)))
+        #print("len amplitude: " + str(len(amplitude)))
+
+
+        fluence_sample.append(fluence)
+        duration_sample.append(duration)
+        amplitude_sample.append(amplitude)
+
+    sp_all = []
+    popt_all, pcov_all = [], []
+
+    for i,(r,a,amp) in enumerate(zip(duration_sample, fluence_sample, amplitude_sample)):
+        a = np.array(a)
+        sp = scipy.stats.spearmanr(r,a)
+        sp_all.append(sp)
+
+        popt, pcov = scipy.optimize.curve_fit(straight, np.log10(r), np.log10(a), p0=[0.5,1.0], sigma=amp)
+        popt_all.append(popt)
+        pcov_all.append(pcov)
+
+
+    popt_mean = np.mean(popt_all, axis=0)
+    popt_std = np.std(popt_all, axis=0)
+
+    if makeplot:
+        fig = figure(figsize=(12,9))
+        ax = fig.add_subplot(111)
+        for i,(r,a) in enumerate(zip(duration_sample, fluence_sample)):
+            a = np.array(a)
+            #sp = scipy.stats.spearmanr(r,a)
+            #sp_all.append(sp)
+            scatter(np.log10(r),np.log10(a), color=cm.jet(i*20))
+
+        axis([np.log10(dt/10.0),
+              np.max([np.max(np.log10(r)) for r in duration_sample]),
+              np.min([np.min(np.log10(a)) for a in fluence_sample]),
+              np.max([np.max(np.log10(a)) for a in fluence_sample])])
+
+        ax.text(0.8,0.1, r"power law index $\gamma = %.2f \pm %.2f$"%(popt_mean[0],popt_std[0]),
+                verticalalignment='center', horizontalalignment='center', color='black', transform=ax.transAxes,
+                fontsize=16)
+
+
+        xlabel(r"$\log_{10}{(\mathrm{duration})}$ [s]", fontsize=20)
+        ylabel(r"$\log_{10}{(\mathrm{spike\; fluence})}$", fontsize=20)
+        title("duration versus total fluence")
+        savefig("%s_duration_fluence.png"%froot, format="png")
+        close()
+
+    return duration_sample, fluence_sample, sp_all, popt_all
+
 
 
 def skewness_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="test"):
@@ -1009,6 +1212,7 @@ def all_correlations(sample=None, bids=None, datadir="./", trigfile="sgr1550_ttr
 
     risetime, amplitude, sp_all, popt_all = risetime_amplitude(sample, nsims=nsims, makeplot=makeplot, froot=froot)
     risetime, energy, sp_all, popt_all = risetime_energy(sample, nsims=nsims, makeplot=makeplot, froot=froot)
+    risetime, fluence, sp_all, popt_all = risetime_fluence(sample, nsims=nsims, makeplot=makeplot, froot=froot)
     risetime, skewness, sp_all, popt_all = risetime_skewness(sample, nsims=nsims, makeplot=makeplot, froot=froot)
     risetime, duration, sp_all, popt_all = risetime_duration(sample, nsims=nsims, makeplot=makeplot,
                                                              froot=froot, dt=dt)
@@ -1019,6 +1223,8 @@ def all_correlations(sample=None, bids=None, datadir="./", trigfile="sgr1550_ttr
                                                    makeplot=makeplot, froot=froot)
 
     duration, energy, sp_all, popt_all = energy_duration(sample, nsims=nsims, makeplot=makeplot, froot=froot,
+                                                         dt=dt)
+    duration, fluence, sp_all, popt_all = fluence_duration(sample, nsims=nsims, makeplot=makeplot, froot=froot,
                                                          dt=dt)
 
     nspikes = nspike_dist(sample, nsims=nsims, datadir=datadir, makeplot=makeplot, froot=froot)
@@ -1052,7 +1258,7 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.00
         duration = np.array([[a.duration for a in p.all] for p in pars])
         t0 = np.array([[a.t0 for a in p.all] for p in pars])
         amplitude = np.array([[a.amp for a in p.all] for p in pars])
-        energy = np.array([[a.energy for a in p.all] for p in pars])
+        fluence = np.array([[a.fluence for a in p.all] for p in pars])
         waiting_times = np.array([np.array(t[1:])-np.array(t[:-1]) for t in t0])
 
 
@@ -1062,7 +1268,7 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.00
         #waitingtime_all.append(waiting_times)
 
         sorted_data = [sorted(zip(t,r,d,a,e,w)) for t,r,d,a,e,w
-                       in zip(t0, risetime, duration, amplitude, energy, waiting_times)]
+                       in zip(t0, risetime, duration, amplitude, fluence, waiting_times)]
 
         sorted_data_all.append(sorted_data)
 
@@ -1153,7 +1359,7 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.00
             rise = np.array([s[n][1] for s in samp if len(s)>n])
             duration = np.array([s[n][2] for s in samp if len(s)>n])
             amp = np.array([s[n][3] for s in samp if len(s)>n])/dt
-            energy = np.array([s[n][4] for s in samp if len(s)>n])/dt
+            fluence = np.array([s[n][4] for s in samp if len(s)>n])/dt
             waitingtime = np.array([s[n][5] for s in samp if len(s)>n])
 
             ax_rise.hist(np.log10(rise), range=[np.log10(0.00005), np.log10(2.5)], bins=40,
@@ -1162,7 +1368,7 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.00
             ax_amp.hist(np.log10(amp), range=[np.log10(1.0/dt), np.log10(3.5e5)], bins=40,
                          normed=True, alpha=0.6, color=cm.jet(i*20.0))
 
-            ax_energy.hist(np.log10(energy), range=[np.log10(1.0/dt), np.log10(3.5e6)], bins=40,
+            ax_energy.hist(np.log10(fluence), range=[np.log10(1.0/dt), np.log10(3.5e6)], bins=40,
                          normed=True, alpha=0.6, color=cm.jet(i*20.0))
 
             ax_duration.hist(np.log10(duration), range=[np.log10(0.00005), np.log10(2.5)], bins=40,
@@ -1188,9 +1394,9 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.00
     savefig("%s_duration_evolution.png"%froot, format="png")
     close()
 
-    ax_energy_top.set_xlabel(r"$\log_{10}{(\mathrm{energy})}$", fontsize=20)
-    ax_energy_top.set_ylabel(r"$p(\log_{10}{(\mathrm{energy})})$", fontsize=20)
-    savefig("%s_energy_evolution.png"%froot, format="png")
+    ax_energy_top.set_xlabel(r"$\log_{10}{(\mathrm{fluence})}$", fontsize=20)
+    ax_energy_top.set_ylabel(r"$p(\log_{10}{(\mathrm{fluence})})$", fontsize=20)
+    savefig("%s_fluence_evolution.png"%froot, format="png")
     close()
 
     ax_amp_top.set_xlabel(r"$\log_{10}{(\mathrm{amplitude})}$", fontsize=20)
@@ -1221,27 +1427,27 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
         print("Resetting nsims to %i."%nsims)
 
 
-    energy_sample, duration_sample, amp_sample = [], [],  []
+    fluence_sample, duration_sample, amp_sample = [], [],  []
 
     for i in xrange(nsims):
 
         sample = parameters_red[:,i]
-        energy_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
+        fluence_all = np.array([np.array([a.fluence for a in s.all if a.duration > 0.0]) for s in sample])
 
-        #energy_all = energy_all.flatten()
+        #fluence_all = fluence_all.flatten()
         duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
         #amplitude_all = amplitude_all.flatten()
 
         amp_all = np.array([np.array([a.amp for a in s.all if a.duration > 0.0]) for s in sample])
 
-        duration, energy, amp = [], [], []
-        for d,e,a in zip(duration_all, energy_all, amp_all):
+        duration, fluence, amp = [], [], []
+        for d,e,a in zip(duration_all, fluence_all, amp_all):
             duration.extend(d)
-            energy.extend(e)
+            fluence.extend(e)
             amp.extend(a)
 
 
-        energy_sample.append(energy)
+        fluence_sample.append(fluence)
         duration_sample.append(duration)
         amp_sample.append(amp)
 
@@ -1282,8 +1488,8 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
         ax2 = fig.add_subplot(133)
         n_all = []
         min_e, max_e = [], []
-        for i,e in enumerate(energy_sample):
-            e = np.array(e)/dt
+        for i,e in enumerate(fluence_sample):
+            e = np.array(e)
 
             min_e.append(np.min(np.log10(e)))
             max_e.append(np.max(np.log10(e)))
@@ -1293,9 +1499,9 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
             n_all.append(n)
 
         axis([np.min(min_e), np.max(max_e), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
-        ax2.set_xlabel(r"$\log_{10}{(\mathrm{Energy})}$", fontsize=24)
-        ax2.set_ylabel("p($\log_{10}{(\mathrm{Energy})}$)", fontsize=24)
-        ax2.set_title("Differential Energy Distribution", fontsize=24)
+        ax2.set_xlabel(r"$\log_{10}{(\mathrm{Fluence})}$", fontsize=24)
+        ax2.set_ylabel("p($\log_{10}{(\mathrm{Fluence})}$)", fontsize=24)
+        ax2.set_title("Differential Fluence Distribution", fontsize=24)
 
 
         savefig("%s_diff_dist.png"%froot, format="png")
@@ -1505,7 +1711,8 @@ def fit_distribution(func, x, y, p0):
 ##### OLD CODE: NEED TO CHECK THIS! ##########
 
 
-def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="sgr1550_ttrig.dat"):
+def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="sgr1550_ttrig.dat",
+                       efile="sgr1550_fluence.dat"):
 
     """
     Read output from RJObject/DNest3 run and return in a format more
@@ -1523,6 +1730,21 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
     #print("filename: " + str(filename))
     #print("shape alldata: " + str(alldata.shape))
 
+
+    if not efile is None:
+        edata = burstmodel.conversion("%s%s"%(datadir, efile))
+        bids_energy = np.array(edata[0][1:])
+        bsts_energy = np.array([np.float(e) for e in edata[1][1:]])
+        fluence = np.array([np.float(e) for e in edata[2][1:]])
+
+        #print("ttrig_all: " + str(ttrig_all))
+        fsplit = filename.split("/")[-1]
+        bid_data = fsplit.split("_")[0]
+        bst_data = fsplit.split("_")[1]
+        #print("bid_data: " + str(bid_data))
+        bind = np.where((bids_energy == bid_data) & (np.float(bst_data) == bsts_energy))[0][0]
+        #print("bind: %i"%bind)
+        b_fluence = fluence[bind]
 
 
     if not trigfile is None:
@@ -1594,11 +1816,13 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
     ## pull out the ones that are not zero
     paras_real = []
 
+
     for p,a,sc,sk in zip(pos_all, amp_all, scale_all, skew_all):
         paras_real.append([(pos+ttrig,scale,amp,skew) for pos,amp,scale,skew in zip(p,a,sc,sk) if pos != 0.0])
 
 
-    sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax, "parameters":paras_real}
+    sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax,
+                   "parameters":paras_real, "fluence":b_fluence}
 
     return sample_dict
 
@@ -1653,6 +1877,15 @@ def extract_real_spikes(sample_dict, min_scale=1.0e-4):
 
 def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None):
 
+
+    fname = filename.split("/")[-1]
+    fsplit = fname.split("_")
+    datafile = "%s%s_%s_all_data.dat"%(datadir, fsplit[0], fsplit[1])
+
+    times, counts = burstmodel.read_gbm_lightcurves(datafile)
+
+    sum_counts = np.sum(counts)
+
     ### extract parameters from file
     sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile)
 
@@ -1663,6 +1896,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
 
     nbursts_all = sample_dict["nbursts"]
 
+    fluence = sample_dict["fluence"]
 
     ### if there's no artificial threshold for the amplitude, then set it to the background level
     if bkg is None:
@@ -1692,6 +1926,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
         p = parameters.TwoExpCombined(pars_flat, int(nbursts), log=False, bkg=True)
         e_all = p.compute_energy()
         d_all = p.compute_duration()
+        f_all = p.compute_fluence(fluence, sum_counts)
 
         parameters_all.append(p)
 

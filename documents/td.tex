@@ -89,7 +89,7 @@ At the same time, there is a lack of understanding of the underlying physical pr
 model for highly variable transient events, based on a decomposition of the light curve into simple shapes, without knowing the number of components in the model a priori. We demonstrate the 
 power of this approach on a large sample of magnetar bursts, and, for the first time, connect variability in magnetar bursts to the time scales thought to govern the underlying physics.
 
-\begin{figure*}[h]
+\begin{figure*}[htbp]
 \begin{center}
 \includegraphics[width=18cm]{example_bursts.pdf}
 \caption{Six example bursts observed with \fermi/GBM from the magnetar SGR J1550-5418. Bursts show a complex morphology of one or more
@@ -320,6 +320,7 @@ where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisati
 \begin{eqnarray}
 p(\bm{\counts} | H) & = & \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
 && p(N)p(\alpha) \prod\limits_{n=0}^{N}  p(\{\bm{\theta}_n\}\given \alpha) d\bm{\alpha} dN d\bm{\theta}_1 ... d\bm{\theta}_N \; .
+\label{eqn:marginal}
 \end{eqnarray}
 
 The marginal likelihood involves integration in a high-dimensional parameter space, which is analytically intractable for all but the
@@ -356,15 +357,6 @@ For the type of exploratory data analysis considered here, this is sufficient. A
 where many bursts are considered in the same model, with appropriate priors on any quantities to be measured across samples of many bursts. This can, in turn,
 be extended again to make inferences across, for example, different magnetars. The latter two steps are beyond the scope of this work, but will be explored in the future.
 
-
-\subsection{Model shapes}
-\label{sec:wordmodel}
-
-The model defined in Section \ref{sec:model} is fairly general: it is valid for any Poisson-distributed light curve thought to be composed several individual components of
-the same shape, but with potentially different individual parameters (such as amplitudes and widths). 
-We have made only three assumptions so far: the likelihood follows a Poisson distribution, the priors for the number of components $N$ and the hyper parameters $\bm{\alpha}$ are independent,
-and the priors on the parameters of the model for the individual components are independent of each other and identically distributed. 
-Here, we now refine this model for magnetar bursts specifically. However, changing the model shape for use with different source classes (e.g. GRBs) is straightforward.
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=9cm]{word.pdf}
@@ -375,6 +367,15 @@ $t$ describing the location of the peak count rate in a time series, and an ampl
 \label{fig:word_example}
 \end{center}
 \end{figure}
+\subsection{Model shapes}
+\label{sec:wordmodel}
+
+The model defined in Section \ref{sec:model} is fairly general: it is valid for any Poisson-distributed light curve thought to be composed several individual components of
+the same shape, but with potentially different individual parameters (such as amplitudes and widths). 
+We have made only three assumptions so far: the likelihood follows a Poisson distribution, the priors for the number of components $N$ and the hyper parameters $\bm{\alpha}$ are independent,
+and the priors on the parameters of the model for the individual components are independent of each other and identically distributed. 
+Here, we now refine this model for magnetar bursts specifically. However, changing the model shape for use with different source classes (e.g. GRBs) is straightforward.
+
 Magnetar bursts are short events composed of one or more sharp, spike-like features (see Figure \ref{fig:example_bursts} for various examples). We model these features
 with a sharp spike consisting of an exponential rise and an exponential decay of the type:
 
@@ -411,6 +412,18 @@ start and the end of each burst, we can simply define the prior on the time offs
 the start and end times of the burst light curve, $t_{\mathrm{start}} < t_n < t_\mathrm{end}$. 
 For the amplitude $A_n$ and the rise timescale $\tau_n$, we choose exponential priors:
 
+\begin{figure*}[htbp]
+%\begin{center}
+\includegraphics[width=\textwidth]{example_dnest_result.pdf}
+\caption{An example burst from the magnetar SGR J1550-5418, in an observation taken on 2009 January 22 (ObsID 090122173). In the left
+panel, the light curve at high time resolution, $\Delta t = 5 \times 10^{-4}$, and model light curves for $10$ random draws from the posterior pdf. 
+On the right, the marginalised posterior pdf over the possible number of components in the model. The posterior for the number of components is 
+quite well constrained between $9$ and $17$ components.}
+\label{fig:dnest_example}
+%\end{center}
+\end{figure*}
+
+
 \begin{eqnarray}
 p(A \given \mu_A) &=& e^{(A/\mu_A)} \\
 p(\tau \given \mu_{\tau} & = & e^{(\frac{\tau - \tau_{\mathrm{min}}}{\mu_{\mathrm{\tau}}})} \; ,
@@ -424,16 +437,6 @@ The prior on the skewness parameter $s_n$ is a uniform distribution with a mean 
 that the log-skewness must lie in the range $(a-b) < \log{(s)} < (a+b)$. A definition in terms of mean and half-width ensures
 that positive and negative skews are equally likely a priori.
 
-\begin{figure*}[h]
-\begin{center}
-\includegraphics[width=\textwidth]{example_dnest_result.pdf}
-\caption{An example burst from the magnetar SGR J1550-5418, in an observation taken on 2009 January 22 (ObsID 090122173). In the left
-panel, the light curve at high time resolution, $\Delta t = 5 \times 10^{-4}$, and model light curves for $10$ random draws from the posterior pdf. 
-On the right, the marginalised posterior pdf over the possible number of components in the model. The posterior for the number of components is 
-quite well constrained between $9$ and $17$ components.}
-\label{fig:dnest_example}
-\end{center}
-\end{figure*}
 
 The prior on the background parameter, finally, depends on the data itself. It is log-uniform, with boundaries between 
 $\log{(10^{-3}\mu_\counts)} < \log{(\counts_{\mathrm{bg}})} < \log{(10^{3} \mu_\counts)}$, where $\mu_\counts$ is the average count
@@ -547,8 +550,16 @@ this implies a strong prior against any potential correlations between parameter
 considered the bursts to be separate entities. Here, we restrict ourselves to simple, qualitative tests, and
 leave a full Bayesian hierarchical model with the power to quantify the results presented below to future work. 
 
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=9cm]{sgr1550_nspikes.pdf}
+\caption{Number of components in a given burst for $339$ modelled bursts.}
+\label{fig:spikes}
+\end{center}
+\end{figure}
 
 \subsection{Exploratory Data Analysis}
+\label{sec:exploration}
 
 A first exploration of the data reveals that most bursts can be represented with only a few spikes, of the order of 
 $10$ or less (see also Figure \ref{fig:spikes}). Because we use very high-resolution data for this analysis in order to
@@ -567,6 +578,14 @@ that including the smallest features in the analysis does not change our results
 waiting times and amplitudes have a stronger tail at small waiting times and amplitudes, but their inclusions changes neither
 the qualitative behaviour nor the conclusions we draw from this analysis. It would be interesting to explore their presence
 using bursts from low-background instruments such as \rxte.
+\begin{figure*}[htbp]
+\begin{center}
+\includegraphics[width=\textwidth]{sgr1550_diff_dist.pdf}
+\caption{Differential distributions for the duration, count-space amplitude and fluence for all model components from $339$ bursts. In each bin, we plot the mean for
+that bin from $100$ ensembles of random draws from the posterior pdf of each burst.}
+\label{fig:diffdist}
+\end{center}
+\end{figure*}
 
 Four quantities are of particular interest for their potential connection with physical processes: the spike duration, rise time scale,
 energy and waiting time between consecutive spikes. The exponential rise time scale for each model component is a free parameter
@@ -576,22 +595,59 @@ in our model, and thus easily extracted. We compute spike duration by finding th
  THESE ARE THE RIGHT REFS!]. Because the distance is not well constrained for SGR J1550-5418, we do not convert from
  fluence to energy, but for a qualitative comparison to the expected correlation between the various quantities, this conversion is irrelevant.
  
- In Figure \ref{fig:correlations}, we plot rise time and duration against fluence for all $336$ bursts. There is a clear positive
- correlation between both rise time and fluence as well as spike duration and fluence (Spearman rank coefficient $R = 0.29$ with $p=10^{-5}$ for duration versus fluence,
- and $R = 0.25$ with $p = 0.01$ for duration versus rise time). Clearly, more energetic spikes require both more time to rise to the peak,
- and radiate away their energy for a longer overall time. [CHECK SOC PREDICTIONS AND ANNA'S THEORY WAFFLE].
+ Here, we test for both correlation between fluence and rise time as well as fluence and duration, as well as construct differential distributions
+ in order to compare with predictions from SOC theory. We construct differential distributions by picking a sample from the posterior distribution
+ for each burst in the data set, and hence form an ensemble of posterior draws for all bursts, for which we can construct the differential distribution.
+ We repeat this process $N$ times, such that we have $N$ ensembles of burst models and $N$ differential distributions, and plot the mean of the distribution in
+ each bin of that distribution. 
+ Similarly, we test for correlations by $N$ ensembles of burst models and testing for the presence of a correlation using a Spearman rank
+ coefficient for each ensemble. We then report the mean and standard deviation of the distribution of coefficients for $N$ draws. 
  
 
-\subsection{Testing SOC Predictions Qualitatively}
+ 
+ 
+ In Figure \ref{fig:diffdist}, we show differential distributions of duration, peak amplitude (measured in count space) and fluence for all spikes in $339$ bursts. All three distributions are
+ strongly peaked, and both amplitude and fluence are skewed towards larger values. The latter is exacerbated when considering the unfiltered sample of 
+ spikes, producing longer tails for both amplitude and fluence, but not changing the qualitative behaviour of the distributions. We will consider the behaviour of
+ the differential distributions in detail and compare the observed distributions to predictions from SOC theory in Section \ref{sec:sox}
 
-Magnetar bursts have often been placed in the context of self-organised criticality. In this framework, a physical system continuously drives
-itself towards a critical point, without fine tuning or outside intervention. Upon reaching this critical point, a catastrophic energy
-release will return the system to a sub-critical state, upon which the cycle begins anew. One of the defining features of the SOC
-framework is that while the details of the physical processes in question depend on the physical system, SOC leads to an overall
-characteristic behaviour with similar statistical properties for many different systems. Of particular interest are the predictions for 
-correlations between various quantities - most importantly, duration, peak amplitude, total released energy and waiting times -  as well
-as their differential distributions. 
+ \begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=9cm]{sgr1550_waitingtimes.pdf}
+\caption{Waiting time distribution between consecutive spikes for $339$ bursts. Waiting times are the times between peak amplitudes of spikes, and are only computed for
+continuous stretches of data between them, i.e. time series without data gaps. This effectively sets an upper limit to the waiting time that can be measured of $330\,\mathrm{s}$, the 
+length of a single \fermi/GBM trigger.}
+\label{fig:waitingtimes}
+\end{center}
+\end{figure}
 
+In Figure \ref{fig:waitingtimes}, we show the differential distribution of waiting times for $339$ magnetar bursts. We use only waiting times 
+between consecutive spikes that have no data gaps between them. This effectively sets an upper limit to the waiting time distribution of $330\,\mathrm{s}$,
+the length of a single \fermi/GBM trigger. The distribution is clearly bimodal: a broad peak at long waiting times has a maximum at $\sim 20 \,\mathrm{s}$, a
+second peak at smaller waiting times, $t_\mathrm{wait} \approx 0.05 \,\mathrm{s}$. This implies that there are two significantly different time scales
+in the system, as expected. In our definition, bursts are clusters of individual peaks separated by
+waiting times much longer than their durations. It is the time between these bursts that sets the peak in long waiting times. This distribution has a peak about
+an order of magnitude lower than that reported for the strongest-field magnetars, SGR 1900+14\citep{gogus1999} and SGR 1806-20\citep{gogus2000} as observed
+with \rxte, however, we note that the intrinsic short duration of \fermi/GBM observation imposes an artificial limit of $330\,\mathrm{s}$ on the waiting times we measure,
+and thus likely introduces a significant bias at long waiting times. 
+The distribution of short waiting times, on the other hand, traces the time between consecutive spikes within a burst. The sharp peak of this distribution indicates
+that there is a characteristic time scale determining the waiting time between individual peaks within a burst as well. 
+
+ \begin{figure*}[htbp]
+\begin{center}
+\includegraphics[width=\textwidth]{sgr1550_correlations.pdf}
+\caption{}
+\label{fig:correlations}
+\end{center}
+\end{figure*}
+
+In Figure \ref{fig:correlations}, we plot rise time and duration against fluence for all $336$ bursts. There is a clear positive
+correlation between both rise time and fluence as well as spike duration and fluence (Spearman rank coefficient $R = 0.29$ with $p=10^{-5}$ for duration versus fluence,
+and $R = 0.25$ with $p = 0.01$ for duration versus rise time). Clearly, more energetic spikes require both more time to rise to the peak,
+and radiate away their energy for a longer overall time. This is consistent with the results from \citep{gogus1999}, who found a strong correlation between
+duration and fluence for bursts from SGR 1900+14, which could be modelled with a power law with an index of $1.13$. 
+
+ 
 
 \subsection{Testing the Prior Assumptions}
 
@@ -600,10 +656,61 @@ the underlying physical processes producing them, we choose uninformative priors
 there is still some leeway in the choice of these prior distributions, and thus it merits investigation whether changing
 any priors will have an appreciable impact on the conclusions we derive. 
 
+The strongest source of uncertainty in terms of deriving conclusions from the data set comes from the priors for
+amplitudes and rise time. An exponential distribution favours low-amplitude spikes with short rise time, which, in principle,
+could give rise to a population of very short, very small spikes modelling individual photons. We have already shown in 
+Section \ref{sec:exploration} that the generally low number of components per burst disfavours this interpretation. In order
+to improve our understanding how this prior could influence our results, we implemented a log-normal prior for both rise time
+and amplitude, with the mean and standard deviations of each distribution free hyper parameters. Because of the use of improper priors
+on the background parameter as well as the hyper parameter for the amplitude, we do not perform a formal model selection
+(e.g. using the marginal likelihood introduced in Equation \ref{eqn:marginal}), but simply explore how the use of different priors
+changes the results reported in the previous section.
 
+
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=9cm]{sgr1550_prior_nspikes.pdf}
+\caption{}
+\label{fig:nspikes_prior}
+\end{center}
+\end{figure}
+
+\begin{figure*}[htbp]
+\begin{center}
+\includegraphics[width=\textwidth]{sgr1550_prior_diff_dist.pdf}
+\caption{}
+\label{fig:diff_prior}
+\end{center}
+\end{figure*}
+
+
+
+In Figures \ref{fig:nspikes_prior} and \ref{fig:diff_prior} we present a comparison between the distributions for the number of spikes 
+per burst from $82$ bursts for each set of priors, and the differential distributions for the most important quantities for both priors.
+In both cases, we consider the full, unfiltered sample, since it is the spikes with the smallest amplitudes where we expect to see
+an appreciable difference. Overall, there is no significant difference in the number of components per burst, indicating that both 
+priors lead to similar results. However, we do see an excess of small-amplitude spikes for a log-normal prior in the differential 
+distributions for duration, amplitude, and, correspondingly, fluence. Using lognormal priors on the amplitude seems to increase
+the probability of a model consisting of many low-amplitude spikes. Why exactly this should be the case is not immediately 
+obvious and merits further exploration. However, given that the presence of these low-amplitude spikes is uncertain no matter
+the prior, and they do little to change our conclusions from the data, we defer this in-depth exploration of prior 
 
 
 \section{Discussion}
+
+
+\subsection{Comparison with SOC Predictions}
+\label{sec:soc}
+
+Magnetar bursts have often been placed in the context of self-organised criticality. In this framework, a physical system continuously drives
+itself towards a critical point, without fine tuning or outside intervention. Upon reaching this critical point, a catastrophic energy
+release will return the system to a sub-critical state, upon which the cycle begins anew. One of the defining features of the SOC
+framework is that while the details of the physical processes in question depend on the physical system, SOC leads to an overall
+characteristic behaviour with similar statistical properties for many different systems. In particular, the SOC framework makes predictions for 
+correlations between various quantities - most importantly, duration, peak amplitude, total released energy and waiting times -  as well
+as their differential distributions. 
+
 
 \subsection{Crust Fracture Calculations}
 

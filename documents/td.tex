@@ -18,7 +18,7 @@
 
 \newcommand{\project}[1]{\textsl{#1}}
 \newcommand{\fermi}{\project{Fermi}}
-\newcommand{\RXTE}{\project{RXTE}}
+\newcommand{\rxte}{\project{RXTE}}
 \newcommand{\given}{\,|\,}
 \newcommand{\dd}{\mathrm{d}}
 \newcommand{\counts}{y}
@@ -390,6 +390,7 @@ with a sharp spike consisting of an exponential rise and an exponential decay of
 \begin{equation}
 \word(t) = A \left\{\begin{array}{ll}\exp(t-t_{\mathrm{offset}}/\tau) & \mbox{for $t < t_{\mathrm{offset}}$}\\ 
 \exp(-(t-t_{\mathrm{offset}})/(\tau s)) & \mbox{for $t \geq t_\mathrm{offset}$}\end{array}\right. \, ,
+\label{eqn:word}
 \end{equation}
 %\end{eqnarray}
 
@@ -545,24 +546,60 @@ samples from the parameter space. For inferences across bursts, as mentioned in 
 this implies a strong prior against any potential correlations between parameters, because we have essentially
 considered the bursts to be separate entities. Here, we restrict ourselves to simple, qualitative tests, and
 leave a full Bayesian hierarchical model with the power to quantify the results presented below to future work. 
- 
+
 
 \subsection{Exploratory Data Analysis}
+
+A first exploration of the data reveals that most bursts can be represented with only a few spikes, of the order of 
+$10$ or less (see also Figure \ref{fig:spikes}). Because we use very high-resolution data for this analysis in order to
+be sensitive to short timescales of $< 1\mathrm{ms}$, a primary source for potential biases in our analysis is the
+danger that the model might try to represent individual (e.g. background) photons as spike features; this would greatly
+skew the resulting distributions towards small amplitudes and very short durations. The fact that we have many bursts
+fit with few spikes indicates that this might not be much of a problem. However, we also note that there is an appreciable fraction
+of spikes ($\sim 35\%$) with amplitudes smaller than the inferred background count level for the respective model these spikes 
+are part of. We cannot say with certainty whether these features are present: they may well be, but the intrinsic background
+of the instrument makes it difficult to ascertain their presence. Excluding these features produces a narrower distribution
+of spikes per burst, with the maximum clustered at $2$ spikes her bursts (see Figure \ref{fig:spikes}).
+
+We exclude these features from the following analysis and restrict ourselves the bright spikes only. This effectively puts a
+lower limit on the spike amplitudes we consider, which then depends on the instrumental and sky background. We note
+that including the smallest features in the analysis does not change our results in a significant way: distributions for 
+waiting times and amplitudes have a stronger tail at small waiting times and amplitudes, but their inclusions changes neither
+the qualitative behaviour nor the conclusions we draw from this analysis. It would be interesting to explore their presence
+using bursts from low-background instruments such as \rxte.
+
+Four quantities are of particular interest for their potential connection with physical processes: the spike duration, rise time scale,
+energy and waiting time between consecutive spikes. The exponential rise time scale for each model component is a free parameter
+in our model, and thus easily extracted. We compute spike duration by finding the time between the two points at which the flux drops by a
+ factor of $100$ on either side of the spike peak. Finally, we define energy by integrating Equation \ref{eqn:word} analytically in count space,
+ then converting from count space to fluence using the spectral modelling results from \citet{vanderhorst2012} and \citet{vonkienlin2012} [CHECK WHETHER
+ THESE ARE THE RIGHT REFS!]. Because the distance is not well constrained for SGR J1550-5418, we do not convert from
+ fluence to energy, but for a qualitative comparison to the expected correlation between the various quantities, this conversion is irrelevant.
+ 
+ In Figure \ref{fig:correlations}, we plot rise time and duration against fluence for all $336$ bursts. There is a clear positive
+ correlation between both rise time and fluence as well as spike duration and fluence (Spearman rank coefficient $R = 0.29$ with $p=10^{-5}$ for duration versus fluence,
+ and $R = 0.25$ with $p = 0.01$ for duration versus rise time). Clearly, more energetic spikes require both more time to rise to the peak,
+ and radiate away their energy for a longer overall time. [CHECK SOC PREDICTIONS AND ANNA'S THEORY WAFFLE].
+ 
+
+\subsection{Testing SOC Predictions Qualitatively}
+
+Magnetar bursts have often been placed in the context of self-organised criticality. In this framework, a physical system continuously drives
+itself towards a critical point, without fine tuning or outside intervention. Upon reaching this critical point, a catastrophic energy
+release will return the system to a sub-critical state, upon which the cycle begins anew. One of the defining features of the SOC
+framework is that while the details of the physical processes in question depend on the physical system, SOC leads to an overall
+characteristic behaviour with similar statistical properties for many different systems. Of particular interest are the predictions for 
+correlations between various quantities - most importantly, duration, peak amplitude, total released energy and waiting times -  as well
+as their differential distributions. 
 
 
 \subsection{Testing the Prior Assumptions}
 
-Here, we report on a first test of the impact of choosing a different prior for various model parameters on the 
-results we present. Because we have little prior information about the nature of magnetar bursts and the details of
+Because we have little prior information about the nature of magnetar bursts and the details of
 the underlying physical processes producing them, we choose uninformative priors for all model parameters. However,
 there is still some leeway in the choice of these prior distributions, and thus it merits investigation whether changing
 any priors will have an appreciable impact on the conclusions we derive. 
 
-
-- make distribution of no of model parameters, see whether it varies for different priors
-- check whether exponential prior is more likely to admit many models with small-amplitude spikes
-
-\subsection{Testing SOC Predictions Qualitatively}
 
 
 

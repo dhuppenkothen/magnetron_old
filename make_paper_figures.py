@@ -1,17 +1,18 @@
 import numpy as np
+import scipy.stats
+
 import word
 import burstmodel
 import parameters
+import dnest_sample
 
+import matplotlib.pyplot as plt
 from pylab import *
 from matplotlib.patches import FancyArrow
+import matplotlib.cm as cm
 
 rc("font", size=20, family="serif", serif="Computer Sans")
 rc("text", usetex=True)
-
-import matplotlib.cm as cm
-import cPickle as pickle
-import textwrap
 
 
 
@@ -184,244 +185,581 @@ def plot_example_dnest_lightcurve():
     return
 
 
-
-
-
-def parameter_distributions(filename, namestr="allbursts"):
-
+def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100):
     """
-    Make a bunch of distributions from the posteriors of a number of bursts.
+    Make a histogram of the number of spikes per bin
 
-    This requires a python pickle file with a dictionary of the posterior results of various
-    quantities, right now with keywords:
-    scale_max: posterior maximum of log(scale)
-    scale_cl: 0.05 lower quantile of log(scale)
-    scale_cu: 0.95 upper quantile of log(scale)
-    skew_max: posterior maximum of log(skew)
-    skew_cl: 0.05 lower quantile of log(skew)
-    skew_cuL 0.95 upper quantile of log(skew)
+    NOTE: requires files sgr1550_ttrig.dat and sgr1550_fluence.dat
 
-    At the moment, scale and skew are fixed for all words within a burst, but this could easily be changed.
-    Similarly, it should be just as easy to extend this to other parameters (e.g. position + amplitude).
-
-    The kind of file needed here is easily created by manipulating function plot_all_bursts in plot_parameters.py
-
+    @param datadir: directory with posterior files and data files.
+    @return:
     """
 
-    pfile = open(filename, "r")
-    allparas = pickle.load(pfile)
-    pfile.close()
-    scale_max = np.array(allparas["scale_max"])
-    scale_cl = np.array(allparas["scale_cl"])
-    scale_cu = np.array(allparas["scale_cu"])
-    skew_max = np.array(allparas["skew_max"])
-    skew_cl = np.array(allparas["skew_cl"])
-    skew_cu = np.array(allparas["skew_cu"])
+    ### parameters both filtered for low-amplitude bursts (with amp < bkg) and unfiltered
+    if par_unfiltered is None and par_filtered is None:
+        par_filtered, bids_filtered = \
+            dnest_sample.extract_sample(datadir=datadir,nsims=nsims, filter_weak=True, trigfile="sgr1550_ttrig.dat")
 
-    ### plot maximum scale for 1,5 and 10 words,
-    ### plot in log_10 instead of log_e for ease of interpreting timescales
-    hist(np.log10(np.exp(scale_max[:,0])), bins=15, color='navy', histtype='stepfilled', alpha=0.7, label="1 word")
-    hist(np.log10(np.exp(scale_max[:,4])), bins=15, color='darkred', histtype='stepfilled', alpha=0.7, label="5 words")
-    hist(np.log10(np.exp(scale_max[:,9])), bins=15, color='green', histtype='stepfilled', alpha=0.7, label="10 words")
-    legend()
-    xlabel(r"$\log_{10}{(\mathrm{scale})}$ [s]", fontsize=18)
-    ylabel(r"$N(\mathrm{bursts})$", fontsize=18)
-    title("Distribution of rise times for the 85 brightest bursts")
-    savefig(namestr + "_scale.eps", format="eps")
+        par_unfiltered, bids_unfiltered = \
+            dnest_sample.extract_sample(datadir=datadir, nsims=nsims, filter_weak=False, trigfile="sgr1550_ttrig.dat")
+
+
+    nspikes_unfiltered, nspikes_filtered = [], []
+    for i in xrange(nsims):
+
+        sample_unfiltered = par_unfiltered[:,i]
+        sample_filtered = par_filtered[:,i]
+
+        nspikes_u = np.array([len(s.all) for s in sample_unfiltered])
+        nspikes_f = np.array([len(s.all) for s in sample_filtered])
+
+        nspikes_unfiltered.append(nspikes_u)
+        nspikes_filtered.append(nspikes_f)
+
+
+    fig = figure(figsize=(12,9))
+    ax = fig.add_subplot(111)
+    nu_all, nf_all = [], []
+    for i,(u,f) in enumerate(zip(nspikes_unfiltered, nspikes_filtered)):
+
+        nu, ubins = np.histogram(u, bins=50, range=[1,50], normed=False)
+        nu_all.append(nu)
+
+        nf, fbins = np.histogram(f, bins=50, range=[1,50], normed=False)
+        nf_all.append(nf)
+
+    #print("nu shape " + str(np.shape(nu_all)))
+    nu_mean = np.mean(np.array(nu_all), axis=0)
+    nf_mean = np.mean(np.array(nf_all), axis=0)
+
+    y_bottom = np.zeros(len(nu_mean))
+
+    #print("len ubins: %i"%(len(ubins)))
+    #print("len y_bottom: %i"%(len(y_bottom)))
+    #print("len nu_means: %i"%(len(nu_mean)))
+
+    #ax.plot(ubins[:-1]+0.5, nu_mean, lw=2, color="navy", linestyle="steps-mid")
+    #ax.fill(ubins[:-1]+0.5, 0.0, nu_mean, color="navy", alpha=0.7)
+    #ax.plot(fbins[:-1]+0.5, nf_mean, lw=2, color="darkred", linestyle="steps-mid")
+    #ax.fill_between(fbins[:-1]+0.5, y_bottom, nf_mean, color="darkred", alpha=0.7, drawstyle='steps-mid')
+
+    #ax.plot(ubins[:-1]+0.5, nu_mean, color='navy',
+    #        linewidth=2, label=None, linestyle="steps-mid")
+    ax.bar(ubins[:-1]+0.5, nu_mean, ubins[1]-ubins[0]+0.005, color='navy',
+           alpha=0.6, linewidth=0, align="center", label="unfiltered sample")
+    #ax.plot(fbins[:-1]+0.5, nf_mean, color='darkred',
+    #        linewidth=2, label=None, linestyle="steps-mid")
+    ax.bar(fbins[:-1]+0.5, nf_mean, fbins[1]-fbins[0]+0.005, color='darkred',
+           alpha=0.6, linewidth=0, align="center", label="filtered sample")
+
+    axis([1,30, 0.0, np.max([np.max(nu_mean), np.max(nf_mean)])])
+
+    xlabel("Number of components", fontsize=24)
+    ylabel("Number of bursts", fontsize=24)
+    title("distribution of the number of components per burst")
+    legend(loc="upper right", prop={"size":24})
+    #savefig("sgr1550_nspikes.png", format="png")
+    #close()
+    draw()
+    plt.tight_layout()
+    savefig("sgr1550_nspikes.pdf", format="pdf")
     close()
 
-    ### DO same plot with skew parameters
-    hist(np.log10(np.exp(skew_max[:,0])), bins=15, color='navy', histtype='stepfilled', alpha=0.7, label="1 word")
-    hist(np.log10(np.exp(skew_max[:,4])), bins=15, color='darkred', histtype='stepfilled', alpha=0.7, label="5 words")
-    hist(np.log10(np.exp(skew_max[:,9])), bins=15, color='green', histtype='stepfilled', alpha=0.7, label="10 words")
-    xlabel(r"$\log_{10}{(\mathrm{skew})}$ [s]", fontsize=18)
-    ylabel(r"$N(\mathrm{bursts})$", fontsize=18)
-    legend()
-    title("Distribution of skew parameters for the 85 brightest bursts")
-    savefig(namestr + "_skew.eps", format="eps")
+    return
+
+
+def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True):
+
+    """
+    Make plots with correlations for duration versus fluence and rise time versus fluence.
+
+
+    @param sample:
+    @param datadir:
+    @param nsims:
+    @return:
+    """
+
+
+    if sample is None:
+        parameters_red,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
+                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+    else:
+        parameters_red = sample
+
+    fluence_sample, duration_sample, risetime_sample = [], [], []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        fluence_all = np.array([np.array([a.fluence for a in s.all if a.duration > 0.0]) for s in sample])
+
+        #fluence_all = fluence_all.flatten()
+        duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
+        #risetime_all = risetime_all.flatten()
+
+        risetime_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
+
+        #print("len fluence: " + str(len(fluence_all)))
+        #print("len risetime: " + str(len(risetime_all)))
+
+        fluence, duration, risetime = [], [], []
+        for a,e,d in zip(risetime_all, fluence_all, duration_all):
+            fluence.extend(e)
+            duration.extend(d)
+            risetime.extend(a)
+
+        #print("len fluence: " + str(len(fluence)))
+        #print("len risetime: " + str(len(risetime)))
+
+
+        fluence_sample.append(fluence)
+        duration_sample.append(duration)
+        risetime_sample.append(risetime)
+
+
+    r = np.array(np.log10(risetime_sample[0]))
+    f = np.array(np.log10(fluence_sample[0]))
+    d = np.array(np.log10(duration_sample[0]))
+
+    sp_dur_all, sp_rise_all = [], []
+
+    fig = figure(figsize=(18,9))
+    subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
+
+    ### first plot: duration versus fluence
+    ax1 = fig.add_subplot(121)
+
+    ax1.scatter(d, f, color="black")
+    ax1.axis([np.min(d)-0.1, np.max(d)+0.1, np.min(f)-0.1, np.max(f)+0.1])
+
+    ax1.set_xlabel(r"$\log_{10}{(\mathrm{Duration} \; \mathrm{[s]})}$ ", fontsize=24)
+    ax1.set_ylabel(r"$\log_{10}{(\mathrm{Fluence})}$ [$\mathrm{erg} \, \mathrm{cm}^{-1}$]", fontsize=24)
+
+
+    ### first plot: duration versus fluence
+    ax2 = fig.add_subplot(122, sharey=ax1)
+
+    ax2.scatter(r, f, color="black")
+    ax2.axis([np.min(r)-0.1, np.max(r)+0.1, np.min(f)-0.1, np.max(f)+0.1])
+
+    ax2.set_xlabel(r"$\log_{10}{(\mathrm{Rise\, timescale} \; \mathrm{[s]})}$ ", fontsize=24)
+    setp(ax2.get_yticklabels(), visible=False)
+    draw()
+    plt.tight_layout()
+
+    savefig('sgr1550_correlations.pdf', format="pdf")
+    close()
+    #### NEED TO COMPUTE SPEARMAN RANK COEFFICIENT
+    #for
+    #sp = scipy.stats.spearmanr(r,a)
+    #sp_all.append(sp)
+
+    return
+
+def waitingtime_plot(sample=None, bids=None, datadir="./", nsims=100, mean=True, filtered=True):
+
+    if sample is None and bids is None:
+        sample,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
+                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+
+
+
+    waitingtimes = dnest_sample.waiting_times(sample, bids, datadir=datadir, nsims=nsims, mean=mean,
+                                              trigfile="sgr1550_ttrig.dat", froot="sgr1550")
+
+    return
+
+
+def differential_plots(sample=None, datadir="./", nsims=100, mean=True, filtered=True, froot="sgr1550"):
+
+    if sample is None:
+        sample,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
+                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+
+    dnest_sample.differential_distributions(sample, nsims=100, mean=True, froot=froot)
+
+    return
+
+
+def priors_nspikes(par_exp=None, par_logn=None, par_gauss=None, datadir="./", nsims=100, filtered=False):
+
+    if par_exp is None:
+        par_exp,bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
+                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+
+    if par_logn is None:
+        par_logn, bids_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
+                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+
+#    if par_gauss is None:
+#        par_gauss, bids_gauss = dnest_sample.extract_sample(datadir=datadir+"gaussprior/", nsims=nsims,
+#                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+
+
+    nspikes_exp, nspikes_logn, nspikes_gauss= [], [], []
+    for i in xrange(nsims):
+        sample_exp = par_exp[:,i]
+        sample_logn = par_logn[:,i]
+#        sample_gauss = par_gauss[:,i]
+
+
+
+        nspikes_e= np.array([len(s.all) for s in sample_exp])
+        nspikes_l = np.array([len(s.all) for s in sample_logn])
+#        nspikes_g = np.array([len(s.all) for s in sample_gauss])
+
+        nspikes_exp.append(nspikes_e)
+        nspikes_logn.append(nspikes_l)
+#        nspikes_gauss.append(nspikes_g)
+
+
+
+    fig = figure(figsize=(12,9))
+    ax = fig.add_subplot(111)
+    ne_all, nl_all, ng_all = [], [], []
+    #for i,(e,l,g) in enumerate(zip(nspikes_exp, nspikes_logn, nspikes_gauss)):
+    for i,(e,l) in enumerate(zip(nspikes_exp, nspikes_logn)):
+
+        ne, ebins = np.histogram(e, bins=50, range=[1,50], normed=True)
+        ne_all.append(ne)
+
+        nl, lbins = np.histogram(l, bins=50, range=[1,50], normed=True)
+        nl_all.append(nl)
+
+#        ng, gbins = np.histogram(g, bins=50, range=[1,50], normed=True)
+#        ng_all.append(ng)
+
+
+    #print("nu shape " + str(np.shape(nu_all)))
+    ne_mean = np.mean(np.array(ne_all), axis=0)
+    nl_mean = np.mean(np.array(nl_all), axis=0)
+    ng_mean = np.mean(np.array(ng_all), axis=0)
+
+
+    ax.bar(ebins[:-1]+0.5, ne_mean, ebins[1]-ebins[0]+0.005, color='blue',
+           alpha=0.6, linewidth=0, align="center", label="exponential prior")
+
+    ax.bar(lbins[:-1]+0.5, nl_mean, lbins[1]-lbins[0]+0.005, color='limegreen',
+           alpha=0.6, linewidth=0, align="center", label="log-normal prior")
+
+#    ax.bar(gbins[:-1]+0.5, ng_mean, gbins[1]-gbins[0]+0.005, color='limegreen',
+#           alpha=0.6, linewidth=0, align="center", label="normal prior")
+
+    ng_mean = [0.0]
+    axis([1,30, 0.0, np.max([np.max(ne_mean), np.max(nl_mean), np.max(ng_mean)])])
+
+    xlabel("Number of components", fontsize=24)
+    ylabel("Number of bursts", fontsize=24)
+    #title("distribution of the number of components per burst")
+    legend(loc="upper right", prop={"size":24})
+    #savefig("sgr1550_nspikes.png", format="png")
+    #close()
+    draw()
+    plt.tight_layout()
+    savefig("sgr1550_prior_nspikes.pdf", format="pdf")
     close()
 
-    ### Plot all scales as a function of number of spikes in one plot, just to be able to look at them
-    ### all at once:
-    figure()
-    for l,m,u in zip(scale_cl, scale_max, scale_cu):
-        errorbar(np.arange(10)+1, np.log10(np.exp(m)), yerr=[np.log10(np.exp(m-l)),
-                                                                np.log10(np.exp(u-m))], fmt="--o", lw=2)
-    xlabel("Number of spikes in model", fontsize=18)
-    ylabel(r"$\log_{10}{(\mathrm{scale})}$ [s]", fontsize=18)
-    title("Change of rise time with number of spikes in model, for 85 brightest bursts")
-    savefig(namestr + "_scale_per_nspikes.eps", format='eps')
-    close()
+    return
 
 
-    ### Same for skew
-    figure()
-    for l,m,u in zip(skew_cl, skew_max, skew_cu):
-        errorbar(np.arange(10)+1, np.log10(np.exp(m)), yerr=[np.log10(np.exp(m-l)),
-                                                                np.log10(np.exp(u-m))], fmt="--o", lw=2)
-    xlabel("Number of spikes in model", fontsize=18)
-    ylabel(r"$\log_{10}{(\mathrm{skew})}$ [s]", fontsize=18)
-    title("Change of skew with number of spikes in model, for 85 brightest bursts")
-    savefig(namestr + "_skew_per_nspikes.eps", format='eps')
-    close()
+def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, filtered=False):
+
+    if par_exp is None:
+        par_exp,bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
+                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+
+    if par_logn is None:
+        par_logn, bids_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
+                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+
+    #if par_gauss is None:
+    #    par_gauss, bids_gauss = dnest_sample.extract_sample(datadir=datadir+"gaussprior/", nsims=nsims,
+    #                                                      filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
 
 
 
-    ### number of bins for the histogram
-    nbins = 15
+    db_exp, nd_exp, ab_exp, na_exp, fb_exp, nf_exp = \
+        dnest_sample.differential_distributions(sample=par_exp,  nsims=nsims, makeplot=False,
+                                                dt=0.0005, mean=True, normed=False)
 
-    ### plot an image of the scale histograms:
-    scale_hist_all = []
-    scale_max_log10 = np.log10(np.exp(scale_max))
-    smin = min(scale_max_log10.flatten())
-    smax = np.max(scale_max_log10.flatten())
+    db_logn, nd_logn, ab_logn, na_logn, fb_logn, nf_logn = \
+        dnest_sample.differential_distributions(sample=par_logn,  nsims=nsims, makeplot=False,
+                                                dt=0.0005, mean=True, normed=False)
 
-    for s in np.transpose(scale_max_log10):
-        h,bins = np.histogram(s, bins=nbins, range=[smin, smax])
-        scale_hist_all.append(h)
+    #db_gauss, nd_gauss, ab_gauss, na_gauss, fb_gauss, nf_gauss = \
+    #    dnest_sample.differential_distributions(sample=par_gauss,  nsims=nsims, makeplot=False,
+    #                                            dt=0.0005, mean=True, normed=True)
 
-    fig, ax = subplots()
-    imshow(scale_hist_all, cmap=cm.hot)
-    axis([-0.5, -0.5+nbins, -0.5, np.min(np.shape(scale_max_log10))-1])
+    fig = figure(figsize=(24,8))
+    subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
 
-    ### get limits of x-axis
-    start, end = ax.get_xlim()
-    ### define tick positions
-    tickpos = np.arange(start+0.5, end, 2)
-    ### define tick labels
-    ticklabels = np.arange(bins[0], bins[-1], (bins[-1]-bins[0])/float(len(tickpos)))
-    ### stupid way of defining significant digits
-    ticklabels = [str(l)[:5] for l in ticklabels]
-    xticks(tickpos, ticklabels)
-    xlabel(r"$\log_{10}{(\mathrm{scale})}$ [s]", fontsize=18)
-    ylabel("Number of spikes in model", fontsize=18)
-    savefig(namestr + "_scale_histograms.eps", format="eps")
-    close()
+    ### first subplot: differential duration distribution
+    ax = fig.add_subplot(131)
 
-    skew_hist_all = []
-    skew_max_log10 = np.log10(np.exp(skew_max))
-    smin = min(skew_max_log10.flatten())
-    smax = np.max(skew_max_log10.flatten())
+    ax.bar(db_exp[:-1]+0.5, nd_exp, db_exp[1]-db_exp[0], color='blue',
+               alpha=0.7, linewidth=0, align="center", label="exponential prior")
 
-    for s in np.transpose(skew_max_log10):
-        h,bins = np.histogram(s, bins=nbins, range=[smin, smax])
-        skew_hist_all.append(h)
+    ax.bar(db_logn[:-1]+0.5, nd_logn, db_logn[1]-db_logn[0], color='limegreen',
+               alpha=0.7, linewidth=0, align="center", label="log-normal prior")
 
-    fig, ax = subplots()
-    imshow(skew_hist_all, cmap=cm.hot)
-    axis([-0.5, -0.5+nbins, -0.5, np.min(np.shape(skew_max_log10))-1])
+    #ax.bar(db_gauss[:-1]+0.5, nd_gauss, db_gauss[1]-db_gauss[0], color='limegreen',
+    #           alpha=0.7, linewidth=0, align="center", label="normal prior")
 
-    ### get limits of x-axis
-    start, end = ax.get_xlim()
-    ### define tick positions
-    tickpos = np.arange(start+0.5, end, 2)
-    ### define tick labels
-    ticklabels = np.arange(bins[0], bins[-1], (bins[-1]-bins[0])/float(len(tickpos)))
-    ### stupid way of defining significant digits
-    ticklabels = [str(l)[:5] for l in ticklabels]
-    xticks(tickpos, ticklabels)
-    xlabel(r"$\log_{10}{(\mathrm{skew})}$ [s]", fontsize=18)
-    ylabel("Number of spikes in model", fontsize=18)
-    savefig(namestr + "_skew_histograms.eps", format="eps")
+    axis([-4.0, np.log10(30.0), 0.0, np.max([np.max(nd_exp), np.max(nd_logn)])+10.0])
+    legend(loc="upper left", prop={"size":20})
+
+    ax.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$", fontsize=24)
+    ax.set_ylabel("N($\log_{10}{\mathrm{Duration}}$)", fontsize=24)
+    #ax.set_title("Differential Duration Distribution", fontsize=24)
+
+    ax1 = fig.add_subplot(132)
+
+
+    min_a, max_a = [], []
+
+    ax1.bar(ab_exp[:-1]+0.5, na_exp, ab_exp[1]-ab_exp[0], color='blue',
+               alpha=0.6, linewidth=0, align="center", label="exponential prior")
+
+    ax1.bar(ab_logn[:-1]+0.5, na_logn, ab_logn[1]-ab_logn[0], color='limegreen',
+               alpha=0.6, linewidth=0, align="center", label="log-normal prior")
+
+    #ax1.bar(ab_gauss[:-1]+0.5, na_gauss, ab_gauss[1]-ab_gauss[0], color='limegreen',
+    #           alpha=0.7, linewidth=0, align="center", label="normal prior")
+
+    axis([np.log10(0.001), 3.0, 0.0, np.max([np.max(na_exp), np.max(na_logn)])+10.0])
+
+    ax1.set_xlabel(r"$\log_{10}{(\mathrm{Amplitude})}$", fontsize=24)
+    ax1.set_ylabel("N($\log_{10}{\mathrm{Amplitude}}$)", fontsize=24)
+    #ax1.set_title("Differential Amplitude Distribution", fontsize=24)
+
+    ax2 = fig.add_subplot(133)
+    ax2.bar(fb_exp[:-1]+0.5, nf_exp, fb_exp[1]-fb_exp[0], color='blue',
+               alpha=0.6, linewidth=0, align="center", label="exponential prior")
+
+    ax2.bar(fb_logn[:-1]+0.5, nf_logn, fb_logn[1]-fb_logn[0], color='limegreen',
+               alpha=0.6, linewidth=0, align="center", label="log-normal prior")
+
+    #ax2.bar(fb_gauss[:-1]+0.5, nf_gauss, fb_gauss[1]-fb_gauss[0], color='limegreen',
+    #           alpha=0.7, linewidth=0, align="center", label="normal prior")
+
+
+    axis([-14.0, -5.0, 0.0, np.max([np.max(nf_exp), np.max(nf_logn)])+10.0])
+
+    ax2.set_xlabel(r"$\log_{10}{(\mathrm{Fluence})}$", fontsize=24)
+    ax2.set_ylabel("N($\log_{10}{\mathrm{Fluence}}$)", fontsize=24)
+    #ax2.set_title("Differential Fluence Distribution", fontsize=24)
+
+    draw()
+    plt.tight_layout()
+
+    savefig("sgr1550_prior_diff_dist.pdf", format="pdf")
     close()
 
 
     return
 
 
-def playing_around_with_amplitudes(filename, nwords = 10, namestr="allbursts"):
+def correlation_plots_new(sample=None, datadir="./", nsims=100, filtered=True):
 
-    pfile = open(filename, "r")
-    allparas = pickle.load(pfile)
-    pfile.close()
-
-    amp_max = np.array(allparas["amp_max"])
-    t0_max = np.array(allparas["t0_max"])
+    """
+    Make plots with correlations for duration versus fluence and rise time versus fluence.
 
 
-    ### plot posterior maximum of amplitude parameter for the first spike versus posterior max of amplitude
-    ### of all other spikes at least 10ms away
-    amp0, amp_mean = [], []
-    for i,(t,a) in enumerate(zip(t0_max, amp_max)):
-        minind = np.argmin(t[nwords-1])
-        a_temp = list(a[nwords-1])
-        a0 = a_temp.pop(minind)
-        t0_temp = list(t[nwords-1])
-        t0 = t0_temp.pop(minind)
-        a_otherspikes = [i for i,j in zip(a_temp, t0_temp) if j > t0+0.01]
-        if not len(a_otherspikes) == 0 :
-            amp_mean.append(np.mean(a_otherspikes))
-            amp0.append(a0)
-        else:
-            continue
+    @param sample:
+    @param datadir:
+    @param nsims:
+    @return:
+    """
 
-    fig = figure(figsize=(12, 9))
-    scatter(amp0, amp_mean)
-    xlabel("Amplitude of first spike in burst", fontsize=18)
-    ylabel("Mean amplitude of other spikes in burst", fontsize=18)
-    title("Amplitude of first spike versus mean amplitude of other spikes")
-    savefig(namestr + "_firstspike_meanrest_k" + str(nwords) + ".eps", format='eps')
+
+    if sample is None:
+        parameters_red,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
+                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+    else:
+        parameters_red = sample
+
+    fluence_sample, duration_sample, risetime_sample = [], [], []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        fluence_all = np.array([np.array([a.fluence for a in s.all if a.duration > 0.0]) for s in sample])
+
+        #fluence_all = fluence_all.flatten()
+        duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
+        #risetime_all = risetime_all.flatten()
+
+        risetime_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
+
+        #print("len fluence: " + str(len(fluence_all)))
+        #print("len risetime: " + str(len(risetime_all)))
+
+        fluence, duration, risetime = [], [], []
+        for a,e,d in zip(risetime_all, fluence_all, duration_all):
+            fluence.extend(e)
+            duration.extend(d)
+            risetime.extend(a)
+
+        #print("len fluence: " + str(len(fluence)))
+        #print("len risetime: " + str(len(risetime)))
+
+
+        fluence_sample.append(fluence)
+        duration_sample.append(duration)
+        risetime_sample.append(risetime)
+
+    ### samples for scatter plot
+    fsamp = np.log10(fluence_sample[0])
+    dsamp = np.log10(duration_sample[0])
+    rsamp = np.log10(risetime_sample[0])
+
+
+    fluence_flat, duration_flat, risetime_flat = [], [], []
+    spdf, sprf = [], []
+
+    for f,d,r in zip(fluence_sample, duration_sample, risetime_sample):
+        fluence_flat.extend(np.log10(f))
+        duration_flat.extend(np.log10(d))
+        risetime_flat.extend(np.log10(r))
+
+        spdf.append(scipy.stats.spearmanr(d,f))
+        sprf.append(scipy.stats.spearmanr(r,f))
+
+
+    fluence_flat = np.array(fluence_flat)
+    risetime_flat = np.array(risetime_flat)
+    duration_flat = np.array(duration_flat)
+
+    spdf_mean = np.mean(spdf, axis=0)
+    spdf_std = np.std(spdf, axis=0)
+    sprf_mean = np.mean(sprf, axis=0)
+    sprf_std = np.std(spdf, axis=0)
+
+
+    fig = figure(figsize=(18,9))
+    #subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
+
+    ### first plot: duration versus fluence
+    ax1 = fig.add_subplot(121)
+
+    levels = [0.01, 0.05, 0.1, 0.2, 0.3]
+
+
+    #xmin, xmax = duration_flat.min(), duration_flat.max()
+    #ymin, ymax = fluence_flat.min(), fluence_flat.max()
+    xmin = -3.1
+    xmax = 1.0
+    ymin = -13.0
+    ymax = -7.5
+    ### Perform Kernel density estimate on data
+    try:
+        X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        positions = np.vstack([X.ravel(), Y.ravel()])
+        values = np.vstack([duration_flat, fluence_flat])
+        kernel = scipy.stats.gaussian_kde(values)
+        Z = np.reshape(kernel(positions).T, X.shape)
+
+
+        im = ax1.imshow(np.transpose(Z), interpolation='bicubic', origin='lower',
+                cmap=cm.PuBuGn, extent=(-4.0,2.0,ymin,ymax))
+        im.set_clim(0.0,0.5)
+        #plt.colorbar(im)
+
+        cs = ax1.contour(X,Y,Z,levels, linewidths=2, colors="black", origin="lower")
+        #manual_locations = [(0.0, -10.5), (-0.9, -11.5), (-0.7,-10.7), (-1.7,11.1), (-1.1,-10.4)]
+        #plt.clabel(cs, fontsize=24, inline=1, manual=manual_locations)
+
+    except ValueError:
+        print("Not making contours.")
+
+
+    ax1.scatter(dsamp, fsamp, color="black")
+
+    ax1.text(0.5,0.05, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(spdf_mean[0], spdf_std[0]),
+                verticalalignment='center', horizontalalignment='center', color='black', transform=ax1.transAxes,
+                fontsize=18)
+    ax1.axis([-3.1, 1.0, -13.0, -7.5])
+
+
+    ax1.set_xlabel(r"$\log_{10}{(\mathrm{Duration} \; \mathrm{[s]})}$ ", fontsize=24)
+    ax1.set_ylabel(r"$\log_{10}{(\mathrm{Fluence})}$ [$\mathrm{erg} \, \mathrm{cm}^{-1}$]", fontsize=24)
+
+
+    ### first plot: duration versus fluence
+    ax2 = fig.add_subplot(122, sharey=ax1)
+
+    #xmin, xmax = risetime_flat.min(), risetime_flat.max()
+    #ymin, ymax = fluence_flat.min(), fluence_flat.max()
+
+    xmin = -4.5
+    xmax = 0.5
+    ymin = -13.0
+    ymax = -7.5
+
+    ### Perform Kernel density estimate on data
+    try:
+        X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        positions = np.vstack([X.ravel(), Y.ravel()])
+        values = np.vstack([risetime_flat, fluence_flat])
+        kernel = scipy.stats.gaussian_kde(values)
+        Z = np.reshape(kernel(positions).T, X.shape)
+
+        im = ax2.imshow(np.transpose(Z), interpolation='bicubic', origin='lower',
+                cmap=cm.PuBuGn, extent=(xmin,xmax,ymin,ymax))
+
+        im.set_clim(0.0,0.5)
+        plt.colorbar(im)
+
+        cs = ax2.contour(X,Y,Z,levels, linewidths=2, colors="black", origin="lower")
+        #manual_locations = [(-2.0, -12.0),(-1.75,-11.2),(-2.75,-11.5),(-2.25,-11.0),(-2.3,-10.2)]
+        #clabel(cs, fontsize=24, inline=1, manual=manual_locations)
+
+    except ValueError:
+        print("Not making contours.")
+
+
+    ax2.scatter(rsamp, fsamp, color="black")
+    ax2.axis([-4.5,0.5, -13.0, -7.5])
+    ax2.text(0.5,0.05, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(sprf_mean[0], sprf_std[0]),
+                verticalalignment='center', horizontalalignment='center', color='black', transform=ax2.transAxes,
+                fontsize=18)
+    ax2.set_xlabel(r"$\log_{10}{(\mathrm{Rise\, timescale} \; \mathrm{[s]})}$ ", fontsize=24)
+    setp(ax2.get_yticklabels(), visible=False)
+    draw()
+    plt.tight_layout()
+
+    savefig('sgr1550_correlations.pdf', format="pdf")
     close()
 
-    ### Plot the amplitude
-    amp_9 = [a[nwords-1] for a in amp_max]
-    t0_9 = [a[nwords-1] for a in t0_max]
-    pairs = [zip(t,a) for t,a in zip(t0_9, amp_9)]
-    pairs_sorted = [sorted(p) for p in pairs]
-    amp_max_sorted = [[a[1] for a in p] for p in pairs_sorted]
+    return spdf, sprf
+
+def all_dnest_plots(datadir="./", nsims=100):
 
 
-    ### Plot the amplitude for each spike in each burst for each position (as an integer number, not time)
-    ### as an image
-    ### This should help me see whether there are any overall trends in the amplitude
-    fig = figure(figsize=(30,6))
-    imshow(np.transpose(amp_max_sorted), cmap=cm.hot)
-    colorbar()
-    subplots_adjust(top=0.9, bottom=0.13, left=0.05, right=0.97, wspace=0.15, hspace=0.1)
-    xlabel("Burst index", fontsize=20)
-    ylabel("Spike position in burst", fontsize=20)
-    title("Amplitude (colour) as a function of position in the burst (y-axis) for all bursts")
-    savefig(namestr + "_amplitude_image_k" + str(nwords) + ".eps", format="eps")
-    close()
+    par_filtered, bids_filtered = \
+        dnest_sample.extract_sample(datadir=datadir+"finished/",nsims=nsims, filter_weak=True, trigfile="sgr1550_ttrig.dat")
+
+    par_unfiltered, bids_unfiltered = \
+        dnest_sample.extract_sample(datadir=datadir+"finished/", nsims=nsims, filter_weak=False, trigfile="sgr1550_ttrig.dat")
 
 
-    ### Compute mean and standard deviation for each spike position for all bursts
-    amp_max_mean = np.mean(amp_max_sorted, axis=0)
-    amp_max_std = np.std(amp_max_sorted, axis=0)
 
-    ### plot mean amplitude versus spike position in the burst, with errors
-    ### again, if there's an overall trend, I should see it here!
-    fig = figure(figsize=(12,9))
-    errorbar(np.arange(nwords)+1, amp_max_mean, yerr=amp_max_std, color='black', fmt="--o")
-    xlabel("Location of spike relative to the other spikes")
-    ylabel("Average amplitude over 85 bursts")
-    title("Average amplitude for 85 bursts as a function of spike position in a burst")
-    savefig(namestr + "_spike_amplitude_vs_location_k" + str(nwords) + ".eps", format="eps")
-    close()
+    par_exp,bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
+                                                      filter_weak=False, trigfile="sgr1550_ttrig.dat")
+    par_logn, bids_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
+                                                      filter_weak=False, trigfile="sgr1550_ttrig.dat")
 
-    ### For fun, plot the overall distribution of amplitudes:
-    fig = figure(figsize=(12,9))
-    hist(np.array(np.log10(amp_max_sorted)).flatten(), bins=30, color='navy', histtype='stepfilled')
-    xlabel(r"$\log_{10}{(\mathrm{amplitude})}$ [s]", fontsize=18)
-    ylabel("N(spikes)", fontsize=18)
-    title("Distribution of amplitudes for all spikes in all bursts")
-    savefig(namestr + "_amplitude_distribution_k" + str(nwords) + ".eps", format="eps")
-    close()
 
-    ### Plot distribution of waiting times between spikes
-    t0_max_sorted = [[a[0] for a in p] for p in pairs_sorted]
-    dt_all = [[t[i] - t[i-1] for i in np.arange(len(t[1:]))+1] for t in t0_max_sorted]
-    fig = figure(figsize=(12,9))
-    hist(np.array(np.log10(dt_all)).flatten(), bins=30, color="navy", histtype="stepfilled")
-    xlabel(r"$\log_10{(\mathrm{waiting time})}$ [s]", fontsize=18)
-    ylabel("N(spikes)", fontsize=18)
-    title("Distribution of waiting times between adjacent spikes in all bursts")
-    savefig(namestr + "_waitingtime_distribution_k" + str(nwords) + ".eps", format="eps")
-    close()
+
+    nspike_plot(par_unfiltered, par_filtered)
+    correlation_plots_new(par_filtered)
+    waitingtime_plot(par_unfiltered, bids_unfiltered)
+    differential_plots(par_filtered)
+    priors_nspikes(par_exp, par_logn)
+    priors_differentials(par_exp, par_logn)
 
     return
-
-
 
 def main():
 

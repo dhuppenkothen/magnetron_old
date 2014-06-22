@@ -73,7 +73,7 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
     return
 
 
-def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None):
+def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None, prior="exp"):
 
     files = glob.glob("%s*posterior*"%datadir)
     print("files: " + str(files))
@@ -83,7 +83,8 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_
         fname = f.split("/")[-1]
         bid = fname.split("_")[0]
         bids.append(bid)
-        parameters = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile, bkg=bkg)
+        parameters = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile,
+                                      bkg=bkg, prior=prior, datadir=datadir)
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
 
@@ -439,7 +440,8 @@ def risetime_skewness(sample=None, datadir="./", nsims=5, makeplot=True, froot="
 
 
 
-def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None, makeplot=True, froot="test"):
+def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None,
+                  makeplot=True, froot="test", mean=False):
 
     if sample is None and bids is None:
         parameters_red, bids = extract_sample(datadir, nsims)
@@ -459,6 +461,7 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None,
         bid_ttrig = np.array([t for t in data[0]])
         ttrig_all = np.array([float(t) for t in data[1]])
 
+    #print("bid" + str(bids))
 
     for i in xrange(nsims):
 
@@ -492,20 +495,37 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None,
         fig = figure(figsize=(12,9))
         ax = fig.add_subplot(111)
         n_all = []
-        for i,w in enumerate(waitingtime_sample):
 
-            n,bins, patches = hist(log10(w), bins=30, range=[np.log10(0.0001), np.log10(330.0)],
-                                   color=cm.jet(i*20),alpha=0.6, normed=True)
-            n_all.append(n)
+        if mean is True:
+            for i,(w) in enumerate(waitingtime_sample):
+                w = np.log10(w)
+                n, bins = np.histogram(w, bins=40, range=[np.log10(0.0001),np.log10(330.0)], normed=False)
+                n_all.append(n)
 
-        axis([np.log10(0.0001), np.log10(330.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+            #print("n_all.shape: " + str(np.shape(n_all)))
+            n_mean = np.mean(np.array(n_all), axis=0)
+            #print(n_mean)
+            ax.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], color='navy',
+                   alpha=0.7, linewidth=0, align="center", label="unfiltered sample")
 
-        xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=20)
-        ylabel("p(waiting time)", fontsize=20)
-        title("waiting time distribution")
-        savefig("%s_waitingtimes.png"%froot, format="png")
+            axis([np.log10(0.0003), np.log10(330.0), 0.0, np.max(n_mean)+0.1])
+
+        else:
+            for i,w in enumerate(waitingtime_sample):
+
+                n,bins, patches = hist(log10(w), bins=30, range=[np.log10(0.0001), np.log10(330.0)],
+                                       color="navy",alpha=0.6, normed=True)
+                n_all.append(n)
+
+            axis([np.log10(0.0001), np.log10(330.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+
+        xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=24)
+        ylabel("N(waiting time)", fontsize=24)
+        #title()
+        draw()
+        plt.tight_layout()
+        savefig("%s_waitingtimes.pdf"%froot, format="pdf")
         close()
-
 
     return waitingtime_sample
 
@@ -1095,7 +1115,7 @@ def skewness_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="tes
     return skewness_sample
 
 
-def nspike_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="sgr1550"):
+def nspike_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="sgr1550", mean=False):
 
     if sample is None:
         parameters_red,bids = extract_sample(datadir, nsims)
@@ -1121,12 +1141,21 @@ def nspike_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="sgr15
         ax = fig.add_subplot(111)
         n_all = []
         for i,w in enumerate(nspikes_sample):
-
-            n,bins, patches = hist(w, bins=50, range=[1, 50],
+            if mean is False:
+                n,bins, patches = hist(w, bins=50, range=[1, 50],
                                    color=cm.jet(i*20),alpha=0.6, normed=True)
-            n_all.append(n)
+                n_all.append(n)
 
-        axis([1, 50, np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+            else:
+                n, bins = np.histogram(w, bins=50, range=[1,50], normed=True)
+                n_all.append(n)
+
+        if mean is True:
+            n_mean = np.mean(np.array(n_all), axis=0)
+            ax.bar(bins, n_mean, bins[1]-bins[0], color='navy', alpha=0.6)
+            axis([1,50, 0.0, np.max(n_mean)])
+        else:
+            axis([1, 50, np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
 
         xlabel(r"number of components", fontsize=24)
         ylabel("p(number of components)", fontsize=24)
@@ -1413,7 +1442,8 @@ def parameter_evolution(sample=None, datadir="./", nsims=50, nspikes=10, dt=0.00
     return
 
 
-def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=True, dt=0.0005, froot="test"):
+def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=True,
+                               dt=0.0005, froot="test", mean=False, normed=False):
 
     if sample is None:
         parameters_red,bids = extract_sample(datadir, nsims)
@@ -1452,63 +1482,139 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
         amp_sample.append(amp)
 
 
+    nd_all, na_all, nf_all = [], [], []
+
+    if mean is True:
+        for i,(d,a,f) in enumerate(zip(duration_sample, amp_sample, fluence_sample)):
+            d = np.log10(d)
+            nd, dbins = np.histogram(d, bins=40, range=[np.log10(0.0001),np.log10(10.0)], normed=False)
+            nd_all.append(nd)
+
+            a = np.log10(a)
+            na, abins = np.histogram(a, bins=40, range=[np.log10(0.0001), np.log10(3.5e5)], normed=False)
+            na_all.append(na)
+
+            f = np.log10(f)
+            nf, fbins = np.histogram(f, bins=40, range=[-17.0, -4.0], normed=False)
+            nf_all.append(nf)
+
+
+        nd_mean = np.mean(np.array(nd_all), axis=0)
+        na_mean = np.mean(np.array(na_all), axis=0)
+        nf_mean = np.mean(np.array(nf_all), axis=0)
+
     if makeplot:
         fig = figure(figsize=(24,8))
+        subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
 
         ### first subplot: differential duration distribution
         ax = fig.add_subplot(131)
         n_all = []
-        for i,d in enumerate(duration_sample):
 
-            n,bins, patches = ax.hist(log10(d), bins=40, range=[np.log10(0.0005/10.0), np.log10(2.0)],
-                                   color=cm.jet(i*20),alpha=0.6, normed=False)
-            n_all.append(n)
+        if mean is True:
+            for i,d in enumerate(duration_sample):
+                d = np.log10(d)
+                n, bins = np.histogram(d, bins=40, range=[np.log10(0.0001),np.log10(10.0)], normed=False)
+                n_all.append(n)
 
-        axis([np.log10(0.0005/10.0), np.log10(2.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+            n_mean = np.mean(np.array(n_all), axis=0)
+            #print(n_mean)
+            ax.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], color='navy',
+                   alpha=0.7, linewidth=0, align="center", label="unfiltered sample")
+
+            axis([np.log10(0.0001), np.log10(10.0), 0.0, np.max(n_mean)+0.1])
+
+
+        else:
+            for i,d in enumerate(duration_sample):
+
+                n,bins, patches = ax.hist(log10(d), bins=40, range=[np.log10(0.0005/10.0), np.log10(2.0)],
+                                       color=cm.jet(i*20),alpha=0.6, normed=False)
+                n_all.append(n)
+
+            axis([np.log10(0.0005/10.0), np.log10(2.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+
+
         ax.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$", fontsize=24)
-        ax.set_ylabel("p($\log_{10}{(\mathrm{Duration})}$)", fontsize=24)
-        ax.set_title("Differential Duration Distribution", fontsize=24)
+        ax.set_ylabel("N($\log_{10}{(\mathrm{Duration})}$)", fontsize=24)
+        #ax.set_title("Differential Duration Distribution", fontsize=24)
 
         ax1 = fig.add_subplot(132)
         n_all = []
         min_a, max_a = [], []
-        for i,a in enumerate(amp_sample):
-            a = np.array(a)/dt
-            min_a.append(np.min(np.log10(a)))
-            max_a.append(np.max(np.log10(a)))
-            n,bins, patches = ax1.hist(log10(a), bins=40, range=[3.0, 6.0],
-                                   color=cm.jet(i*20),alpha=0.6, normed=False)
-            n_all.append(n)
 
-        axis([np.min(min_a), np.max(max_a), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+        if mean is True:
+            for i,d in enumerate(amp_sample):
+                d = np.log10(d)
+                n, bins = np.histogram(d, bins=40, range=[np.log10(0.001), np.log10(2.5e4)], normed=False)
+                n_all.append(n)
+
+            n_mean = np.mean(np.array(n_all), axis=0)
+            #print(n_mean)
+            ax1.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], color='navy',
+                   alpha=0.7, linewidth=0, align="center")
+
+            axis([np.log10(0.001), np.log10(2.5e4), 0.0, np.max(n_mean)+0.1])
+
+
+        else:
+            for i,a in enumerate(amp_sample):
+                a = np.array(a)/dt
+                min_a.append(np.min(np.log10(a)))
+                max_a.append(np.max(np.log10(a)))
+                n,bins, patches = ax1.hist(log10(a), bins=40, range=[3.0, 6.0],
+                                       color=cm.jet(i*20),alpha=0.6, normed=False)
+                n_all.append(n)
+
+            axis([np.min(min_a), np.max(max_a), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
         ax1.set_xlabel(r"$\log_{10}{(\mathrm{Amplitude})}$", fontsize=24)
-        ax1.set_ylabel("p($\log_{10}{(\mathrm{Amplitude})}$)", fontsize=24)
-        ax1.set_title("Differential Amplitude Distribution", fontsize=24)
+        ax1.set_ylabel("N($\log_{10}{(\mathrm{Amplitude})}$)", fontsize=24)
+        #ax1.set_title("Differential Amplitude Distribution", fontsize=24)
 
         ax2 = fig.add_subplot(133)
         n_all = []
         min_e, max_e = [], []
-        for i,e in enumerate(fluence_sample):
-            e = np.array(e)
 
-            min_e.append(np.min(np.log10(e)))
-            max_e.append(np.max(np.log10(e)))
+        if mean is True:
+            for i,d in enumerate(fluence_sample):
+                d = np.log10(d)
+                n, bins = np.histogram(d, bins=40, range=[-14.0, -7.0], normed=False)
+                n_all.append(n)
 
-            n,bins, patches = ax2.hist(e, bins=40, range=[-1.0, 4.0],
-                                   color=cm.jet(i*20),alpha=0.6, normed=False)
-            n_all.append(n)
+            n_mean = np.mean(np.array(n_all), axis=0)
+            #print(n_mean)
+            ax2.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], color='navy',
+                   alpha=0.7, linewidth=0, align="center")
 
-        axis([np.min(min_e), np.max(max_e), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+            axis([-14.0, -7.0, 0.0, np.max(n_mean)+0.1])
+
+        else:
+            for i,e in enumerate(fluence_sample):
+                e = np.array(e)
+
+                min_e.append(np.min(np.log10(e)))
+                max_e.append(np.max(np.log10(e)))
+
+                n,bins, patches = ax2.hist(e, bins=40, range=[-1.0, 4.0],
+                                       color=cm.jet(i*20),alpha=0.6, normed=False)
+                n_all.append(n)
+
+            axis([np.min(min_e), np.max(max_e), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
         ax2.set_xlabel(r"$\log_{10}{(\mathrm{Fluence})}$", fontsize=24)
-        ax2.set_ylabel("p($\log_{10}{(\mathrm{Fluence})}$)", fontsize=24)
-        ax2.set_title("Differential Fluence Distribution", fontsize=24)
+        ax2.set_ylabel("N($\log_{10}{(\mathrm{Fluence})}$)", fontsize=24)
+        #ax2.set_title("Differential Fluence Distribution", fontsize=24)
 
+        draw()
+        plt.tight_layout()
 
-        savefig("%s_diff_dist.png"%froot, format="png")
+        savefig("%s_diff_dist.pdf"%froot, format="pdf")
         close()
 
+    if mean is True:
+        return dbins, nd_mean, abins, na_mean, fbins, nf_mean
 
-    return
+    else:
+        return
 
 def compare_samples(p1, p2, bids1, bids2, froot="test", label1="p1", label2="p2", dt=0.0005):
     """
@@ -1712,7 +1818,7 @@ def fit_distribution(func, x, y, p0):
 
 
 def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="sgr1550_ttrig.dat",
-                       efile="sgr1550_fluence.dat"):
+                       efile="sgr1550_fluence.dat", prior="exp"):
 
     """
     Read output from RJObject/DNest3 run and return in a format more
@@ -1721,9 +1827,21 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
     filename: filename with posterior sample (posterior_sample.txt)
 
     NOTE: parameters (amplitudes + background) are in COUNTS space, not COUNT RATE!
+
+    prior can be "exp", "gauss", "lognormal"
+
     """
 
+    if prior == "exp":
+        par_ind = 8
+    elif prior == "lognormal":
+        par_ind = 10
+    elif prior == "gauss":
+        par_ind = 10
+    else:
+        raise Exception("Prior not recognised! Don't know how to extract parameters!")
 
+    #print("par_ind: " + str(par_ind))
     #options = burstmodel.conversion("%sOPTIONS.txt" %dnestdir)
 
     alldata = np.loadtxt(filename)
@@ -1801,17 +1919,17 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
     #print(nbursts)
 
     ## peak positions for all model components, some will be zero
-    pos_all = np.array(alldata[:, 8:8+compmax])
+    pos_all = np.array(alldata[:, par_ind:par_ind+compmax])
 
 
     ## amplitudes for all model components, some will be zero
-    amp_all = alldata[:, 8+compmax:8+2*compmax]
+    amp_all = alldata[:, par_ind+compmax:par_ind+2*compmax]
 
     ## rise times for all model components, some will be zero
-    scale_all = alldata[:, 8+2*compmax:8+3*compmax]
+    scale_all = alldata[:, par_ind+2*compmax:par_ind+3*compmax]
 
     ## skew parameters for all model components, some will be zero
-    skew_all = alldata[:, 8+3*compmax:8+4*compmax]
+    skew_all = alldata[:, par_ind+3*compmax:par_ind+4*compmax]
 
     ## pull out the ones that are not zero
     paras_real = []
@@ -1875,8 +1993,7 @@ def extract_real_spikes(sample_dict, min_scale=1.0e-4):
 
 
 
-def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None):
-
+def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None, prior="exp"):
 
     fname = filename.split("/")[-1]
     fsplit = fname.split("_")
@@ -1887,7 +2004,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     sum_counts = np.sum(counts)
 
     ### extract parameters from file
-    sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile)
+    sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile, prior=prior)
 
     #print("filter_weak " + str(filter_weak))
 

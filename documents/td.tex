@@ -717,7 +717,7 @@ in our model, and thus easily extracted. We compute spike duration by finding th
 \includegraphics[width=9cm]{sgr1550_waitingtimes.pdf}
 \caption{Waiting time distribution between consecutive spikes for $332$ bursts. Waiting times are the times between peak amplitudes of spikes, and are only computed for
 continuous stretches of data between them, i.e. time series without data gaps. This effectively sets an upper limit to the waiting time that can be measured of $330\,\mathrm{s}$, the 
-length of a single \fermi/GBM TTE data file.}
+length of a single \fermi/GBM TTE data file. This cut-off introduces a bias into the distribution at long waiting times, and shifts the peak at long waiting times to smaller values.}
 \label{fig:waitingtimes}
 \end{center}
 \end{figure}

@@ -47,7 +47,7 @@
 
 
 \begin{abstract}
-%*** BJB: We should leave this one in for @OverheardOnAstroph:
+%BJB: We should leave this one in for @OverheardOnAstroph:
 %Magnetars are whatever and people need whatever.
 %Magnetars produce bursts,
 %  each of which appears to be composed of a set of one or more spikes.
@@ -80,6 +80,9 @@ with complex temporal structure that is a superposition of different processes. 
 using standard methods, it is possible to introduce systematic errors into inferences made from this type of data. Three examples stand out particularly: solar flares, $\gamma$-ray bursts (GRBs) and magnetar bursts.  All three phenomena are characterised by bursts lasting from $\sim 1/10$ of a second to hundreds of seconds, and a 
 complex temporal structure that varies strongly from burst to burst (for an example, see Figure \ref{fig:example_bursts}). 
 
+% BJB: you could mention here that taking the fourier transform, while always
+% possible, is only "the right thing to do" if you believe the signal is
+% periodic.
 Fourier methods fail in particular when the underlying processes contributing to the observed light curve, especially deterministic 
 components in combination with stochastic variability, are not well known. In this case,
 the statistical distributions in the periodogram are not straightforward to model, thus making inferences about the variability in the source problematic. Conversely, 
@@ -173,8 +176,11 @@ number of spikes per burst as well as the individual parameters of each spike: t
 At the same time, this process needs to operate automatically without the user's intervention, both to avoid biases introduced by manual fitting, as well as
  to allow for an analysis of the large numbers of magnetar bursts observed from various sources.
 
+% BJB: Better to go gently here by saying inference first, then MCMC, and worry about DNest later (it's too scary and many readers
+% would rather understand the modelling ideas and care less about the computation).
 In this paper, we propose a new method to model magnetar bursts as a linear combination of simple shapes. Both the number of components
-per burst as well as the model parameters for each components are free parameters, to be explored using Diffusive Nested Sampling.
+per burst as well as the model parameters for each components are free parameters, to be inferred from the data (in practice, using
+Markov Chain Monte Carlo).
 We apply this model to a large data set of bursts from SGR J1550-5418, observed with the Gamma-ray Burst Monitor (GBM) on board the \fermi spacecraft.
 The high sensitivity of the instrument as well as 
 the large number of observed bursts make this source an excellent target to demonstrate the power of the proposed methods. For the first time, 

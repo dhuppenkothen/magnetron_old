@@ -454,6 +454,7 @@ $\tau_{\mathrm{min}} = \Delta t/10$: the time resolution effectively limits the 
 The prior on the skewness parameter $s_n$ is a uniform distribution with a mean of $\mu_s$ and a half-width of $\sigma_s$, such
 that the log-skewness must lie in the range $(\mu_s-\sigma_s) < \log{(s)} < (\mu_s+\sigma_s)$. A definition in terms of mean and half-width ensures
 that positive and negative skews are equally likely a priori. 
+
 % BJB: For large models I like to list the priors in a table. See e.g. Page 8 here http://arxiv.org/pdf/1310.5177v1.pdf
 % BJB: I know what you're saying here but it could be clearer :)
 \begin{table*}[htbp]
@@ -519,7 +520,16 @@ quite well constrained between $9$ and $17$ components.}
 \label{fig:dnest_example}
 %\end{center}
 \end{figure*}
-
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=9cm]{sgr1550_nspikes.pdf}
+\caption{Number of components in a given burst for $332$ modelled bursts, for both the raw (unfiltered) sample (blue) as well as the sample after
+filtering out all components with an amplitude smaller than the inferred background count rate (red). We computed the distributions by picking single samples
+from the posterior for each burst and form an ensemble of these individual draws for all bursts to make a single distribution. We repeated this process $100$ times,
+and computed the mean number of bursts for each bin (corresponding to the number of components per burst) in the distribution.}
+\label{fig:spikes}
+\end{center}
+\end{figure}
 
 %where $\Poisson(\counts\given\mean)$ is the Poisson probability of getting count $y$ given mean rate $\mean$,
 %  $\pars$ is the vector or blob of all model parameters,
@@ -605,16 +615,7 @@ quite well constrained between $9$ and $17$ components.}
 %  fit with $K=1$, $2$, $3$, $4$, and $5$ words.
 %It also shows the result of the posterior-prediction validation
 %  that selects $K=4$ as the best choice for this burst.
-\begin{figure}[htbp]
-\begin{center}
-\includegraphics[width=9cm]{sgr1550_nspikes.pdf}
-\caption{Number of components in a given burst for $332$ modelled bursts, for both the raw (unfiltered) sample (blue) as well as the sample after
-filtering out all components with an amplitude smaller than the inferred background count rate (red). We computed the distributions by picking single samples
-from the posterior for each burst and form an ensemble of these individual draws for all bursts to make a single distribution. We repeated this process $100$ times,
-and computed the mean number of bursts for each bin (corresponding to the number of components per burst) in the distribution.}
-\label{fig:spikes}
-\end{center}
-\end{figure}
+
 
 \section{A Single Burst}
 \label{sec:oneburst}
@@ -648,9 +649,6 @@ hyper parameters $\bm{\alpha}$) We sampled from the posterior PMF for each indiv
 to compute the quantity of interest (say, a correlation between two model parameters). This procedure can be repeated, such that we build up a sample
 for the quantity in question. Note, however, that by posing that individual bursts have no knowledge of each other - we fit the model for each burst separately - 
 this imposes a strong prior on this quantity, suggesting that there is, in fact, no correlation present. 
-
-% BJB: I feel like this discussion enters too early. We should show the inferences
-% about an individual burst before discussing what we can say about a population
 
 For the type of exploratory data analysis considered here, this is sufficient. A formally correct implementation would have to include a Bayesian hierarchical model,
 where many bursts are considered in the same model, with appropriate priors on any quantities to be measured across samples of many bursts. This can, in turn,
@@ -714,14 +712,7 @@ in our model, and thus easily extracted. We compute spike duration by finding th
  each bin of that distribution. 
  Similarly, we test for correlations by $S$ ensembles of burst models and testing for the presence of a correlation using a Spearman rank
  coefficient for each ensemble. We then report the mean and standard deviation of the distribution of coefficients for $S$ draws, where $S = 100$ in all cases below.
- 
- 
- In Figure \ref{fig:diffdist}, we show differential distributions of duration, peak amplitude (measured in count space) and fluence for all spikes in $332$ bursts. All three distributions are
- strongly peaked, and both amplitude and fluence are skewed towards larger values. The latter is exacerbated when considering the unfiltered sample of 
- spikes (including spikes with peak amplitudes below the background count rate), producing longer tails for both amplitude and fluence, but not changing the qualitative behaviour of the distributions. We will consider the behaviour of
- the differential distributions in detail and compare the observed distributions to predictions from SOC theory in Section \ref{sec:soc}.
-
- \begin{figure}[htbp]
+  \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=9cm]{sgr1550_waitingtimes.pdf}
 \caption{Waiting time distribution between consecutive spikes for $332$ bursts. Waiting times are the times between peak amplitudes of spikes, and are only computed for
@@ -730,18 +721,11 @@ length of a single \fermi/GBM TTE data file.}
 \label{fig:waitingtimes}
 \end{center}
 \end{figure}
-
-In Figure \ref{fig:waitingtimes}, we show the differential distribution of waiting times for $332$ magnetar bursts. We use only waiting times 
-between consecutive spikes that have no data gaps between them. This effectively sets an upper limit to the waiting time distribution of $330\,\mathrm{s}$,
-the length of a single \fermi/GBM TTE data file. The distribution is clearly bimodal: a broad peak at long waiting times has a maximum at $\sim 20 \,\mathrm{s}$, a
-second peak at smaller waiting times, $t_\mathrm{wait} \approx 0.05 \,\mathrm{s}$. This implies that there are two significantly different time scales
-in the system, as expected. In our definition, bursts are clusters of individual peaks separated by
-waiting times much longer than their durations. It is the time between these bursts that sets the peak in long waiting times. This distribution has a peak about
-an order of magnitude lower than that reported for the strongest-field magnetars, SGR 1900+14 \citep{gogus1999} and SGR 1806-20 \citep{gogus2000} as observed
-with \rxte, however, we note that the intrinsic short duration of \fermi/GBM TTE data files we used in this study imposes an artificial limit of $330\,\mathrm{s}$ on the waiting times we measure,
-and thus introduces a significant bias towards short waiting times. 
-The distribution of short waiting times, on the other hand, traces the time between consecutive spikes within a burst. The peak of this distribution indicates
-that there is a characteristic time scale determining the waiting time between individual peaks within a burst as well. 
+ 
+ In Figure \ref{fig:diffdist}, we show differential distributions of duration, peak amplitude (measured in count space) and fluence for all spikes in $332$ bursts. All three distributions are
+ strongly peaked, and both amplitude and fluence are skewed towards larger values. The latter is exacerbated when considering the unfiltered sample of 
+ spikes (including spikes with peak amplitudes below the background count rate), producing longer tails for both amplitude and fluence, but not changing the qualitative behaviour of the distributions. We will consider the behaviour of
+ the differential distributions in detail and compare the observed distributions to predictions from SOC theory in Section \ref{sec:soc}.
 
  \begin{figure*}[htbp]
 \begin{center}
@@ -757,6 +741,21 @@ this fraction in combination with fluences inferred from spectral modelling\cite
 \end{center}
 \end{figure*}
 
+
+In Figure \ref{fig:waitingtimes}, we show the differential distribution of waiting times for $332$ magnetar bursts. We use only waiting times 
+between consecutive spikes that have no data gaps between them. This effectively sets an upper limit to the waiting time distribution of $330\,\mathrm{s}$,
+the length of a single \fermi/GBM TTE data file. The distribution is clearly bimodal: a broad peak at long waiting times has a maximum at $\sim 20 \,\mathrm{s}$, a
+second peak at smaller waiting times, $t_\mathrm{wait} \approx 0.05 \,\mathrm{s}$. This implies that there are two significantly different time scales
+in the system, as expected. In our definition, bursts are clusters of individual peaks separated by
+waiting times much longer than their durations. It is the time between these bursts that sets the peak in long waiting times. This distribution has a peak about
+an order of magnitude lower than that reported for the strongest-field magnetars, SGR 1900+14 \citep{gogus1999} and SGR 1806-20 \citep{gogus2000} as observed
+with \rxte, however, we note that the intrinsic short duration of \fermi/GBM TTE data files we used in this study imposes an artificial limit of $330\,\mathrm{s}$ on the waiting times we measure,
+and thus introduces a significant bias towards short waiting times. 
+The distribution of short waiting times, on the other hand, traces the time between consecutive spikes within a burst. The peak of this distribution indicates
+that there is a characteristic time scale determining the waiting time between individual peaks within a burst as well. 
+
+
+
 In Figure \ref{fig:correlations}, we plot rise time and duration against fluence for all $332$ bursts. There is a clear positive
 correlation between both rise time and fluence as well as spike duration and fluence (Spearman rank coefficient $R = 0.30\pm0.06$ with $p < 10^{-5}$ for duration versus fluence,
 and $R = 0.25\pm0.06$ with $p < 0.01$ for duration versus rise time). Clearly, more energetic spikes require both more time to rise to the peak,
@@ -764,8 +763,7 @@ and radiate away their energy for a longer overall time. This is consistent with
 and burst fluence, although the correlation found when considering whole bursts instead of spikes seems to be weaker than that found here. It is also consistent with 
 previous results in \citet{gogus1999}, who found a correlation between
 duration and fluence for bursts from SGR 1900+14 observed with \rxte, which could be modelled with a power law with an index of $1.13$. 
-
- \begin{figure}[htbp]
+  \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=9cm]{sgr1550_prior_nspikes.pdf}
 \caption{The number of  components (spikes) per burst for $332$ bursts for both exponential priors (blue) for amplitude and rise time scale, the standard prior assumed in
@@ -774,6 +772,13 @@ no appreciable effect on the number of components per burst.}
 \label{fig:nspikes_prior}
 \end{center}
 \end{figure}
+\subsection{Testing the Prior Assumptions}
+\label{sec:priortest}
+Because we have little prior information about the nature of magnetar bursts and the details of
+the underlying physical processes producing them, we choose mostly uninformative priors for all model parameters. However,
+there is still some leeway in the choice of these prior distributions, and thus it merits investigation whether changing
+any priors will have an appreciable impact on the conclusions we derive. 
+
 
 \begin{figure*}[htbp]
 \begin{center}
@@ -786,12 +791,8 @@ to an excess at low fluences as well. The overall shape and location of the maxi
 \end{center}
 \end{figure*}
 
-\subsection{Testing the Prior Assumptions}
-\label{sec:priortest}
-Because we have little prior information about the nature of magnetar bursts and the details of
-the underlying physical processes producing them, we choose mostly uninformative priors for all model parameters. However,
-there is still some leeway in the choice of these prior distributions, and thus it merits investigation whether changing
-any priors will have an appreciable impact on the conclusions we derive. 
+
+
 
 The strongest source of uncertainty in terms of deriving conclusions from the data set comes from the priors for
 amplitudes and rise time. An exponential distribution favours low-amplitude spikes with short rise time, which, in principle,
@@ -913,7 +914,7 @@ over different sources, testing priors + model shapes in a more rigorous way.
 
 \paragraph{acknowledgements}
 We thank the organizers of MaxEnt2013.
-
+\clearpage
 
 \bibliography{td}
 \bibliographystyle{apj}

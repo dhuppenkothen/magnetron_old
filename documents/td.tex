@@ -338,30 +338,42 @@ p(\bm{\counts} | H) & = & \sum_{N=0}^{N_{\rm max}} \int_{-\infty}^{\infty}{\like
 \label{eqn:marginal}
 \end{eqnarray}
 
+% BJB: Our model is quite closely related to some other ones in the literature
+% that we should cite. Let's do this later
+
+% BJB: Consider an abbreviation (DNS?) for Diffusive Nested Smapling
+% BJB: added footnote
 The marginal likelihood involves integration in a high-dimensional parameter space as well as summation over $N$, which is analytically intractable for all but the
 simplest cases. Here, we use Diffusive Nested Sampling \citep{brewer2011} to efficiently traverse parameter space and approximate the marginal 
 likelihood as well as sample from the posterior probability density. 
 Nested sampling \citep{skilling2006} samples parameter space by uniformly sampling $M$ points (particles) from the space allowed by the prior. 
 One then computes the likelihood values associated with each particle, and the particle with the lowest likelihood is discarded. A new point
-can be generated, for example, via Markov Chain Monte Carlo (MCMC), subject to the hard constraint that the
+can be generated, for example, via MCMC\footnote{In our case, the MCMC process will include trans-dimensional jumps that change the number of components $N$.}, subject to the hard constraint that the
 likelihood of the new point must be larger than the likelihood of the discarded one. In this way, the population iterates progressively towards
 regions of higher likelihood. At the same time, one may assign a value $X  \in [0, 1]$ to the discarded particle. This effectively provides a 
 mapping from parameter space into $[0,1]$, such that the evaluation of the marginal likelihood simplifies to a one-dimensional 
 integral tractable with numerical integration methods.
 
-The MCMC step is the key challenge in any Nested Sampling algorithm, and classical MCMC often fails for probability distributions that
-are highly multi-modal or contain phase transitions. It is here that Diffusive Nested Sampling provides a reliable alternative \citep[for details, see][]{brewer2011}. 
+% BJB: A referee may complain about lack of detail here (proposal distributions
+% etc). You can forward-reference my in prep RJObject paper
+% BJB: All nested sampling methods are fine with phase transitions, it's the
+% potential multi-modality that we care about
+The MCMC step is the key challenge in any Nested Sampling algorithm. However, standard MCMC-based Nested Sampling often fails for probability distributions that
+are multi-modal. It is here that Diffusive Nested Sampling provides a reliable alternative \citep[for details, see][]{brewer2011}. 
 Instead of recording the end point of an MCMC chain as the new particle, the likelihoods of parameter sets visited during the MCMC exploration step
  are recorded. One can then compute the $1-e^{-1}$ quantile, and record this value as the new likelihood contour, such that the prior space
  under consideration contracts by a factor of $\sim e$. Instead of enforcing a hard likelihood constraint, one now samples a mixture of the 
  two regions, and the particle may escape into the lower-likelihood region, where it can explore more freely. Once enough samples are accumulated,
  one again computes the $1-e^{-1}$ quantile, and constructs a new likelihood contour. This process is repeated, and as in the classical Nested Sampling
- approach, the population contracts towards regions of high likelihood, but it will do so even for complex probability distributions subject to multi-modality
- or phase transitions.
+ approach, the population contracts towards regions of high likelihood, but it will do so even for complex probability distributions subject to multi-modality.
 
+% BJB: Techically the posterior isn't a PDF here because N is discrete.
 Diffusive nested sampling as implemented in {\it DNest3}\footnote{the code is available under the GNU public license at \hyperref[]{https://github.com/eggplantbren/DNest3}} can return both an estimate for the marginal likelihood,
-suitable for model selection purposes, as well as a samples drawn from the posterior probability density function (pdf) for a given burst. The latter is done by letting a particle explore
+suitable for model selection purposes, as well as a samples drawn from the posterior distribution for a given burst. The latter is done by letting a particle explore
 the final mixture of levels freely via MCMC. 
+
+% BJB: I feel like this discussion enters too early. We should show the inferences
+% about an individual burst before discussing what we can say about a population
 We can make inferences about individual parameters in the model from these samples in the usual way by marginalising over nuisance parameters (e.g. 
 hyper parameters $\bm{\alpha}$). Additionally, for many bursts, we can make inferences over the parameters from many components. In the naive way,
 this can be done by picking a parameter set from the MCMC run for each burst, and using this ensemble of individual samples from many bursts 
@@ -369,6 +381,8 @@ to compute the quantity of interest (say, a correlation between two model parame
 for the quantity in question. Note, however, that by posing that individual bursts have no knowledge of each other - we fit the model for each burst separately - 
 this imposes a strong prior on this quantity, suggesting that there is, in fact, no correlation present. 
 
+% BJB: I feel like this discussion enters too early. We should show the inferences
+% about an individual burst before discussing what we can say about a population
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=9cm]{word.pdf}
@@ -422,12 +436,14 @@ for an example of the model).
 For each component $n$, we have a set of free parameters $\{t_n, A_n, \tau_n, s_n \},$, for each model, i.e. each
 linear combination of components, we have a set of free parameters $\{\mean_{bg}, \{t_n, A_n, \tau_n, s_n\} \}$.
 We set a uniform prior on the number of components $N$, where $N$ may lie between $0$ and $100$. 
-The priors for the free parameters of the individual components are independent and identically distributed, such that priors 
+The priors for the free parameters of the individual components, given the hyperparameters, are independent and identically distributed, such that priors 
 are the same for a given type of parameter between components. 
 Because bursts are defined in such a way that the observed count rate must drop back to the background before the
 start and the end of each burst, we can simply define the prior on the time offset such that $t_n$ must lie between
 the start and end times of the burst light curve, $t_{\mathrm{start}} < t_n < t_\mathrm{end}$. 
 For the amplitude $A_n$ and the rise timescale $\tau_n$, we choose exponential priors:
+
+% BJB: for "justification" (haha) of the exponential choice, you can cite Skilling (1998) [Massive Inference paper] who says it's "natural".
 
 \begin{figure*}[htbp]
 %\begin{center}
@@ -454,6 +470,8 @@ The prior on the skewness parameter $s_n$ is a uniform distribution with a mean 
 that the log-skewness must lie in the range $(a-b) < \log{(s)} < (a+b)$. A definition in terms of mean and half-width ensures
 that positive and negative skews are equally likely a priori.
 
+% BJB: For large models I like to list the priors in a table. See e.g. Page 8 here http://arxiv.org/pdf/1310.5177v1.pdf
+% BJB: I know what you're saying here but it could be clearer :)
 
 The prior on the background parameter, finally, depends on the data itself. It is log-uniform, with boundaries between 
 $\log{(10^{-3}\mu_\counts)} < \log{(\counts_{\mathrm{bg}})} < \log{(10^{3} \mu_\counts)}$, where $\mu_\counts$ is the average count
@@ -462,7 +480,7 @@ itself. In practice, it is convenient as long as one does not need to compute th
 involving the marginal likelihood where, for example, one might test whether any results change with a change of prior, or where different component models
 might be compared, one would need to discard this prior for one that is formally valid.
 
-The priors on the hyper parameters $\mu_{A}$ and $\mu_{\mathrm{\tau}}$ are log-uniform. The prior range for
+The priors on the hyperparameters $\mu_{A}$ and $\mu_{\mathrm{\tau}}$ are log-uniform. The prior range for
 $\mu_{\tau}$ depends on the length of the data set, such that $\log{(10^{-3}t_{\mathrm{burst}})} < \log{(\mu_{\tau})} < \log{(10^{3}t_\mathrm{burst})}$.
 Like the prior on the background count rate $\counts_{\mathrm{bg}}$, the hyper prior on the width of the amplitude prior distribution
 depends on the count rate in a burst, $\mu_\counts$: $\log{(10^{-3}\mu_\counts)} < \log{(\mu_{A})} < \log{(10^{3} \mu_\counts)}$. The same reasoning applies as

@@ -180,7 +180,7 @@ At the same time, this process needs to operate automatically without the user's
 % would rather understand the modelling ideas and care less about the computation).
 In this paper, we propose a new method to model magnetar bursts as a linear combination of simple shapes. Both the number of components
 per burst as well as the model parameters for each components are free parameters, to be inferred from the data (in practice, using
-Markov Chain Monte Carlo).
+Markov Chain Monte Carlo [MCMC]).
 We apply this model to a large data set of bursts from SGR J1550-5418, observed with the Gamma-ray Burst Monitor (GBM) on board the \fermi spacecraft.
 The high sensitivity of the instrument as well as 
 the large number of observed bursts make this source an excellent target to demonstrate the power of the proposed methods. For the first time, 
@@ -242,7 +242,8 @@ to make sure the entire burst is included.
 
 \section{Analysis Methods}
 \label{sec:methods}
-In order to successfully model the complex temporal variability in magnetar bursts, any modelling procedure must satisfy the following criteria: (1) it must be flexible enough to be applicable to a large number of bursts with distinctly different morphologies. We achieve this by decomposing magnetar burst light curves into one or more components with simple shapes, which, taken together, make up a burst. (2) The procedure must be largely automated, and be capable of sampling both the number of components as well as the model parameters for each component without human intervention. The latter is achieved by setting up a Bayesian model, where the number of components is a parameter to be sampled together with the corresponding parameters of the individual components. We use diffusive nested sampling as implemented in DNest \citep{brewer2011} to approximate the posterior distribution over all parameters. From samples of the posterior distribution,
+% BJB: Some minor wording changes in the following paragraph
+In order to successfully model the complex temporal variability in magnetar bursts, any modelling procedure must satisfy the following criteria: (1) it must be flexible enough to be applicable to a large number of bursts with distinctly different morphologies. We achieve this by decomposing magnetar burst light curves into one or more components with simple shapes, which, taken together, make up a burst. (2) The procedure must be largely automated, and be capable of inferring both the number of components as well as the model parameters for each component without human intervention. The latter is achieved by setting up a Bayesian model, where the number of components is a parameter to be inferred together with the corresponding parameters of the individual components. We use MCMC (particularly, diffusive nested sampling as implemented in DNest \citep{brewer2011}) to sample the posterior distribution over all parameters including the number of components. From samples of the posterior distribution,
 we can then study the properties of individual burst components, as well as their properties for a given burst.
 
 \subsection{A Bayesian model for magnetar burst light curves}
@@ -250,13 +251,14 @@ we can then study the properties of individual burst components, as well as thei
 
 For a light curve with $K$ Poisson-distributed counts $\bm{\counts} = \{\counts_k\}$, we define a model as a superposition of $N$ individual components:
 
+% BJB: The parentheses in the equation annoyed me so I added \left and \right
 %The model for the data in or near one burst is
 \begin{eqnarray}
 %p(\counts_n\given\pars) &=& \Poisson(\counts_n\given\mean_n)
 %\\
 \mean_n &=& \mean_{\bg} + \sum_{n=1}^N \mean_{nk}
 \\
-\mean_{nk} &\equiv& \int_{t_n-\Delta t/2}^{t_n+\Delta t/2} A_n\,\word(\frac{t'-t_n}{\tau})\,\dd t' \; ,
+\mean_{nk} &\equiv& \int_{t_n-\Delta t/2}^{t_n+\Delta t/2} A_n\,\word\left(\frac{t'-t_n}{\tau}\right)\,\dd t' \; ,
 %\begin{equation}
 %\word(\xi) &=& \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right. \, ,
 %\end{equation}
@@ -280,15 +282,18 @@ restrict ourselves here to a general description of the model.
 %  $\phi(\xi)$ is the dimensionless word function,
 %  $A_n, t_n$ are the amplitudes and time offsets of the words,
 %  and $s, \tau$ set the shape (asymmetry or skew) and rise time of the words.
-  
-We can compute the posterior probability over all model parameters in the following way:
+
+% BJB: Reworded  
+The posterior probability over all model parameters is given by:
 
 \begin{equation}
 p(N, \bm{\alpha},\{\bm{\theta}_n \} \given \bm{\counts}, H) = \frac{p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_n \}, H) p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H)}{p(\bm{\counts} | H)} \, .
 \end{equation}
 
+% BJB: The words "hierarchical model" should appear somewhere around here, but
+% I didn't insert them. Might want to define interim prior as p(thetas | alphas, N, H)
 Here, $N$ is the number of model components, with the corresponding set of model components $\{\bm{\theta}_n\} = \{ \bm{\theta}_1, \bm{\theta}_2, ..., \bm{\theta}_N \}$. Each $\bm{\theta}_n$ may be a scalar, for models with a single parameter, or a vector.
-The scalar or vector $\bm{\alpha}$ encodes the potential hyper parameters used to describe the prior distributions of parameters in $\{\bm{\theta}_n\}$. $H$ encodes the prior choices we have
+The scalar or vector $\bm{\alpha}$ encodes the potential hyperparameters used to describe the prior distributions of parameters in $\{\bm{\theta}_n\}$. $H$ encodes the prior choices we have
 made about the model that are not part of the inference problem at this stage: for example, the choice of shape for prior distributions and the model shape used to represent the light curve.
 
 We use a Poisson likelihood to describe the data,
@@ -299,36 +304,41 @@ We use a Poisson likelihood to describe the data,
 \end{eqnarray}
 
 which only depends on the parameters of the individual model components, $\{\bm{\theta}_n\}$. In general, the interim priors for the model 
-parameters $\{\bm{\theta}_n\}$ will depend on the priors for the hyper parameters defining their prior distributions, $\bm{\alpha}$, such that the
+parameters $\{\bm{\theta}_n\}$ will depend on the priors for the hyperparameters defining their prior distributions, $\bm{\alpha}$, such that the
 overall prior for this model is
 
+% BJB "Given H" was missing from some of these terms
 \begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N)p(\alpha\given N)p(\{\bm{\theta}_n\}\given \alpha, N) \; .
+p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N | H)p(\alpha\given N, H)p(\{\bm{\theta}_n\}\given \alpha, N, H) \; .
 \end{equation}
 
 Under the assumption that $\bm{\alpha}$ and $N$ are independent, and that the interim priors of the individual model components are
 independent and identically distributed, we can re-write this equation as:
 
+% BJB: Fixed mistake in this equation that was caused by me initially (from that RJObject document). Sorry
 \begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N)p(\alpha) \prod\limits_{n=0}^{N}  p(\{\bm{\theta}_n\}\given \alpha) \; .
+p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N|H)p(\alpha|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \alpha, H) \; .
 \end{equation}
 
 Thus, the posterior probability density becomes
 
+% BJB: Brackets and H again
 \begin{eqnarray}
 p(N, \bm{\alpha}, &&\{\bm{\theta}_n \}  \given \bm{\counts}, H) = \\ 
-&& \frac{\prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }} p(N)p(\alpha) \prod\limits_{n=0}^{N}  p(\{\bm{\theta}_n\}\given \alpha)}{p(\bm{\counts} | H)}  \nonumber
+&& \frac{\prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }} p(N|H)p(\alpha|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \alpha)}{p(\bm{\counts} | H)}  \nonumber
 \end{eqnarray}
 
 where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisation constant in the usual way: 
 
+% BJB: brackets and H again
+% BJB: Also, you can't integrate over N as it's discrete :) It's a summation
 \begin{eqnarray}
-p(\bm{\counts} | H) & = & \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
-&& p(N)p(\alpha) \prod\limits_{n=0}^{N}  p(\{\bm{\theta}_n\}\given \alpha) d\bm{\alpha} dN d\bm{\theta}_1 ... d\bm{\theta}_N \; .
+p(\bm{\counts} | H) & = & \sum_{N=0}^{N_{\rm max}} \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
+&& p(N|H)p(\alpha|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \alpha, H) d\bm{\alpha} d\bm{\theta}_1 ... d\bm{\theta}_N \; .
 \label{eqn:marginal}
 \end{eqnarray}
 
-The marginal likelihood involves integration in a high-dimensional parameter space, which is analytically intractable for all but the
+The marginal likelihood involves integration in a high-dimensional parameter space as well as summation over $N$, which is analytically intractable for all but the
 simplest cases. Here, we use Diffusive Nested Sampling \citep{brewer2011} to efficiently traverse parameter space and approximate the marginal 
 likelihood as well as sample from the posterior probability density. 
 Nested sampling \citep{skilling2006} samples parameter space by uniformly sampling $M$ points (particles) from the space allowed by the prior. 

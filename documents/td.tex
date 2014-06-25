@@ -12,6 +12,7 @@
 \usepackage{amsbsy}
 \usepackage{bm}
 \usepackage{hyperref}
+\usepackage{url}
 \usepackage{booktabs}
 %\usepackage[stable]{footmisc}
 %\usepackage{color}
@@ -378,7 +379,7 @@ Instead of recording the end point of an MCMC chain as the new particle, the lik
  For details on an implementation of DNS for models where 
 
 % BJB: Techically the posterior isn't a PDF here because N is discrete.
-DNS as implemented in {\it DNest3}\footnote{the code is available under the GNU public license at \hyperref[]{https://github.com/eggplantbren/DNest3}} can return both an estimate for the marginal likelihood,
+DNS as implemented in {\it DNest3}\footnote{the code is available under the GNU public license at \url{https://github.com/eggplantbren/DNest3}} can return both an estimate for the marginal likelihood,
 suitable for model selection purposes, as well as a samples drawn from the posterior mass function (PMF) for a given burst. The latter is done by letting a particle explore
 the final mixture of levels freely via MCMC. 
 \begin{figure}[h]
@@ -824,20 +825,41 @@ the prior, and they do little to change our conclusions from the data, we defer 
 
 Magnetar bursts have often been placed in the context of self-organised criticality (SOC). In this framework, a physical system continuously drives
 itself towards a critical point, without fine tuning or outside intervention. When reaching this critical point, a catastrophic energy
-release will return the system to a sub-critical state, upon which the cycle begins anew. The standard cellular automaton model of \citet{bak1987} models an SOC system as a grid of cells (or nodes), where activation of one node leads to a cascade of activation in neighbouring nodes based on some activation rule (e.g. a preferential direction), leading to 
+release will return the system to a sub-critical state, upon which the cycle begins anew. The standard cellular automaton model of \citet{bak1987} models an 
+SOC system as a grid of cells (or nodes), where activation of one node leads to a cascade of activation in neighbouring nodes based on some activation rule 
+(e.g. a preferential direction), leading to 
 sudden energy release and dissipation and return of the system to the sub-critical state.
 Based on the avalanche evolution, it becomes possible to define a characteristic length scale and affected 
 area (or volume) in the system, which is closely related with the released energy. 
-The evolution of typical avalanche length scales follows a classical diffusion law, set by a diffusion coefficient $\beta$. 
- Using this diffusion law, it is possible to derive detailed predictions for the relationships between different quantities.
-
 One of the defining features of the SOC framework is that while the details of the physical processes in question depend on the characteristics
 of the system, SOC leads to an overall characteristic behaviour with similar statistical properties for many different systems. 
 
+In general, SOC processes follow a fractal geometry, an idea that was proposed by proponents of SOC theory early on \citep{bak1989}, and later
+confirmed with detailed SOC simulations \citep{aschwanden2012a}, where next-neighbour interactions were found to build up tree-like fractal structures. In the simplest case,
+the fractal geometry can be characterised by the so-called Hausdorff fractal dimension $D_d$, which depends on the Euclidean space
+dimension $d$. In practice, while it is usually possible to determine the area fractal dimension $D_2$ directly (e.g. from solar granulation imaging or solar
+magnetograms), this is not true for the $3$D Euclidean space, which is relevant for the geometry of both solar flares and magnetar bursts. 
+In the absence of firm measurements, it is often reasonable to define a mean fractal dimension, averaging the smallest likely and the maximum possible fractal dimensions.
+For most SOC systems, $D_{d,\mathrm{min}} \approx 1$, since for smaller fractal dimensions there would be too little interaction between neighbouring nodes to form an avalanche.
+The maximum possible fractal dimension is directly related to the relevant Euclidean dimension $d$. For $d=3$, the mean fractal dimension becomes $D_d \approx (1+d)/2 = 2$. 
 
- This framework has been successfully employed to model, for example, solar flares \citep[for an overview see ][ and references therein]{aschwanden2014}.
-In particular, the SOC framework makes predictions for power law-type correlations between various quantities - most importantly, duration, 
-peak amplitude and total dissipated energy -  as well as their differential distributions. 
+For solar flares, there is a wealth of both imaging and timing studies suited to measure the relevant fractal dimensions. A large body of evidence suggests that area fractal dimension $D_2$ is
+close to the expected mean fractal dimension $D_2 \approx 1.5$ \citep[see Table 8 in ][ and references therein]{aschwanden2014}. 
+While measurements of $D_3$ are more difficult, \citet{aschwanden2008} found $D_3 = 2.06 \pm 0.48$
+in a study of $20$ bright solar flares observed in X-rays, close to the predicted value $D_3 = 2$. 
+
+Simulations of cellular automaton models \citep{aschwanden2012a} and calculations from solar flare observations \citep{aschwanden2012b,aschwanden2013a,aschwanden2013b} 
+suggest that the evolution of the avalanche radius $r(t)$ follows a classical diffusion-type relationship after onset of the instability $t_0$, 
+
+\begin{equation}
+r(t) = \kappa(t- t_0)^{\beta/2}\; ,
+\end{equation}
+
+with a diffusions coefficient $\kappa$ and a diffusive spreading coefficient $\beta$.
+
+Using this diffusion law in combination with the fractal dimension $D_d$, the SOC framework makes predictions for 
+power law-type correlations between various quantities - most importantly, duration, 
+peak amplitude and total dissipated energy -  as well as their differential distributions.
 The predicted correlations for the avalanche duration $T$, peak flux $P$ and total dissipated energy $E$ are
 
 \begin{eqnarray}
@@ -845,24 +867,31 @@ P & \propto  T^{d\beta/2} &\propto  T^{3/2} \\
 E &\propto   T^{D_d\beta/2 + 1} & \propto  T^{2} \\
 \end{eqnarray}
 
-for typical values for the (mean) fractal dimension $D_d \approx (1+d)/2$, the spatial dimension $d = 3$ for Euclidean space, and a
-classical diffusion coefficient  $\beta = 1$ \citep[see ][ and references therein for details of the derivation]{aschwanden2014}. 
+for typical values $D_d \approx (1+d)/2$, $d = 3$  and  $\beta = 1$ \citep[see ][ and references therein for details of the derivation]{aschwanden2014}. 
+For solar flare data in hard X-rays, observed correlations between $T$, $P$ and $E$ are in remarkably good agreement within the measurement
+uncertainties with predictions made by the fractal-diffusive SOC model outlined above, with a classical diffusion coefficient $\beta = 1$ and $D_d = 2$.
+
+Similarly, the differential distributions of burst duration, peak amplitude and total dissipated energy can be derived as
+
+\begin{eqnarray}
+N(T) dT &=& T^{-\alpha_T}dT \;  \mbox{; $\alpha_T = 1 + (d-1)\frac{\beta}{2}$} = 2\nonumber \\ 
+N(P) dA &=& T^{-\alpha_P}dP \; \mbox{; $\alpha_P = 2 - \frac{1}{d}$} = 5/3 \\
+N(E) dE & = &T^{-\alpha_E}dE  \;\mbox{; $\alpha_E = 1 + \frac{(d-1)}{(D_d + 2/b)}$} =  3/2 \; ,  \nonumber
+\label{eqn:diffdist}
+\end{eqnarray}
+
+again for the standard assumptions stated above. Observations of solar flares in hard X-rays with a number of different telescopes
+agree with fractal-diffusive SOC predictions; the power law-like distributions in $T$, $P$ and $E$ and the values of $\alpha_T$, $\alpha_P$
+and $\alpha_E$ match those of Equations \ref{eqn:diffdist}.
+
 As expected from SOC predictions, we see a positive correlation between spike duration and 
-fluence (a proxy for the total dissipated energy), similar to that seen when taking the bursts as a whole \citep{gogus1999}. 
+fluence (a proxy for the total dissipated energy) for spikes in magnetar bursts, similar to that seen when taking the bursts as a whole \citep{gogus1999}. 
 The slope of this correlation seems to be flatter than the $T^{2}$ proportionality
 expected from classical SOC, although this requires confirmation with a hierarchical model that allows proper inference over many
 bursts at the same time.  
 
-The differential distributions of burst duration, peak amplitude and total dissipated energy can be derived as
-
-\begin{eqnarray}
-N(T) dT &=& T^{-\alpha_T}dT \;  \mbox{; $\alpha_T = 1 + (d-1)\frac{\beta}{2}$} = 2\nonumber \\ 
-N(A) dA &=& T^{-\alpha_A}dA \; \mbox{; $\alpha_A = 2 - \frac{1}{d}$} = 5/3 \\
-N(E) dE & = &T^{-\alpha_E}dE  \;\mbox{; $\alpha_E = 1 + \frac{(d-1)}{(D_d + 2/b)}$} =  3/2 \; ,  \nonumber
-\end{eqnarray}
-
-again for the standard assumptions stated above. Unlike the correlations between parameters, the differential
- distributions do not follow the expected power laws: all three quantities show strongly peaked, unimodal distributions.
+ Unlike the correlations between parameters, however, the differential
+ distributions for magnetar bursts do not follow the expected power laws: all three quantities show strongly peaked, unimodal distributions.
  While some of that may be an artefact of excluding the weakest, unconstrained peaks (with amplitudes lower than the inferred
  background count rate) from the sample, this selection cannot account for the complete disparity between theoretical 
  expectations and the inferred distributions from the data. Especially the fluence distribution additionally also disagrees strongly
@@ -920,3 +949,5 @@ We thank the organizers of MaxEnt2013.
 \bibliographystyle{apj}
 
 \end{document}
+
+

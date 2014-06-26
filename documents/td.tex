@@ -689,15 +689,49 @@ skewed towards larger values. }
 \label{fig:diffdist}
 \end{center}
 \end{figure*}
-
-Four quantities are of particular interest for their potential connection with physical processes: the spike duration $T$, exponential rise time scale $\tau$,
-total dissipated energy $E$ and waiting time between consecutive spikes $t_\mathrm{wait}$. The exponential rise time scale for each model component is a free parameter
+  \begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=9cm]{sgr1550_waitingtimes.pdf}
+\caption{Waiting time distribution between consecutive spikes for $332$ bursts. Waiting times are the times between peak amplitudes of spikes, and are only computed for
+continuous stretches of data between them, i.e. time series without data gaps. This effectively sets an upper limit to the waiting time that can be measured of $330\,\mathrm{s}$, the 
+length of a single \fermi/GBM TTE data file. This cut-off introduces a bias into the distribution at long waiting times, and shifts the peak at long waiting times to smaller values.}
+\label{fig:waitingtimes}
+\end{center}
+\end{figure}
+Five quantities are of particular interest for their potential connection with physical processes: the spike duration $T$, the exponential rise time scale $\tau$, the exponential fall
+time scale as parametrised by the skewness parameter $s$, $\tau_{\mathrm{fall}} = s\tau$, the total dissipated energy $E$ and waiting time between consecutive spikes $t_\mathrm{wait}$. T
+he exponential rise time scale and skewness for each model component are free parameters
 in our model, and thus easily extracted. We compute spike duration by finding the time between the two points at which the flux drops by a
  factor of $100$ on either side of the spike peak. We choose this definition for the spike duration, as opposed to, for example, a definition in terms of where the spike vanishes
  into the instrumental background, because it is independent of the sky background (which may be variable between observations and even between bursts). Thus, by defining the 
  duration in terms of rise time, skewness and amplitude alone, in other words, only in terms of the spike parameters, we avoid introducing unnecessary instrument-dependent
  biases into our analysis.
- 
+  \begin{figure*}[htbp]
+\begin{center}
+\includegraphics[width=\textwidth]{sgr1550_correlations.pdf}
+\caption{Correlations between spike duration and fluence (left) and spike rise time and fluence (right). Black points indicate an ensemble of burst models, where we drew once
+from the posterior PMF of each burst to build the ensemble. Contours are derived from the combined sample of $100$ draws for all bursts, the shaded background is constructed in
+the same way for illustrative purposes. Contour levels are at $0.01, 0.05, 0.1, 0.2$ and $0.3$.
+The duration is defined as the time between the two points where
+the count rate drops to $0.01$ of the peak count rate on either side of that peak, computed from the inferred model parameters of each spike. The rise time is the exponential
+rise time scale defined in Equation \ref{eqn:word}. The fluence is calculated by computing the fraction of the total number of bursts in a spike compared to the whole burst, and using
+this fraction in combination with fluences inferred from spectral modelling \citep{vanderhorst2012,vonkienlin2012} to derive the fluence in a single spike.}
+\label{fig:correlations}
+\end{center}
+\end{figure*}
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=9cm]{sgr1550_skewness_correlations.pdf}
+\caption{Flux versus skewness for a sample of spikes in $332$ bursts. We parametrise flux in arbitrary units as the ratio of amplitude $A$ 
+for a spike in count space divided by the exponential rise time scale $\tau$. The skewness $s$ measures the asymmetry
+of exponential rise versus exponential fall in a spike, such that the fall time scale $\tau_{\mathrm{fall}} = s\tau$. Overall, spikes are positively skewed ($\log_{10}{(s)} > 0$), i.e. their
+exponential rise is faster than their decay. There is a clear correlation between our measure of the flux and the skewness $s$, although the relationship seems to flatten out for
+low fluxes.}
+\label{fig:skewness}
+\end{center}
+\end{figure}
+
  Finally, we compute the dissipated energy in a spike by integrating Equation \ref{eqn:word} analytically in count space,
  then converting from count space to fluence using the spectral modelling results from \citet{vanderhorst2012} and \citet{vonkienlin2012}. We subtract the integrated number of 
  background photons, derived from the background parameter $\mu_\counts$ for a given model, from the total integrated number of 
@@ -714,34 +748,14 @@ in our model, and thus easily extracted. We compute spike duration by finding th
  each bin of that distribution. 
  Similarly, we test for correlations by $S$ ensembles of burst models and testing for the presence of a correlation using a Spearman rank
  coefficient for each ensemble. We then report the mean and standard deviation of the distribution of coefficients for $S$ draws, where $S = 100$ in all cases below.
-  \begin{figure}[htbp]
-\begin{center}
-\includegraphics[width=9cm]{sgr1550_waitingtimes.pdf}
-\caption{Waiting time distribution between consecutive spikes for $332$ bursts. Waiting times are the times between peak amplitudes of spikes, and are only computed for
-continuous stretches of data between them, i.e. time series without data gaps. This effectively sets an upper limit to the waiting time that can be measured of $330\,\mathrm{s}$, the 
-length of a single \fermi/GBM TTE data file. This cut-off introduces a bias into the distribution at long waiting times, and shifts the peak at long waiting times to smaller values.}
-\label{fig:waitingtimes}
-\end{center}
-\end{figure}
+
  
  In Figure \ref{fig:diffdist}, we show differential distributions of duration, peak amplitude (measured in count space) and fluence for all spikes in $332$ bursts. All three distributions are
  strongly peaked, and both amplitude and fluence are skewed towards larger values. The latter is exacerbated when considering the unfiltered sample of 
  spikes (including spikes with peak amplitudes below the background count rate), producing longer tails for both amplitude and fluence, but not changing the qualitative behaviour of the distributions. We will consider the behaviour of
  the differential distributions in detail and compare the observed distributions to predictions from SOC theory in Section \ref{sec:soc}.
 
- \begin{figure*}[htbp]
-\begin{center}
-\includegraphics[width=\textwidth]{sgr1550_correlations.pdf}
-\caption{Correlations between spike duration and fluence (left) and spike rise time and fluence (right). Black points indicate an ensemble of burst models, where we drew once
-from the posterior PMF of each burst to build the ensemble. Contours are derived from the combined sample of $100$ draws for all bursts, the shaded background is constructed in
-the same way for illustrative purposes. Contour levels are at $0.01, 0.05, 0.1, 0.2$ and $0.3$.
-The duration is defined as the time between the two points where
-the count rate drops to $0.01$ of the peak count rate on either side of that peak, computed from the inferred model parameters of each spike. The rise time is the exponential
-rise time scale defined in Equation \ref{eqn:word}. The fluence is calculated by computing the fraction of the total number of bursts in a spike compared to the whole burst, and using
-this fraction in combination with fluences inferred from spectral modelling \citep{vanderhorst2012,vonkienlin2012} to derive the fluence in a single spike.}
-\label{fig:correlations}
-\end{center}
-\end{figure*}
+
 
 
 In Figure \ref{fig:waitingtimes}, we show the differential distribution of waiting times for $332$ magnetar bursts. We use only waiting times 
@@ -757,7 +771,6 @@ The distribution of short waiting times, on the other hand, traces the time betw
 that there is a characteristic time scale determining the waiting time between individual peaks within a burst as well. 
 
 
-
 In Figure \ref{fig:correlations}, we plot rise time and duration against fluence for all $332$ bursts. There is a clear positive
 correlation between both rise time and fluence as well as spike duration and fluence (Spearman rank coefficient $R = 0.30\pm0.06$ with $p < 10^{-5}$ for duration versus fluence,
 and $R = 0.25\pm0.06$ with $p < 0.01$ for duration versus rise time). Clearly, more energetic spikes require both more time to rise to the peak,
@@ -765,7 +778,18 @@ and radiate away their energy for a longer overall time. This is consistent with
 and burst fluence, although the correlation found when considering whole bursts instead of spikes seems to be weaker than that found here. It is also consistent with 
 previous results in \citet{gogus1999}, who found a correlation between
 duration and fluence for bursts from SGR 1900+14 observed with \rxte\, which could be modelled with a power law with an index of $1.13$. 
-  \begin{figure}[htbp]
+
+In Figure \ref{fig:skewness}, we plot a measure of the flux, parametrised as the peak amplitude $A_n$ of a component $n$ divided by the rise time $\tau_n$ of that component,
+against the skewness parameter $s_n$, in order to test whether bursts with higher luminosity are also more skewed, i.e. their ratio of rise time scale to fall time scale deviates significantly
+from $1$. Overall, the spikes modelling magnetar bursts are skewed: the population of skewness parameters resides largely above 1 (corresponding to $\log_{10}{(s)} = 0$), indicating that most
+spikes have faster rise time scales than decays. Moreover, we find that there is a positive correlation between the our flux measure and the skewness: brighter bursts have a higher
+ratio between rise and fall time scales. We also note a possible deviation from a simple power law relationship between these two quantities: while the correlation is fairly strong at high fluxes
+above $A/s \!\sim\! 100$, it seems to flatten out towards a slope of $0$ at lower fluxes: spikes with fluxes below that value have a similar ratio between rise and fall time scale. This 
+deviation is, however, weak, and requires quantification to draw firm conclusions.
+
+
+
+ \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=9cm]{sgr1550_prior_nspikes.pdf}
 \caption{The number of  components (spikes) per burst for $332$ bursts for both exponential priors (blue) for amplitude and rise time scale, the standard prior assumed in
@@ -774,6 +798,10 @@ no appreciable effect on the number of components per burst.}
 \label{fig:nspikes_prior}
 \end{center}
 \end{figure}
+
+
+
+
 \subsection{Testing the Prior Assumptions}
 \label{sec:priortest}
 Because we have little prior information about the nature of magnetar bursts and the details of

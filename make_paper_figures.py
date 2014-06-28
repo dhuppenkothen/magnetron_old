@@ -9,7 +9,9 @@ import dnest_sample
 import matplotlib.pyplot as plt
 from pylab import *
 from matplotlib.patches import FancyArrow
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.cm as cm
+import scipy.ndimage
 
 rc("font", size=20, family="serif", serif="Computer Sans")
 rc("text", usetex=True)
@@ -35,14 +37,32 @@ def example_word():
                     color='k', head_width=0.01, head_length=0.2, width=0.001, linewidth=1)
     ar2 = FancyArrow(1., 0.99*exp(-1.), 1.5, 0., length_includes_head=True,
                     color='k', head_width=0.01, head_length=0.2, width=0.001, linewidth=1)
+
+    ar3 = FancyArrow(-3.,0.,0.,1.0, length_includes_head=True,
+                    color='k', head_width=0.15, head_length=0.015, width=0.001, linewidth=1)
+    ar4 = FancyArrow(-3.,1.,0.,-1.0, length_includes_head=True,
+                  color='k', head_width=0.15, head_length=0.015, width=0.001, linewidth=1)
+
+    ar5 = FancyArrow(0., 0.03, 1.0, 0., length_includes_head=True,
+                    color='k', head_width=0.01, head_length=0.2, width=0.001, linewidth=1)
+    ar6 = FancyArrow(1., 0.03, -1.0, 0., length_includes_head=True,
+                    color='k', head_width=0.01, head_length=0.2, width=0.001, linewidth=1)
+
+
     ax = gca()
     # Add the arrow to the axes.
     ax.add_artist(ar1)
     ax.add_artist(ar2)
+    ax.add_artist(ar3)
+    ax.add_artist(ar4)
+    ax.add_artist(ar5)
+    ax.add_artist(ar6)
 
     # Add text
     text(-0.4, 1.*exp(-1.), r'$\tau$')
-    text(2.7, 1.*exp(-1.), r'$\tau S$')
+    text(2.7, 1.*exp(-1.), r'$\tau s$')
+    text(-4.0, 0.5 , r"$A$")
+    text(1.2, 0.01, r"$t_{\mathrm{offset}}$")
 
     savefig('documents/word.pdf', bbox_inches='tight')
 #    show()
@@ -141,7 +161,7 @@ def plot_example_bursts():
     for i in range(6):
         ax1 = fig.add_subplot(2,3,i)
         ax1.plot(allbintimes[i], allbincountrate[i]/10000.0, lw=2, color="black", linestyle='steps-mid')
-        axis([allbintimes[i][0], allbintimes[i][-1], 0.0, np.max(allbincountrate[i])/10000.0+2])
+        axis([allbintimes[i][0], allbintimes[i][-1], 0.0, 16.0])
         f = filenames[i].split("_")
         #xlabel("Time since trigger [s]")
         #ylabel(r"Count rate [$10^{4} \, \mathrm{cts}/\mathrm{s}$]")
@@ -268,94 +288,6 @@ def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100)
     return
 
 
-def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True):
-
-    """
-    Make plots with correlations for duration versus fluence and rise time versus fluence.
-
-
-    @param sample:
-    @param datadir:
-    @param nsims:
-    @return:
-    """
-
-
-    if sample is None:
-        parameters_red,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
-                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
-    else:
-        parameters_red = sample
-
-    fluence_sample, duration_sample, risetime_sample = [], [], []
-
-    for i in xrange(nsims):
-
-        sample = parameters_red[:,i]
-        fluence_all = np.array([np.array([a.fluence for a in s.all if a.duration > 0.0]) for s in sample])
-
-        #fluence_all = fluence_all.flatten()
-        duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
-        #risetime_all = risetime_all.flatten()
-
-        risetime_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
-
-        #print("len fluence: " + str(len(fluence_all)))
-        #print("len risetime: " + str(len(risetime_all)))
-
-        fluence, duration, risetime = [], [], []
-        for a,e,d in zip(risetime_all, fluence_all, duration_all):
-            fluence.extend(e)
-            duration.extend(d)
-            risetime.extend(a)
-
-        #print("len fluence: " + str(len(fluence)))
-        #print("len risetime: " + str(len(risetime)))
-
-
-        fluence_sample.append(fluence)
-        duration_sample.append(duration)
-        risetime_sample.append(risetime)
-
-
-    r = np.array(np.log10(risetime_sample[0]))
-    f = np.array(np.log10(fluence_sample[0]))
-    d = np.array(np.log10(duration_sample[0]))
-
-    sp_dur_all, sp_rise_all = [], []
-
-    fig = figure(figsize=(18,9))
-    subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
-
-    ### first plot: duration versus fluence
-    ax1 = fig.add_subplot(121)
-
-    ax1.scatter(d, f, color="black")
-    ax1.axis([np.min(d)-0.1, np.max(d)+0.1, np.min(f)-0.1, np.max(f)+0.1])
-
-    ax1.set_xlabel(r"$\log_{10}{(\mathrm{Duration} \; \mathrm{[s]})}$ ", fontsize=24)
-    ax1.set_ylabel(r"$\log_{10}{(\mathrm{Fluence})}$ [$\mathrm{erg} \, \mathrm{cm}^{-1}$]", fontsize=24)
-
-
-    ### first plot: duration versus fluence
-    ax2 = fig.add_subplot(122, sharey=ax1)
-
-    ax2.scatter(r, f, color="black")
-    ax2.axis([np.min(r)-0.1, np.max(r)+0.1, np.min(f)-0.1, np.max(f)+0.1])
-
-    ax2.set_xlabel(r"$\log_{10}{(\mathrm{Rise\, timescale} \; \mathrm{[s]})}$ ", fontsize=24)
-    setp(ax2.get_yticklabels(), visible=False)
-    draw()
-    plt.tight_layout()
-
-    savefig('sgr1550_correlations.pdf', format="pdf")
-    close()
-    #### NEED TO COMPUTE SPEARMAN RANK COEFFICIENT
-    #for
-    #sp = scipy.stats.spearmanr(r,a)
-    #sp_all.append(sp)
-
-    return
 
 def waitingtime_plot(sample=None, bids=None, datadir="./", nsims=100, mean=True, filtered=True):
 
@@ -560,7 +492,8 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
     return
 
 
-def correlation_plots_new(sample=None, datadir="./", nsims=100, filtered=True):
+
+def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot="sgr1550"):
 
     """
     Make plots with correlations for duration versus fluence and rise time versus fluence.
@@ -661,12 +594,14 @@ def correlation_plots_new(sample=None, datadir="./", nsims=100, filtered=True):
         Z = np.reshape(kernel(positions).T, X.shape)
 
 
-        im = ax1.imshow(np.transpose(Z), interpolation='bicubic', origin='lower',
+        im = ax1.imshow(np.transpose(Z), interpolation='nearest', origin='lower',
                 cmap=cm.PuBuGn, extent=(-4.0,2.0,ymin,ymax))
         im.set_clim(0.0,0.5)
         #plt.colorbar(im)
 
-        cs = ax1.contour(X,Y,Z,levels, linewidths=2, colors="black", origin="lower")
+        znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
+        cs = ax1.contour(X,Y,znew,levels,
+                         linewidths=2, colors="black", origin="lower")
         #manual_locations = [(0.0, -10.5), (-0.9, -11.5), (-0.7,-10.7), (-1.7,11.1), (-1.1,-10.4)]
         #plt.clabel(cs, fontsize=24, inline=1, manual=manual_locations)
 
@@ -705,13 +640,15 @@ def correlation_plots_new(sample=None, datadir="./", nsims=100, filtered=True):
         kernel = scipy.stats.gaussian_kde(values)
         Z = np.reshape(kernel(positions).T, X.shape)
 
-        im = ax2.imshow(np.transpose(Z), interpolation='bicubic', origin='lower',
+        im = ax2.imshow(np.transpose(Z), interpolation='nearest', origin='lower',
                 cmap=cm.PuBuGn, extent=(xmin,xmax,ymin,ymax))
 
         im.set_clim(0.0,0.5)
         plt.colorbar(im)
 
-        cs = ax2.contour(X,Y,Z,levels, linewidths=2, colors="black", origin="lower")
+        znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
+        cs = ax2.contour(X,Y,znew,levels,
+                         linewidths=2, colors="black", origin="lower")
         #manual_locations = [(-2.0, -12.0),(-1.75,-11.2),(-2.75,-11.5),(-2.25,-11.0),(-2.3,-10.2)]
         #clabel(cs, fontsize=24, inline=1, manual=manual_locations)
 
@@ -729,31 +666,229 @@ def correlation_plots_new(sample=None, datadir="./", nsims=100, filtered=True):
     draw()
     plt.tight_layout()
 
-    savefig('sgr1550_correlations.pdf', format="pdf")
+    savefig('%s_correlations.pdf'%froot, format="pdf")
     close()
 
-    return spdf, sprf
+    return
 
-def all_dnest_plots(datadir="./", nsims=100):
+
+def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=True, froot="sgr1550"):
+
+    """
+    Make plots with correlations for duration versus flux and rise time versus flux.
+
+
+    @param sample:
+    @param datadir:
+    @param nsims:
+    @return:
+    """
+
+
+    if sample is None:
+        parameters_red,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
+                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+    else:
+        parameters_red = sample
+
+    skewness_sample, flux_sample, duration_sample, amplitude_sample = [], [], [], []
+
+    for i in xrange(nsims):
+
+        sample = parameters_red[:,i]
+        #amplitude_all = np.array([np.array([a.amp for a in s.all if a.duration > 0.0]) for s in sample])
+        #risetime_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
+        #flux_all = [a/r for a,r in zip(amplitude_all, risetime_all)]
+#        duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
+
+#        skewness_all = np.array([np.array([a.skew for a in s.all if a.duration > 0.0]) for s in sample])
+
+
+        amplitude_all = np.array([np.array([a.amp for a in s.all]) for s in sample])
+        risetime_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
+        flux_all = [a/r for a,r in zip(amplitude_all, risetime_all)]
+        skewness_all = np.array([np.array([a.skew for a in s.all]) for s in sample])
+        duration_all = np.array([np.array([a.duration for a in s.all]) for s in sample])
+
+
+
+        #print("len flux: " + str(len(amplitude_all)))
+        #print("len skewness: " + str(len(risetime_all)))
+
+        flux, duration, skewness, amplitude = [], [], [], []
+        for s,a,f,d in zip(skewness_all, amplitude_all, flux_all, duration_all):
+            flux.extend(np.log10(f))
+            duration.extend(np.log10(d))
+            skewness.extend(np.log10(s))
+            amplitude.extend(np.log10(a))
+
+        #print("len flux: " + str(len(flux)))
+        #print("len skewness: " + str(len(skewness)))
+
+
+        flux_sample.append(flux)
+        duration_sample.append(duration)
+        skewness_sample.append(skewness)
+        amplitude_sample.append(amplitude)
+
+
+    ### samples for scatter plot
+    fsamp = flux_sample[0]
+    dsamp = duration_sample[0]
+    ssamp = skewness_sample[0]
+    asamp = amplitude_sample[0]
+
+    flux_flat, duration_flat, skewness_flat, amplitude_flat = [], [], [], []
+    spda, spsf = [], []
+
+    for f,d,s,a in zip(flux_sample, duration_sample, skewness_sample, amplitude_sample):
+        flux_flat.extend(f)
+        duration_flat.extend(d)
+        skewness_flat.extend(s)
+        amplitude_flat.extend(a)
+
+        spda.append(scipy.stats.spearmanr(d,a))
+        spsf.append(scipy.stats.spearmanr(f,s))
+
+
+    flux_flat = np.array(flux_flat)
+    skewness_flat = np.array(skewness_flat)
+    duration_flat = np.array(duration_flat)
+    amplitude_flat = np.array(amplitude_flat)
+
+    #spda_mean = np.mean(spda, axis=0)
+    #spda_std = np.std(spda, axis=0)
+    #spsf_mean = np.mean(spsf, axis=0)
+    #spsf_std = np.std(spsf, axis=0)
+
+
+    fig = figure(figsize=(12,9))
+    #subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
+
+    ### first plot: duration versus flux
+    #ax1 = fig.add_subplot(121)
+    ax1 = fig.add_subplot(111)
+    levels = [0.01, 0.05, 0.1, 0.2, 0.3]
+
+
+    #xmin, xmax = duration_flat.min(), duration_flat.max()
+    #ymin, ymax = fluence_flat.min(), fluence_flat.max()
+    xmin = -1.0 #np.min(flux_flat)
+    xmax = 6.0 #np.max(flux_flat)
+    ymin = -2.5 #np.min(skewness_flat)
+    ymax = 3.0 #np.max(skewness_flat)
+    ### Perform Kernel density estimate on data
+    try:
+        X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        positions = np.vstack([X.ravel(), Y.ravel()])
+        values = np.vstack([flux_flat, skewness_flat])
+        kernel = scipy.stats.gaussian_kde(values)
+        Z = np.reshape(kernel(positions).T, X.shape)
+
+
+        im = ax1.imshow(np.transpose(Z), interpolation='bicubic', origin='lower',
+                cmap=cm.PuBuGn, extent=(xmin,xmax,ymin,ymax))
+        im.set_clim(0.0,0.5)
+        #plt.colorbar(im)
+
+        znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
+        cs = ax1.contour(X,Y,znew,levels, linewidths=2, colors="black", origin="lower")
+        #manual_locations = [(0.0, -10.5), (-0.9, -11.5), (-0.7,-10.7), (-1.7,11.1), (-1.1,-10.4)]
+        #plt.clabel(cs, fontsize=24, inline=1, manual=manual_locations)
+
+        divider = make_axes_locatable(ax1)
+        cax = divider.append_axes("right", size="5%", pad=0.5)
+
+        im.set_clim(0.0,0.5)
+        plt.colorbar(im, cax=cax)
+
+
+    except ValueError:
+        print("Not making contours.")
+
+
+    ax1.scatter(fsamp, ssamp, color="black")
+
+    #ax1.text(0.5,0.05, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(spsf_mean[0], spsf_std[0]),
+    #            verticalalignment='center', horizontalalignment='center', color='black', transform=ax1.transAxes,
+    #            fontsize=18)
+    ax1.axis([xmin,xmax,ymin,ymax])
+
+
+    ax1.set_xlabel(r"$\log_{10}{(\mathrm{Flux}} \; A/\tau)$ [counts/s] ", fontsize=24)
+    ax1.set_ylabel(r"$\log_{10}{(\mathrm{Skewness})}$", fontsize=24)
+
+
+    ### first plot: duration versus flux
+#    ax2 = fig.add_subplot(122)
+#
+#    #xmin, xmax = risetime_flat.min(), risetime_flat.max()
+#    #ymin, ymax = fluence_flat.min(), fluence_flat.max()
+#
+#    xmin = -3.0 #np.min(duration_flat)
+#    xmax = 2.0 #np.max(duration_flat)
+#    ymin = np.min(amplitude_flat)
+#    ymax = np.max(amplitude_flat)
+
+    ### Perform Kernel density estimate on data
+#    try:
+#        X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+#        positions = np.vstack([X.ravel(), Y.ravel()])
+#        values = np.vstack([duration_flat, amplitude_flat])
+#        kernel = scipy.stats.gaussian_kde(values)
+#        Z = np.reshape(kernel(positions).T, X.shape)
+
+#        im = ax2.imshow(np.transpose(Z), interpolation='bicubic', origin='lower',
+#                cmap=cm.PuBuGn, extent=(xmin,xmax,ymin,ymax))
+
+#        im.set_clim(0.0,0.5)
+#        plt.colorbar(im)
+
+#        cs = ax2.contour(X,Y,Z,levels, linewidths=2, colors="black", origin="lower")
+        #manual_locations = [(-2.0, -12.0),(-1.75,-11.2),(-2.75,-11.5),(-2.25,-11.0),(-2.3,-10.2)]
+        #clabel(cs, fontsize=24, inline=1, manual=manual_locations)
+
+#    except ValueError:
+#        print("Not making contours.")
+
+
+#    ax2.scatter(dsamp, asamp, color="black")
+#    ax2.axis([xmin,xmax,ymin,ymax])
+    #ax2.text(0.5,0.05, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(spda_mean[0], spda_std[0]),
+    #            verticalalignment='center', horizontalalignment='center', color='black', transform=ax2.transAxes,
+    #            fontsize=18)
+#    ax2.set_xlabel(r"$\log_{10}{(\mathrm{Rise\, timescale} \; \mathrm{[s]})}$ ", fontsize=24)
+    #setp(ax2.get_yticklabels(), visible=False)
+#    ax2.set_ylabel(r"$\log_{10}{(\mathrm{Amplitude} \; \mathrm{[counts/bin]})}$ ", fontsize=24)
+    draw()
+    plt.tight_layout()
+
+    savefig('%s_skewness_correlations.pdf'%froot, format="pdf")
+    close()
+
+    return
+
+
+def all_dnest_plots(datadir="./", nsims=100, froot="sgr1550"):
 
 
     par_filtered, bids_filtered = \
-        dnest_sample.extract_sample(datadir=datadir+"finished/",nsims=nsims, filter_weak=True, trigfile="sgr1550_ttrig.dat")
+        dnest_sample.extract_sample(datadir=datadir+"finished/",nsims=nsims, filter_weak=True, trigfile="%s_ttrig.dat"%froot)
 
     par_unfiltered, bids_unfiltered = \
-        dnest_sample.extract_sample(datadir=datadir+"finished/", nsims=nsims, filter_weak=False, trigfile="sgr1550_ttrig.dat")
+        dnest_sample.extract_sample(datadir=datadir+"finished/", nsims=nsims, filter_weak=False, trigfile="%s_ttrig.dat"%froot)
 
 
 
     par_exp,bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
-                                                      filter_weak=False, trigfile="sgr1550_ttrig.dat")
+                                                      filter_weak=False, trigfile="%s_ttrig.dat"%froot)
     par_logn, bids_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
-                                                      filter_weak=False, trigfile="sgr1550_ttrig.dat")
+                                                      filter_weak=False, trigfile="%s_ttrig.dat"%froot)
 
 
 
     nspike_plot(par_unfiltered, par_filtered)
-    correlation_plots_new(par_filtered)
+    correlation_plots(par_filtered)
     waitingtime_plot(par_unfiltered, bids_unfiltered)
     differential_plots(par_filtered)
     priors_nspikes(par_exp, par_logn)

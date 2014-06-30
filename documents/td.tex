@@ -35,14 +35,14 @@
 
 \begin{document}
 
-\title{Dissecting Magnetar Variability with Probabilistic Generative Models}
+\title{Dissecting Magnetar Variability with Bayesian Hierarchical Models}
 
 \author{D. Huppenkothen\altaffilmark{1, 2}, B. J. Brewer\altaffilmark{3}, D. Hogg\altaffilmark{}, I. Murray\altaffilmark{}, M. Frean\altaffilmark{}, C. Elenbaas\altaffilmark{1}, A. L. Watts\altaffilmark{1}, Y.Levin\altaffilmark{}, A.J. van der Horst\altaffilmark{1}, C. Kouveliotou\altaffilmark{4,5}}
  
 \altaffiltext{1}{Anton Pannekoek Institute for Astronomy, University of
   Amsterdam, Postbus 94249, 1090 GE Amsterdam, the Netherlands}
   \altaffiltext{2}{Email: D.Huppenkothen@uva.nl}
-\altaffiltext{4}{Astrophysics Office, ZP 12, NASA-Marshall Space Flight Center, Huntsville, AL 35812, USA}
+\altaffiltext{4}{Astrophysics Office, ZP 12, NASA/Marshall Space Flight Center, Huntsville, AL 35812, USA}
 \altaffiltext{5}{NSSTC, 320 Sparkman Drive, Huntsville, AL 35805, USA}
 \altaffiltext{3}{Department of Statistics, The University of Auckland, Private Bag 92019, Auckland 1142, New Zealand}
 \altaffiltext{}{Monash Center for Astrophysics and School of Physics, Monash University, Clayton, Victoria 3800, Australia}
@@ -108,20 +108,16 @@ and this sample, see Section \ref{sec:data}.}
 
 Neutron stars, the ultra-dense compact remnants of core-collapse supernovae, are the prime laboratory for studying nuclear 
 physical processes in a parameter regime of density and pressure inaccessible to experiments on Earth. 
-Among the veritable zoo of neutron star phenomena, two stand out for their peculiar parameters: Soft Gamma Repeaters (SGRs),
-named after their hallmark recurring bursts in hard X-rays, and Anomalous X-ray Pulsars (AXPs), persistent pulsating X-ray
-sources. Taken together, these sources are generally called {\it magnetars}. 
+Among the veritable zoo of neutron stars, two historically separate groups stood out for their peculiar properties: Soft Gamma Repeaters (SGRs), named after their frequently recurring bursts in hard X-rays, and Anomalous X-ray Pulsars (AXPs), isolated from the bulk of the X-ray pulsars based on their persistent X-ray
+emission characteristics. In the last decade, however, both groups have been found to form a single class of neutron stars with extreme magnetic fields, generally called {\it magnetars} \citep{duncan1992,thompson1995}. In the original scenario, the observable X-ray emission, both persistent emission and bursts, 
+is powered by the slow evolution and decay of the source's strong magnetic field, instead of the loss of rotational energy as is generally the case for standard radio pulsars \citep{thompson1995,thompson2001}. 
 
-While SGRs and AXPs were detected as separate phenomena, they share common properties \citep[for general overviews of both phenomena, see ][]{woods2006,mereghetti2011}: slow spin periods between
-$2 - 12 \, \mathrm{s}$, coupled with generally high period derivatives, lead to large inferred dipole magnetic fields of
+Most magnetars share common properties \citep[for general overviews of both phenomena, see ][]{woods2006,mereghetti2011}: slow spin periods between
+$2 - 12 \, \mathrm{s}$, which, coupled with generally high period derivatives, lead to large inferred dipole magnetic fields of
 the order of $10^{14} \, \mathrm{G}$, well above the quantum-critical limit $B_{\mathrm{QED}} = 4.4 \times 10^{13} \, \mathrm{G}$,
 where quantum effects such as pair production and photon splitting become important \citep[although three sources have been 
 identified with properties similar to magnetars, but inferred dipole fields below this limit;][]{vanderhorst2010,esposito2010,rea2010,rea2012,scholz2012,rea2014}. 
 
-Both AXPs and SGRs are believed to be the observable phenomena of the same underlying physical system: a highly magnetised
-neutron star, also called a magnetar \citep{duncan1992,thompson1995}. In the original scenario, the observable X-ray emission, both persistent emission and bursts, 
-is powered by the slow evolution and decay of the source's strong magnetic field, instead of the loss of rotational energy as 
-is generally the case for standard radio pulsars \citep{thompson1995,thompson2001}. 
 
 %Magnetar bursts are of particular interest for a variety of reasons. Most importantly, the observation of three giant flares, catastrophic
 %outbursts in hard X-rays of energies up to $10^{47} \, \mathrm{erg}$\citep[e.g.][]{mazets1979,cline1998,hurley1999,feroci1999,palmer2005,hurley2004,hurley2005, borkowski2004, mereghetti2005,mazets2005,yamazaki2005,terasawa2005}.% and the associated detection of quasi-periodic oscillations (QPOs)
@@ -148,8 +144,8 @@ generally between $10^{38}\,\mathrm{erg}$ and $10^{41}\,\mathrm{erg}$, and have 
 multiple peaks that differs from one burst to the next. They are observed either appearing individually, or in burst 
 storms, where tens or hundreds of bursts can occur over a timescale of single days to weeks \citep{mazets1999,goetz2006b,israel2008,mereghetti2009,savchenko2010,israel2010,scholz2011,dib2012,vanderhorst2012,vonkienlin2012}. 
 The appearance of bursts appears to be random \citep{gogus1999,gogus2000}, but far more numerous than the giant flares: 
-for the two best-observed magnetars, SGR 1806-20 and SGR 1900+14, the
-data set spans thousands of such bursts. 
+for the two best-observed magnetars, SGR 1806-20 and SGR 1900+14, their
+data sets span thousands of such bursts. 
 
 One observation of particular interest concerns the overall distributions of these bursts: the differential distribution of fluence (integrated flux) and 
 the cumulative distribution of waiting times are similar to those observed in earth quakes and solar flares \citep{cheng1996}. Especially the fluence distribution

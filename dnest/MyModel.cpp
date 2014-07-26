@@ -39,13 +39,22 @@ MyModel::MyModel()
 
 void MyModel::calculate_mu()
 {
-	const vector< vector<double> >& components = bursts.get_components();
 	const vector<double>& t = data.get_t();
+
+	// Update or from scratch?
+	bool update = (bursts.get_added().size() < bursts.get_components().size());
+
+	// Get the components
+	const vector< vector<double> >& components = (update)?(bursts.get_added()):
+				(bursts.get_components());
+
+	// Set the background level
+	if(!update)
+		mu.assign(mu.size(), background);
 
 	double scale;
 	for(size_t i=0; i<mu.size(); i++)
 	{
-		mu[i] = background;
 		for(size_t j=0; j<components.size(); j++)
 		{
 			scale = components[j][2];
@@ -72,17 +81,23 @@ double MyModel::perturb()
 
 	if(randomU() <= 0.2)
 	{
+		for(size_t i=0; i<mu.size(); i++)
+			mu[i] -= background;
+
 		background = log(background/data.get_y_mean());
 		background += log(1E3)*pow(10., 1.5 - 6.*randomU())*randn();
 		background = mod(background - log(1E-3), log(1E3)) + log(1E-3);
 		background = exp(background)*data.get_y_mean();
+
+		for(size_t i=0; i<mu.size(); i++)
+			mu[i] += background;
 	}
 	else
 	{
 		logH += bursts.perturb();
+		bursts.consolidate_diff();
+		calculate_mu();
 	}
-
-	calculate_mu();
 
 	return logH;
 }

@@ -2043,7 +2043,9 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
         p = parameters.TwoExpCombined(pars_flat, int(nbursts), log=False, bkg=True)
         e_all = p.compute_energy()
         d_all = p.compute_duration()
-        f_all = p.compute_fluence(fluence, sum_counts)
+
+        bkgsum = len(counts)*p.bkg
+        f_all = p.compute_fluence(fluence, sum_counts, bkgsum)
 
         parameters_all.append(p)
 

@@ -1,9 +1,10 @@
-
+import glob
 import numpy as np
 
 import parameters
 import word
 import dnest_sample
+import run_dnest
 ### Simulated light curves
 
 def singlepeak(bkg=None, datadir="./", trigfile="sgr1550_ttrig.dat"):
@@ -23,7 +24,7 @@ def singlepeak(bkg=None, datadir="./", trigfile="sgr1550_ttrig.dat"):
 
 
     ## length of light curve
-    tseg = 0.4
+    tseg = 0.2
     dt = 0.0005
     nsims=100
 
@@ -53,7 +54,7 @@ def singlepeak(bkg=None, datadir="./", trigfile="sgr1550_ttrig.dat"):
     ###### Now make light curves with single peak #########
 
     amp_all = [1,5,10,50,100]
-    t0 = 0.2
+    t0 = 0.06
     tau_rise = 0.005
     skew = 5.0
 
@@ -64,7 +65,7 @@ def singlepeak(bkg=None, datadir="./", trigfile="sgr1550_ttrig.dat"):
         model_counts = word.TwoExp(times).model(p)
         poisson_counts = np.array([np.random.poisson(c) for c in model_counts])
 
-        filename = "%sdnest_sim_onespike_a=%i.txt"%(datadir,a)
+        filename = "%sonespike_a=%i_data.txt"%(datadir,a)
 
         np.savetxt(filename, np.transpose(np.array([times, poisson_counts])))
 
@@ -73,19 +74,39 @@ def singlepeak(bkg=None, datadir="./", trigfile="sgr1550_ttrig.dat"):
 
 
 
-def make_sims():
+def make_sims(datadir="./"):
 
     ###estimate for Fermi/GBM sample
     log_bkg = 0.18606270394577695
     bkg = 10.0**log_bkg
 
     ### simulations with single peak
-    singlepeak(bkg=bkg)
+    singlepeak(datadir=datadir, bkg=bkg)
+
+    return
+
+def run_sims(datadir="../data/", dnest_dir="./", key="onespike", nsims=500):
+
+    files = glob.glob("%s*%s*_data.txt"%(datadir,key))
+    print("files: " + str(files))
+    for f in files:
+        run_dnest.run_burst(f, dnest_dir=dnest_dir, nsims=nsims)
 
     return
 
 def main():
-    make_sims()
+
+    ## assume I'm running this code from the dnest directory in magnetron, and that the simulation files
+    ## are in folder magnetron/data
+    datadir = "../data/"
+    dnest_dir = "./"
+
+    ### make simulations
+    make_sims(datadir=datadir)
+
+    ### run simulations with one spike
+    run_sims(datadir=datadir, dnest_dir=dnest_dir, key="onespike", nsims=250)
+
     return
 
 

@@ -39,7 +39,7 @@ class MyModel:public DNest3::Model
 		RJObject<ClassicMassInf1D> bursts;
 
 		// Poisson mean
-		std::vector<double> mu;
+		std::vector<long double> mu;
 
 		// Calculates mu from scratch
 		void calculate_mu();

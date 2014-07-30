@@ -158,9 +158,9 @@ class TwoExpParameters(Parameters, object):
 
         return self.energy
 
-    def compute_fluence(self, fluence, counts_sum):
+    def compute_fluence(self, fluence, counts_sum, bkgsum = 0):
 
-        count_energy = self.compute_energy()
+        count_energy = self.compute_energy() - bkgsum
         count_ratio = count_energy/counts_sum
         self.fluence = fluence*count_ratio
 
@@ -374,14 +374,22 @@ class TwoExpCombined(Parameters, object):
 
         return e_all
 
-    def compute_fluence(self, fluence, counts_sum):
+    def compute_fluence(self, fluence, counts_sum, bkgsum=0.0):
 
         f_all = []
         for a in self.all:
-            f = a.compute_fluence(fluence, counts_sum)
+            f = a.compute_fluence(fluence, counts_sum, bkgsum=bkgsum)
             f_all.append(f)
 
         return f_all
+
+
+    def compute_luminosity(self):
+
+
+
+
+        return
 
     def compute_duration(self):
 

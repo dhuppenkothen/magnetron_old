@@ -6,6 +6,10 @@ import word
 import dnest_sample
 import run_dnest
 ### Simulated light curves
+from pylab import *
+
+rc("font", size=20, family="serif", serif="Computer Sans")
+rc("text", usetex=True)
 
 def singlepeak(bkg=None, datadir="./", trigfile="sgr1550_ttrig.dat"):
 
@@ -93,6 +97,49 @@ def run_sims(datadir="../data/", dnest_dir="./", key="onespike", nsims=500):
         run_dnest.run_burst(f, dnest_dir=dnest_dir, nsims=nsims)
 
     return
+
+def plot_sims(datadir="./", key="onespike"):
+
+    fig = figure(figsize=(24,9))
+    subplots_adjust(top=0.9, bottom=0.1, left=0.06, right=0.97, wspace=0.15, hspace=0.1)
+
+    amp_all = [1,5,10,50,100]
+
+    colours = ["navy", "orange", "magenta", "mediumseagreen", "cyan"]
+
+    for a,c in zip(amp_all, colours):
+
+        data = np.loadtxt("%sonespike_a=%i_data.txt"%(datadir,a))
+        sample = np.loadtxt("%sonespike_a=%i_posterior_sample.txt"%(datadir,a))
+
+        ax = fig.add_subplot(121)
+        plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2, color=c, linestyle="steps-mid",
+             label="peak amplitude A = %.2e"%(a/0.0005))
+
+        print(sample.shape)
+        ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
+        for i in ind:
+            plot(data[:,0]-data[0,0], (sample[i,-data.shape[0]:]/0.0005)/1.e4, lw=1)
+        xlabel("Time since burst start [s]", fontsize=24)
+        ylabel(r"Count rate [$10^{4} \, \mathrm{counts} \, \mathrm{s}^{-1}$]", fontsize=24)
+
+
+        ax = fig.add_subplot(122)
+        nbursts = sample[:, 7]
+
+        hist(nbursts, bins=14, range=[1, 15], histtype='stepfilled', color=c, alpha=0.6,
+             label="peak amplitude A = %.2e"%(a/0.0005))
+
+        legend()
+    xlabel("Number of spikes per burst", fontsize=24)
+    ylabel("N(samples)", fontsize=24)
+    savefig("%s_sims.pdf"%key, format="pdf")
+    close()
+
+
+    return
+
+
 
 def main():
 

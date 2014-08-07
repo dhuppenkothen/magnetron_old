@@ -92,7 +92,7 @@ double MyModel::perturb()
         background += log(1E3)*pow(10., 1.5 - 6.*randomU())*randn();
 		background = mod(background - log(1E-3), log(1E3)) + log(1E-3);
 //		background = exp(background)*data.get_y_mean();
-        background = exp(background)*5.*3.5e5*data.get_dt()
+        background = exp(background)*5.*3.5e5*data.get_dt();
 
 		for(size_t i=0; i<mu.size(); i++)
 			mu[i] += background;

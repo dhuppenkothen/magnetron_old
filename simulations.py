@@ -53,7 +53,7 @@ def singlepeak(bkg=None, datadir="./", trigfile="sgr1550_ttrig.dat"):
 
     ###### Now make light curves with single peak #########
 
-    amp_all = [1,5,10,50,100]
+    amp_all = [1,5]
     t0 = 0.06
     tau_rise = 0.005
     skew = 5.0
@@ -91,6 +91,11 @@ def run_sims(datadir="../data/", dnest_dir="./", key="onespike", nsims=500):
     print("files: " + str(files))
     for f in files:
         run_dnest.run_burst(f, dnest_dir=dnest_dir, nsims=nsims)
+
+    return
+
+
+
 
     return
 

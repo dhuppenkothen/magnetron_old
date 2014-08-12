@@ -117,7 +117,7 @@ power of this approach on a large sample of magnetar bursts, and, for the first 
 
 \begin{figure*}[htbp]
 \begin{center}
-\includegraphics[width=\textwidth]{ch6f1.pdf}%example_bursts.pdf}
+\includegraphics[width=\textwidth]{f1.pdf}%example_bursts.pdf}
 \caption{Six example bursts observed with \fermi/GBM from the magnetar SGR J1550-5418. Bursts show a complex morphology of one or more
 spikes that differs drastically from burst to burst, making development of a common model for all burst light curves difficult. For details on the source
 and this sample, see Section \ref{ch6:data}.}
@@ -396,7 +396,7 @@ suitable for model selection purposes, as well as a samples drawn from the poste
 the final mixture of levels freely via MCMC. 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=9cm]{ch6f2.pdf}%word.pdf}
+\includegraphics[width=9cm]{f2.pdf}%word.pdf}
 \caption{An example of the component model used for magnetar bursts: a spike is defined by an exponential rise with characteristic
 time scale $\tau$ and an exponential fall with a fall time scale $s\tau$, where $s$ is a skewness parameter that describes how the fall
 time is stretched ($s > 1$) of contracted ($s < 1$) compared to the rise time. Individual spikes are also characterised by a time offset
@@ -537,7 +537,7 @@ by a prior that is formally valid. For a summary of all model parameters, their 
 
 \begin{figure*}[htbp]
 %\begin{center}
-\includegraphics[width=\textwidth]{ch6f3.pdf}%example_dnest_result.pdf}
+\includegraphics[width=\textwidth]{f3.pdf}%example_dnest_result.pdf}
 \caption{An example burst from the magnetar SGR J1550-5418, in an observation taken on 2009 January 22 (ObsID 090122173). In the left
 panel, the light curve at high time resolution, $\Delta t = 5 \times 10^{-4}\,\mathrm{s}$, and model light curves for $10$ random draws from the posterior distribution. 
 On the right, the marginalised posterior distribution over the possible number of components in the model. The posterior for the number of components is 
@@ -643,7 +643,11 @@ in our model, and thus easily extracted. We compute spike duration by finding th
 
 
  Finally, we compute the dissipated energy in a spike by integrating Equation \ref{eqn:word} analytically in count space,
- then converting from count space to fluence using the spectral modelling results from \citet{vanderhorst2012} and \citet{vonkienlin2012}. We subtract the integrated number of 
+ then converting from count space to fluence using the spectral modelling results from \citet{vanderhorst2012} and \citet{vonkienlin2012}. The authors of these two studies converted from 
+ count space to energy space in the following way: first, a detector response was generated in order to deconvolve the source spectrum from effects introduced by the detector. Then, each burst spectrum
+ was fit independently in the $8-200\,\mathrm{keV}$ range with six spectral models, with three models being very similar (a Comptonised model, a model using optically thin thermal bremsstrahlung, and a combination of two blackbodies). The fluence of each burst was estimated by integrating the energy spectrum estimated by the best-fit spectral model, taking into account the detector response. Note, however, that this procedure does not include any subtraction of the sky background.
+ 
+ We subtract the integrated number of 
  background photons, derived from the background parameter $\mu_\counts$ for a given model, from the total integrated number of 
  counts in a burst in the full $8-200\,\mathrm{keV}$ energy band, to compute the total burst energy in count space; and have a direct conversion between count space and 
  the fluences computed in \citet{vanderhorst2012}. To compute the fluence in a single spike, we divide the dissipated energy in that spike (integrated analytically)
@@ -695,7 +699,7 @@ that there is a characteristic time scale determining the waiting time between i
 \begin{figure*}[htbp]
 \begin{center}
 \includegraphics[width=\textwidth]{ch6f7.pdf}%sgr1550_correlations.pdf}
-\caption{Correlations between spike duration and fluence (left) and spike rise time and fluence (right). Black points indicate an ensemble of burst models, where we drew once
+\caption{Joint distributions of spike duration and fluence (left) and spike rise time and fluence (right). Black points indicate an ensemble of burst models, where we drew once
 from the posterior distribution of each burst to build the ensemble. Contours are derived from the combined sample of $100$ draws for all bursts, the shaded background is constructed in
 the same way for illustrative purposes. Contour levels are at $0.01, 0.05, 0.1, 0.2$ and $0.3$.
 The duration is defined as the time between the two points where
@@ -712,8 +716,7 @@ this fraction in combination with fluences inferred from spectral modelling \cit
 \caption{Flux versus skewness for a sample of spikes in $332$ bursts. We parametrise flux in arbitrary units as the ratio of amplitude $A$ 
 for a spike in count space divided by the exponential rise time scale $\tau$. The skewness $s$ measures the asymmetry
 of exponential rise versus exponential fall in a spike, such that the fall time scale $\tau_{\mathrm{fall}} = s\tau$. Overall, spikes are positively skewed ($\log_{10}{(s)} > 0$), i.e.\ their
-exponential rise is faster than their decay. There is a clear correlation between our measure of the flux and the skewness $s$, although the relationship seems to flatten out for
-low fluxes.}
+exponential rise is faster than their decay. There is a clear correlation between our measure of the flux and the skewness $s$, with a Spearman rank coefficient $R = 0.25 \pm 0.05$ with $p < 3.4 \times 10^{-4}$, although the relationship seems to flatten out for low fluxes.}
 \label{fig:skewness}
 \end{center}
 \end{figure}
@@ -1056,7 +1059,7 @@ $\mathcal{S}=\tau_R/\tau_A=\delta c/\eta$ is the Lundquist number), we get $L_x\
 &E &\propto\tau_{\rm tm}^{2/3}T_{\rm dur}B^{7/4}r^{-33/8}. \nonumber
 \end{eqnarray}
 
-Thus if the bursts are due to reconnection driving by the tearing mode, fluence should be linearly proportional to the duration of the spike ($E\propto T_{\rm dur}$).  Assuming that the observed rise time is the reconnection time (as discussed earlier this assumes that emission is essentially instantaneous), this yields $E\propto\tau_{\rm rise}^{2/3}$.  This is qualitatively consistent with the observation of a positive correlation between the exponential rise timescale and the fluence of a spike (Figure \ref{fig:correlations}, left panel): although the correlation seems to be somewhat steeper than expected from the calculation above, the exact power law exponent is difficult to tell due to the large scatter in the data.   Note that this large scatter in the fluence versus rise time plots may be due to the fact that the energy is also strongly dependent on the local magnetic field strength ($E\propto B_S^{7/4}r^{-33/8}$), where the energy of the spike will be highly dependent on the height of the reconnection region $E\propto r^{-33/8}\sim r^{-4}$. Since the scatter is, on the other hand, not that significant, it may be argued that the spikes all occur at relatively the same height ($r\sim r_{\rm rec}$), where the local conditions for reconnection are favourable, instead of happening all throughout the magnetosphere.
+Thus if the bursts are due to reconnection driven by the tearing mode, fluence should be linearly proportional to the duration of the spike ($E\propto T_{\rm dur}$).  Assuming that the observed rise time is the reconnection time (as discussed earlier this assumes that emission is essentially instantaneous), this yields $E\propto\tau_{\rm rise}^{2/3}$.  This is qualitatively consistent with the observation of a positive correlation between the exponential rise timescale and the fluence of a spike (Figure \ref{fig:correlations}, left panel): although the correlation seems to be somewhat steeper than expected from the calculation above, the exact power law exponent is difficult to tell due to the large scatter in the data.   Note that this large scatter in the fluence versus rise time plots may be due to the fact that the energy is also strongly dependent on the local magnetic field strength ($E\propto B_S^{7/4}r^{-33/8}$), where the energy of the spike will be highly dependent on the height of the reconnection region $E\propto r^{-33/8}\sim r^{-4}$. Since the scatter is, on the other hand, not that significant, it may be argued that the spikes all occur at relatively the same height ($r\sim r_{\rm rec}$), where the local conditions for reconnection are favourable, instead of happening all throughout the magnetosphere.
 
 Now consider an alternative scenario, where reconnection is driven directly by crust rupturing, with the speed of reconnection being governed by the shear speed in the crust $v_s$.  Assuming again that the observed rise timescale is the reconnection timescale, but in a situation where $\delta$ is independent of the reconnection timescale, we would now predict $E \propto T_\mathrm{dur}/\tau_{\rm rise}$.  The dependence on rise time is quite different from that predicted for the tearing mode, and is in fact not consistent with the observed correlations.  Although a linear relationship between duration and fluence is certainly possible (see Figure \ref{fig:correlations}, left panel), a negative correlation between the rise time and fluence is strongly disfavoured (Figure \ref{fig:correlations}, right panel).
 

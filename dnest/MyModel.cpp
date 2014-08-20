@@ -73,7 +73,8 @@ void MyModel::calculate_mu()
 void MyModel::fromPrior()
 {
 //	background = exp(log(1E-3) + log(1E3)*randomU())*data.get_y_mean();
-    background = exp(log(1E-10) + log(5.*3.5e5*data.get_dt())*randomU())*5.0*3.5e5*data.get_dt();
+    background = tan(M_PI*(0.97*randomU() - 0.485));
+    background = exp(background);
     bursts.fromPrior();
 	calculate_mu();
 }
@@ -87,12 +88,12 @@ double MyModel::perturb()
 		for(size_t i=0; i<mu.size(); i++)
 			mu[i] -= background;
  
-//		background = log(background/data.get_y_mean());
-        background = log(background/(5.*3.5e5*data.get_dt()));
-        background += log(1E3)*pow(10., 1.5 - 6.*randomU())*randn();
-		background = mod(background - log(1E-3), log(1E3)) + log(1E-3);
-//		background = exp(background)*data.get_y_mean();
-        background = exp(background)*5.*3.5e5*data.get_dt();
+		background = log(background);
+		background = (atan(background)/M_PI + 0.485)/0.97;
+		background += pow(10., 1.5 - 6.*randomU())*randn();
+		background = mod(background, 1.);
+		background = tan(M_PI*(0.97*background - 0.485));
+		background = exp(background);
 
 		for(size_t i=0; i<mu.size(); i++)
 			mu[i] += background;

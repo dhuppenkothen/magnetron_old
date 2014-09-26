@@ -1,4 +1,4 @@
-TransientDict
+Magnetron
 =============
 
 Using dumbed-down dictionary methods to fit the bursts from magnetrons.

@@ -1832,6 +1832,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
 
     """
 
+    print("trigfile: %s"%trigfile)
     if prior == "exp":
         par_ind = 8
     elif prior == "lognormal":
@@ -1938,7 +1939,6 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
     for p,a,sc,sk in zip(pos_all, amp_all, scale_all, skew_all):
         paras_real.append([(pos+ttrig,scale,amp,skew) for pos,amp,scale,skew in zip(p,a,sc,sk) if pos != 0.0])
 
-
     sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax,
                    "parameters":paras_real, "fluence":b_fluence}
 
@@ -1993,8 +1993,10 @@ def extract_real_spikes(sample_dict, min_scale=1.0e-4):
 
 
 
-def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None, prior="exp"):
+def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None, prior="exp",
+                     efile="sgr1550_fluence.dat"):
 
+    print("trigfile: %s"%trigfile)
     fname = filename.split("/")[-1]
     fsplit = fname.split("_")
     datafile = "%s%s_%s_all_data.dat"%(datadir, fsplit[0], fsplit[1])
@@ -2004,7 +2006,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     sum_counts = np.sum(counts)
 
     ### extract parameters from file
-    sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile, prior=prior)
+    sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile, prior=prior, efile=efile)
 
     #print("filter_weak " + str(filter_weak))
 
@@ -2064,7 +2066,7 @@ def make_model_lightcurves(samplefile, times=None, datadir="./"):
     else:
         counts = np.ones(len(times))
 
-    parameters_all = parameter_sample(samplefile, datadir)
+    parameters_all = parameter_sample(samplefile, datadir, trigfile=None, efile=None)
 
     model_counts_all = []
 

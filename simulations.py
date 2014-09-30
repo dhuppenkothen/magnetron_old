@@ -53,7 +53,7 @@ def singlepeak(bkg=None, datadir="./", trigfile="sgr1550_ttrig.dat"):
 
     ###### Now make light curves with single peak #########
 
-    amp_all = [1,5]
+    amp_all = [1,5, 10, 20]
     t0 = 0.06
     tau_rise = 0.005
     skew = 5.0

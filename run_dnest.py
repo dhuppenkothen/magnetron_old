@@ -73,10 +73,10 @@ def rewrite_display(filename, dnest_dir="./"):
     return
 
 
-def remake_model():
+def remake_model(dnest_dir="./"):
 
     tstart = tsys.clock()
-    subprocess.call(["make"])
+    subprocess.call(["make", "-C", dnest_dir])
     tsys.sleep(15)
     tend = tsys.clock()
 
@@ -251,7 +251,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
     print("Rewriting DNest run file")
     rewrite_main(filename, dnest_dir)
     rewrite_options(nlevels=200, dnest_dir=dnest_dir)
-    remake_model()
+    remake_model(dnest_dir)
 
     fdir = filename.split("/")
     fname = fdir[-1]
@@ -303,7 +303,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
         levelfile.close()
 
     rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
-    remake_model()
+    remake_model(dnest_dir)
 
     dnest_process = subprocess.Popen(["./main", "-t", "8"])
 
@@ -350,7 +350,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
 def run_all_bursts(data_dir="./", dnest_dir="./", levelfilename="test_levels.dat"):
 
     print("I am in run_all_bursts")
-    filenames = glob.glob("%s*_data.dat"%data_dir)
+    filenames = glob.glob("%s*_data.txt"%data_dir)
     print(filenames)
 
     levelfilename = data_dir+levelfilename

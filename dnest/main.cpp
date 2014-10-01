@@ -27,7 +27,7 @@ using namespace DNest3;
 
 int main(int argc, char** argv)
 {
-	Data::get_instance().load("/Users/daniela/data/magnetars/sgr1900/extracted_bursts/dnest/ourania/70136-01-29-00_303916698.522_data.dat");
+	Data::get_instance().load("/Users/daniela/data/magnetars/sgr1550/magnetron/dnest/simulations/onespike_a=10_data.txt");
 	MTSampler<MyModel> sampler = setup_mt<MyModel>(argc, argv);
 	sampler.run();
 	return 0;

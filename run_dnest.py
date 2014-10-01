@@ -285,7 +285,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
                 endflag = find_weights(p_samples)
                 print("Endflag: " + str(endflag))
 
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, ValueError):
             break
 
 
@@ -322,7 +322,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
                 endflag = True
             else:
                 endflag = False
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, ValueError):
             break
 
     print("Endflag: " + str(endflag))

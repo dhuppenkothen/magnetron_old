@@ -744,8 +744,8 @@ deviation is, however, weak, and requires quantification to draw firm conclusion
 \begin{center}
 \includegraphics[width=9cm]{ch6f9.pdf}%sgr1550_prior_nspikes.pdf}
 \caption{The number of  components (spikes) per burst for $332$ bursts for both exponential priors (blue) for amplitude and rise time scale, the standard prior assumed in
-deriving the results of this work, and log-normal priors (green) as an alternative hypothesis for the prior distributions on amplitude and rise time scale. Changing the prior has 
-no appreciable effect on the number of components per burst.}
+deriving the results of this work, and log-normal priors (green) as an alternative hypothesis for the prior distributions on amplitude and rise time scale. Changing the prior to a log-normal
+distribution leads to an increase in the number of components per burst.}
 \label{fig:nspikes_prior}
 \end{center}
 \end{figure}
@@ -766,8 +766,7 @@ could give rise to a population of very short, very small spikes modelling indiv
 Section \ref{ch6:exploration} that the generally low number of components per burst disfavours this interpretation, but that there is a population of spikes
  with very small amplitudes. In order
 to improve our understanding of how this prior could influence our results, we implemented a log-normal prior for both rise time
-and amplitude, with the mean and standard deviations of each distribution free hyperparameters. Because of the use of improper priors
-on the background parameter as well as the hyperparameter for the amplitude, we do not perform formal model selection
+and amplitude, with the mean and standard deviations of each distribution free hyperparameters. We do not perform formal model comparison
 (e.g.\ using the marginal likelihood introduced in Equation \ref{eqn:marginal}), but simply explore how the use of different priors
 changes the results reported in the previous section.
 \begin{figure*}[htbp]
@@ -775,8 +774,8 @@ changes the results reported in the previous section.
 \includegraphics[width=\textwidth]{ch6f10.pdf}%sgr1550_prior_diff_dist.pdf}
 \caption{Differential distributions for burst duration (left panel), amplitude (middle panel) and fluence (right panel) for an exponential prior on spike 
 amplitudes and rise timescales (blue; see also Figure \ref{fig:diffdist}),
-and a log-normal prior on the same parameters (green). A log-normal prior leads to a noticeable increase in low-amplitude spikes (middle panel), translating
-to an excess at low fluences as well. The overall shape and location of the maximum for each distribution, however, remains unchanged.}
+and a log-normal prior on the same parameters (green). A log-normal prior leads to a population of short-duration spikes, while the distributions of amplitude and fluence
+largely remain the same. The overall shape and location of the maximum for each distribution, remains unchanged.}
 \label{fig:diff_prior}
 \end{center}
 \end{figure*}
@@ -785,12 +784,10 @@ to an excess at low fluences as well. The overall shape and location of the maxi
 In Figures \ref{fig:nspikes_prior} and \ref{fig:diff_prior} we present a comparison between the distributions for the number of spikes 
 per burst from $82$ bursts for each set of priors, and the differential distributions for the most important quantities for both priors.
 In both cases, we consider the full, unfiltered sample here, since it is the spikes with the smallest amplitudes where we expect to see
-an appreciable difference. Overall, there is no significant difference in the number of components per burst, indicating that both 
-priors lead to similar results. However, we do see an excess of small-amplitude spikes for a log-normal prior in the differential 
-distributions for duration, amplitude, and, correspondingly, fluence. Using lognormal priors on the amplitude seems to increase
-the probability of a model consisting of many low-amplitude spikes. Why exactly this should be the case is not immediately 
-obvious and merits further exploration. However, given that the presence of these low-amplitude spikes is difficult to constrain no matter
-what the prior, and they do little to change our conclusions from the data, we defer this in-depth exploration of priors to future work.
+an appreciable difference. Overall, there is some increase in the number of components per burst when using a log-normal prior, related to
+an excess in short-duration spikes for a log-normal prior in the differential 
+distribution for duration, while the distributions for amplitude and fluence remain largely the same. Why exactly this should be the case is not immediately 
+obvious and merits further exploration. However, given that the minor changes in distributions do little to change our conclusions from the data, we defer this in-depth exploration of priors to future work.
 
 
 \section{Discussion}
@@ -828,8 +825,10 @@ Magnetar bursts have often been placed in the context of self-organised critical
 itself towards a critical point, without fine tuning or outside intervention. When reaching this critical point, a catastrophic energy
 release will return the system to a sub-critical state, upon which the cycle begins anew. The standard cellular automaton model of \citet{bak1987} models an 
 SOC system as a grid of cells (or nodes), where activation of one node leads to a cascade of activation in neighbouring nodes based on some activation rule 
-(e.g.\ a preferred direction), leading to 
-sudden energy release and dissipation and return of the system to the sub-critical state.
+(e.g.\ a preferred direction). An avalanche is triggered when the critical threshold is exceeded in a single cell. The release in energy can then trigger an event in a neighbouring cell. Depending
+on the specific model of the system, triggering any of the neighbouring cells is equally likely, or one may impose that a particular (or several) cell(s) are more likely to be activated than others (e.g.\
+if directional fields play a role).
+The entire process leads to a sudden energy release and dissipation and return of the system to the sub-critical state.
 Based on the avalanche evolution, it becomes possible to define a characteristic length scale and affected 
 area (or volume) in the system, which is closely related to the released energy. 
 One of the defining features of the SOC framework is that while the details of the physical processes in question depend on the characteristics
@@ -937,29 +936,91 @@ In connecting physics to observables, we need to be aware of the limitations of 
 
 We start by considering the bimodal distribution of wait times (Figure \ref{fig:waitingtimes}). Within the cascade picture, the wait times represent the time for information about the change in configuration resulting from a local release of stress to be communicated to the next failure point (be that a weakened part of the crust, or another part of the magnetosphere). The distribution is bimodal, with one peak at $\Delta T\sim 0.05\,\mathrm{s}$ that is the wait time between individual spikes, and one at longer timescales (of at least $10\,\mathrm{s}$) that is the timescale between individual bursts. We would like to understand whether the distributions are consistent with the timescales on which such information might be conveyed: that is to say the shear timescale in the crust, or the Alfv\'en timescales in the stellar interior or magnetosphere.
 
-The shear speed in the crust $v_s = (\mu_s/\rho)^{1/2}$ where $\mu_s$ is the shear modulus and $\rho$ the density. The shear modulus is of the order of the Coulomb potential energy $\sim Z^2e^2/r$ per unit volume $r^3$, where $r\sim(\rho/Am_p)^{-1/3}$ is the inter-ion spacing, while $Z$ and $A$ are the effective atomic number and mass number, respectively, of the ions in the crust. Using the shear modulus computed by \citet{strohmayer1991} and scaling by typical values for the inner crust \citep{douchin2001}, the shear velocity is:
-
-\begin{eqnarray}
-v_s & = & 1.1 \times 10^8 \mathrm{cm/s} \left(\frac{\rho}{10^{14} \mathrm{g/cm}^3}\right)^{1/6} \left(\frac{Z}{38}\right) \\
-&& \times \left(\frac{302}{A}\right)^{2/3} \left(\frac{1-X_n}{0.25}\right)^{2/3} \nonumber \, ,
-\end{eqnarray}
-where $X_n$ is the fraction of neutrons (see also \citet{piro2005}). The timescales for transmission of information via shear waves around the crust are therefore $\lesssim \pi R/v_s = 0.03$ ($R$/10 km) s. This is certainly consistent the values that we found for the wait times between individual spikes. The distribution of wait times that might result is shown in the upper panel of Figure \ref{fig:wtmodels}.  To derive this distribution, we distributed a number of weak points across the crust of a neutron star  with typical radius, and then assumed failure at one initial point. We then calculated the time it would take for the information about that failure to propagate around the star under the assumption transmission proceeds purely through shear waves in the crust assuming the canonical values given in the expression for shear speed above. It is assumed that the impact of the original failure is sufficient to trigger subsequent failure events in other weak points; the waiting time distribution is then the time for the information to travel between these weak points. In general, this model reproduces the observed waiting time distribution in Figure \ref{fig:waitingtimes} fairly well: it peaks at similar time scales ($\sim\!\! 0.01\,\mathrm{s}$, with a sharp drop at long waiting times and a long tail towards shorter waiting times that is more pronounced than we observe in the data. However, we note that the waiting times may be artificially shortened by line-of-sight effects: if a single event at a point triggers two successive events at different positions on the star or in the magnetosphere, we might see all three in rapid succession depending on our line of sight. This may lead us to conclude that there is a small waiting time between successive (causally connected) events, whereas in reality, two of the three hypothetical events in this example are unconnected.
-
 For transmission of information via Alfv\'en waves through the neutron star interior, the appropriate timescale is set by the Alfv\'en speed $v_A = B/\sqrt{4\pi\rho}$ where $B$ is the magnetic field strength, giving
 
 \begin{equation}
 v_A = 10^8 \mathrm{cm/s} \left(\frac{B}{10^{16} \mathrm{G}}\right) \left(\frac{10^{15} \mathrm{g/cm}^3}{\rho}\right)^{1/2}
 \end{equation}
-This yields timescales for transmission of information through the neutron star core via torsional Alfv\'en waves of $\lesssim 2R/v_A = 0.02 (R/$10 km) s. Note however that the value of the field strength $B$ in magnetar cores is highly uncertain, as is the appropriate value of the density $\rho$. In principle only the charged component ($\sim$ 5-10\% of the core mass) should participate in Alfv\'en waves, reducing $\rho$, however there are mechanisms associated with superfluidity and superconductivity that can couple the charged and neutral components. As such this value is also consistent with the inter-spike timescale distribution. In Figure \ref{fig:wtmodels} (middle panel), we show the expected distribution of waiting times for propagation through the neutron star interior. Again, we have assumed a number of weak points on the neutron star surface, but this time, propagation proceeds entirely through the neutron star interior instead of around the star in the crust.  As above a single failure triggers an energy release that is communicated through the star and triggers failures at other weak points in the crust; the waiting time distribution now depends on the distance between two points through the star, and the Alfv\'en speed in the star. 
+This yields timescales for transmission of information through the neutron star core via torsional Alfv\'en waves of $\lesssim 2R/v_A = 0.02 (R/$10 km) s. Note however that the value of the field strength $B$ in magnetar cores is highly uncertain, as is the appropriate value of the density $\rho$. In principle only the charged component ($\sim$ 5-10\% of the core mass) should participate in Alfv\'en waves, reducing $\rho$, however there are mechanisms associated with superfluidity and superconductivity that can couple the charged and neutral components. As such this value is also consistent with the inter-spike timescale distribution. In Figure \ref{fig:wtmodels} (top panel panel), we show the expected distribution of waiting times for propagation through the neutron star interior. 
+
+The distance between two random points on a sphere of radius $R_*$ may be written in terms of the colatitude angle $\phi\in[0,\pi]$. Where we adopt spherical coordinates ($r,\phi,\theta$) and orientate our coordinate system such that one point is located at ($R_*,0,0$) and the other point at ($R_*,\phi,0$) -- note that due to rotational symmetry the distance is independent of the azimuthal angle $\theta\in[0,2\pi)$. The distance between the two points is then
+\begin{equation}\label{eq}
+s(\phi)=R_*(2-2\cos\phi)^{1/2}.
+\end{equation}
+Next we choose to write $\phi$ in terms of $x\in(0,1]$,
+\begin{equation}\label{eq:phi(x)}
+\phi=\arccos(2x-1),
+\end{equation}
+such that we obtain
+\begin{equation}\label{eq}
+s(x)=R_*(1-x)^{1/2}.
+\end{equation}
+Dividing the above equation by the appropriate velocity, i.e. the core Alfv\'en speed  $v_A$, gives us the following transformation function
+\begin{equation}\label{eq:trans1}
+t(x)=\frac{2R_*}{v_A}(1-x)^{1/2},
+\end{equation}
+which describes the waiting time $t$ in terms of the variable $x$. Consequently, we assume that the random variable $X$ obeys a uniform density distribution $U(0,1)$:
+\begin{equation}\label{eq:uniform dist}
+u_X(x) = \left\{
+\begin{array}{ll}
+1 &  {\rm if~} 0<x\leq1,\\
+0 & {\rm otherwise}.
+\end{array} \right.
+\end{equation}
+Then together with Eq.~(\ref{eq:trans1}), we find that the probability density function (PDF) for the variable $T$ is given by
+\begin{equation}\label{eq}
+f_T(t) = \left\{
+\begin{array}{ll}
+\frac{1}{2}\left(v_A/R_*\right)^2t &  {\rm if~} 0<t\leq2R_*/A_c,\\
+0 & {\rm otherwise}.
+\end{array} \right.
+\end{equation}
+
+To derive this distribution, we distributed a number of weak points across the crust of a neutron star with typical radius, and then assumed failure at one initial point. We then calculated the time it would take for the information about that failure to propagate through the neutron star interior. It is assumed that the impact of the original failure is sufficient to trigger subsequent failure events in other weak points; the waiting time distribution is then the time for the information to travel between these weak points.
 
 The expected distribution is clearly at odds with what is observed: while it extends to values high enough to explain the long waiting times, the distribution is dominated by a power law with a positive exponent and a sharp drop-off at $\sim\!\! 0.04\,\mathrm{s}$. This is clearly not observed in the data, where the inter-spike waiting times resemble much more a log-normal distribution. However, the model assumed here does not include seismic waves traveling through the star multiple times. Instead, it is assumed that the energy transferred in the first instance is sufficient to trigger a follow-up event, such that the waiting times are directly related to the distance through the star between two points on the surface. The sharp drop-off at long waiting times in this case corresponds to the travel time between the furthest two points on the star (i.e. $2R$). It is possible that seismic waves could be reflected and travel through the interior multiple times, transferring small amounts of energy every time, and that then the waiting time is determined by the time it takes for the cumulative energy transmitted to a weak point to be sufficient to trigger a starquake. However, including these effects would require much more detailed knowledge about the energy threshold for crust failure than is available, and beyond the scope of this simple toy model.  
+
+The governing factor in the case where information is propagated through the neutron star crust is the shear speed in the crust, $v_s = (\mu_s/\rho)^{1/2}$ where $\mu_s$ is the shear modulus and $\rho$ the density. The shear modulus is of the order of the Coulomb potential energy $\sim Z^2e^2/r$ per unit volume $r^3$, where $r\sim(\rho/Am_p)^{-1/3}$ is the inter-ion spacing, while $Z$ and $A$ are the effective atomic number and mass number, respectively, of the ions in the crust. Using the shear modulus computed by \citet{strohmayer1991} and scaling by typical values for the inner crust \citep{douchin2001}, the shear velocity is:
+
+\begin{eqnarray}
+v_s & = & 1.1 \times 10^8 \mathrm{cm/s} \left(\frac{\rho}{10^{14} \mathrm{g/cm}^3}\right)^{1/6} \left(\frac{Z}{38}\right) \\
+&& \times \left(\frac{302}{A}\right)^{2/3} \left(\frac{1-X_n}{0.25}\right)^{2/3} \nonumber \, ,
+\end{eqnarray}
+where $X_n$ is the fraction of neutrons (see also \citet{piro2005}). The timescales for transmission of information via shear waves around the crust are therefore $\lesssim \pi R/v_s = 0.03$ ($R$/10 km) s. This is certainly consistent the values that we found for the wait times between individual spikes. 
+
+
+The distance between to points on a sphere of radius $R_*$ that is measured across the surface of the sphere, may equally be represented solely in terms of the colatitude angle $\phi\in[0,\pi]$. Following a similar procedure as before we find that the distance between two points, as measured across the surface of the sphere, is then
+\begin{equation}\label{eq}
+s(\phi)=R_*\phi.
+\end{equation}
+Using Eq.~(\ref{eq:phi(x)}) we get
+\begin{equation}\label{eq}
+s(x)=R_*\arccos(2x-1),
+\end{equation}
+which leads to the following transformation function when divided by the corresponding velocity, i.e. the shear speed in the crust $v_s$, 
+\begin{equation}\label{eq:trans2}
+t(x)=\frac{R_*}{v_s}\arccos\left(2x-1\right),
+\end{equation}
+where the waiting time $t$ is expressed in terms of the variable $x$. Assuming again that the random variable $X$ is distributed according to Eq.~(\ref{eq:uniform dist}) and with the transformation function Eq.~(\ref{eq:trans2}) we finally obtain the PDF for the variable $T$ in this case
+\begin{equation}\label{eq}
+g_T(t) = \left\{
+\begin{array}{ll}
+\frac{1}{2}v_s\sin(v_st/R_*)/R_* &  {\rm if~} 0<t\leq\pi v_s/2R_*,\\
+0 & {\rm otherwise}.
+\end{array} \right.
+\end{equation}
+
+Again, we have assumed a number of weak points on the neutron star surface, but this time, propagation proceeds entirely around the star under the assumption transmission proceeds purely through shear waves in the crust assuming the canonical values given in the expression for shear speed above .  As above a single failure triggers an energy release that is communicated through the star and triggers failures at other weak points in the crust; the waiting time distribution now depends on the distance between two points on the surface of the star, and the crustal shear speed. 
+
+The distribution of wait times that might result is shown in the middle panel of Figure \ref{fig:wtmodels}.   In general, this model reproduces the observed waiting time distribution in Figure \ref{fig:waitingtimes} fairly well: it peaks at similar time scales ($\sim\!\! 0.01\,\mathrm{s}$, with a sharp drop at long waiting times and a long tail towards shorter waiting times that is more pronounced than we observe in the data. However, we note that the waiting times may be artificially shortened by line-of-sight effects: if a single event at a point triggers two successive events at different positions on the star or in the magnetosphere, we might see all three in rapid succession depending on our line of sight. This may lead us to conclude that there is a small waiting time between successive (causally connected) events, whereas in reality, two of the three hypothetical events in this example are unconnected.
+
 
 Within the magnetosphere, the Alfv\'en speed is of order the speed of light. An upper limit for the waiting time between causally connected spikes is given by the light crossing time of the circumference of the light cylinder ($2\pi R_L=2 \pi c/\Omega$) i.e.
 
 \begin{equation}\label{eq}
 \Delta t^{\rm max}\sim2\pi \frac{R_L}{c}=P,
 \end{equation}
-where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period. For magnetars $P\sim2-12$ s. The typical value $\Delta T\sim10^{-2}$ s roughly corresponds to a height of $r_{\rm rec}\sim10^{-2} c/(2\pi)\sim5\times10^7$ cm. If we distribute reconnection events homogeneously in the magnetosphere in the region [$r^{\rm min}=10^{-4}c$, $r^{\rm max}=10^{-1}c$], we find the waiting time distribution shown in Figure~\ref{fig:wtmodels}, lower left. Here, we have distributed weak points uniformly in a shell of inner radius $r^{\rm min}$ and outer radius $r^{\rm max}$ around the star, and assumed that propagation of energy and information to other weak points must proceed through this shell. The waiting time distribution expected from the simple toy model is in remarkably good qualitative agreement with the observed distribution (compare Figure \ref{fig:waitingtimes}): it peaks at roughly at the right waiting time, and has an extended tail towards smaller waiting times. This tail is more pronounced in the toy model compared to the observations, but this could potentially be due to observational effects (such as the low-amplitude events that we cannot constrain reliably from the data, and which were excluded from this analysis). 
+where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period. For magnetars $P\sim2-12$ s. The typical value $\Delta T\sim10^{-2}$ s roughly corresponds to a height of $r_{\rm rec}\sim10^{-2} c/(2\pi)\sim5\times10^7$ cm. If we distribute reconnection events in the magnetosphere in the region [$r^{\rm min}=10^{-4}c$, $r^{\rm max}=10^{-1}c$] such that the number of events per radius remains constant, we find the waiting time distribution shown in Figure~\ref{fig:wtmodels}, lower left. Here, we have distributed weak points uniformly in a shell of inner radius $r^{\rm min}$ and outer radius $r^{\rm max}$ around the star, and assumed that propagation of energy and information to other weak points must proceed through this shell. The waiting time distribution expected from the simple toy model is in remarkably good qualitative agreement with the observed distribution (compare Figure \ref{fig:waitingtimes}): it peaks at roughly at the right waiting time, and has an extended tail towards smaller waiting times. This tail is more pronounced in the toy model compared to the observations, but this could potentially be due to observational effects (such as the low-amplitude events that we cannot constrain reliably from the data, and which were excluded from this analysis). 
 
 %\begin{figure*}
 %        \centering        
@@ -1012,7 +1073,7 @@ where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period
          \vspace{0.5cm}
         \caption{Waiting time distributions for three different trigger and propagation models. In all cases, we randomly distribute $10^{6}$ points of potential failure (which we also call weak points) 
         either on the sphere of a neutron star of radius $10^{6}\,\mathrm{cm}$ or in the magnetosphere above the star. We then trigger a single point of failure, and compute how much time it would take for that 
-        information and energy release to propagate either along the surface in the crust (upper panel), through the neutron star interior (middle panel) or through the magnetosphere (lower panel) to other points of failure. The waiting time distribution for $10^{6}$ connections between weak points is then constructed as the set of all travel times between failure points for the three different models, as described in the text.}
+        information and energy release to propagate either along the surface in the crust (upper panel), through the neutron star interior (middle panel) or through the magnetosphere (lower panel) to other points of failure. The red line presents the analytic solutions for the first two cases presented in the text, the blue distribution the waiting time distribution from $10^{6}$ Monte Carlo-simulated connections between weak points is then constructed as the set of all travel times between failure points for the three different models, as described in the text.}
                 \label{fig:wtmodels}
 \end{figure}
 

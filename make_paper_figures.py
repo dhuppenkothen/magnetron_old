@@ -6,6 +6,8 @@ import burstmodel
 import parameters
 import dnest_sample
 
+import seaborn as sns
+sns.set_context("notebook", font_scale=2.5, rc={"axes.labelsize": 26})
 import matplotlib.pyplot as plt
 from pylab import *
 from matplotlib.patches import FancyArrow
@@ -13,7 +15,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.cm as cm
 import scipy.ndimage
 
-rc("font", size=20, family="serif", serif="Computer Sans")
+rc("font", size=24, family="serif", serif="Computer Sans")
 rc("text", usetex=True)
 
 
@@ -265,14 +267,21 @@ def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100)
 
     #ax.plot(ubins[:-1]+0.5, nu_mean, color='navy',
     #        linewidth=2, label=None, linestyle="steps-mid")
-    ax.bar(ubins[:-1]+0.5, nu_mean, ubins[1]-ubins[0]+0.005, color='navy',
-           alpha=0.6, linewidth=0, align="center", label="unfiltered sample")
+
+    sns.distplot(u, bins=50, ax=ax,label="unfiltered sample", kde=False,
+                 hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
+    #ax.bar(ubins[:-1]+0.5, nu_mean, ubins[1]-ubins[0]+0.005, color='navy',
+    #       alpha=0.6, linewidth=0, align="center", label="unfiltered sample")
     #ax.plot(fbins[:-1]+0.5, nf_mean, color='darkred',
     #        linewidth=2, label=None, linestyle="steps-mid")
-    ax.bar(fbins[:-1]+0.5, nf_mean, fbins[1]-fbins[0]+0.005, color='darkred',
-           alpha=0.6, linewidth=0, align="center", label="filtered sample")
 
-    axis([1,30, 0.0, np.max([np.max(nu_mean), np.max(nf_mean)])])
+    sns.distplot(f, ax=ax,label="filtered sample", bins=50, kde=False,
+                 hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
+
+    #ax.bar(fbins[:-1]+0.5, nf_mean, fbins[1]-fbins[0]+0.005, color='darkred',
+    #       alpha=0.6, linewidth=0, align="center", label="filtered sample")
+
+    axis([1,30, 0.0, 70])
 
     xlabel("Number of components", fontsize=24)
     ylabel("Number of bursts", fontsize=24)
@@ -282,7 +291,7 @@ def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100)
     #close()
     draw()
     plt.tight_layout()
-    savefig("sgr1550_nspikes.pdf", format="pdf")
+    savefig("f4.pdf", format="pdf")
     close()
 
     return
@@ -389,7 +398,7 @@ def priors_nspikes(par_exp=None, par_logn=None, par_gauss=None, datadir="./", ns
     #close()
     draw()
     plt.tight_layout()
-    savefig("sgr1550_prior_nspikes.pdf", format="pdf")
+    savefig("f9.pdf", format="pdf")
     close()
 
     return
@@ -397,9 +406,9 @@ def priors_nspikes(par_exp=None, par_logn=None, par_gauss=None, datadir="./", ns
 
 def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, filtered=False):
 
-    if par_exp is None:
-        par_exp,bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
-                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
+    #if par_exp is None:
+    #    par_exp,bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
+    #                                                      filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
 
     if par_logn is None:
         par_logn, bids_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
@@ -485,7 +494,7 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
     draw()
     plt.tight_layout()
 
-    savefig("sgr1550_prior_diff_dist.pdf", format="pdf")
+    savefig("f10.pdf", format="pdf")
     close()
 
 
@@ -579,6 +588,8 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
     levels = [0.01, 0.05, 0.1, 0.2, 0.3]
 
 
+    cmap = sns.cubehelix_palette(start=.5, rot=-.75, as_cmap=True)
+
     #xmin, xmax = duration_flat.min(), duration_flat.max()
     #ymin, ymax = fluence_flat.min(), fluence_flat.max()
     xmin = -3.1
@@ -587,21 +598,22 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
     ymax = -7.5
     ### Perform Kernel density estimate on data
     try:
-        X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-        positions = np.vstack([X.ravel(), Y.ravel()])
-        values = np.vstack([duration_flat, fluence_flat])
-        kernel = scipy.stats.gaussian_kde(values)
-        Z = np.reshape(kernel(positions).T, X.shape)
+        #X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        #positions = np.vstack([X.ravel(), Y.ravel()])
+        #values = np.vstack([duration_flat, fluence_flat])
+        #kernel = scipy.stats.gaussian_kde(values)
+        #Z = np.reshape(kernel(positions).T, X.shape)
 
 
-        im = ax1.imshow(np.transpose(Z), interpolation='nearest', origin='lower',
-                cmap=cm.PuBuGn, extent=(-4.0,2.0,ymin,ymax))
-        im.set_clim(0.0,0.5)
+        sns.kdeplot(duration_flat, fluence_flat, cmap=cmap, shade=True, cut=5, ax=ax1)
+        #im = ax1.imshow(np.transpose(Z), interpolation='nearest', origin='lower',
+        #        cmap=cm.PuBuGn, extent=(-4.0,2.0,ymin,ymax))
+        #im.set_clim(0.0,0.5)
         #plt.colorbar(im)
 
-        znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
-        cs = ax1.contour(X,Y,znew,levels,
-                         linewidths=2, colors="black", origin="lower")
+        #znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
+        #cs = ax1.contour(X,Y,znew,levels,
+        #                 linewidths=2, colors="black", origin="lower")
         #manual_locations = [(0.0, -10.5), (-0.9, -11.5), (-0.7,-10.7), (-1.7,11.1), (-1.1,-10.4)]
         #plt.clabel(cs, fontsize=24, inline=1, manual=manual_locations)
 
@@ -609,12 +621,12 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
         print("Not making contours.")
 
 
-    ax1.scatter(dsamp, fsamp, color="black")
+    ax1.scatter(dsamp, fsamp, color="black", alpha=0.7)
 
     ax1.text(0.5,0.05, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(spdf_mean[0], spdf_std[0]),
                 verticalalignment='center', horizontalalignment='center', color='black', transform=ax1.transAxes,
-                fontsize=18)
-    ax1.axis([-3.1, 1.0, -13.0, -7.5])
+                fontsize=22)
+    ax1.axis([-3., 0.0, -13.0, -7.])
 
 
     ax1.set_xlabel(r"$\log_{10}{(\mathrm{Duration} \; \mathrm{[s]})}$ ", fontsize=24)
@@ -634,21 +646,22 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
 
     ### Perform Kernel density estimate on data
     try:
-        X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-        positions = np.vstack([X.ravel(), Y.ravel()])
-        values = np.vstack([risetime_flat, fluence_flat])
-        kernel = scipy.stats.gaussian_kde(values)
-        Z = np.reshape(kernel(positions).T, X.shape)
+        #X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        #positions = np.vstack([X.ravel(), Y.ravel()])
+        #values = np.vstack([risetime_flat, fluence_flat])
+        #kernel = scipy.stats.gaussian_kde(values)
+        #Z = np.reshape(kernel(positions).T, X.shape)
 
-        im = ax2.imshow(np.transpose(Z), interpolation='nearest', origin='lower',
-                cmap=cm.PuBuGn, extent=(xmin,xmax,ymin,ymax))
+        #im = ax2.imshow(np.transpose(Z), interpolation='nearest', origin='lower',
+        #        cmap=cm.PuBuGn, extent=(xmin,xmax,ymin,ymax))
 
-        im.set_clim(0.0,0.5)
-        plt.colorbar(im)
+        #im.set_clim(0.0,0.5)
+        #plt.colorbar(im)
+        sns.kdeplot(risetime_flat, fluence_flat, cmap=cmap, shade=True, cut=5, ax=ax2)
 
-        znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
-        cs = ax2.contour(X,Y,znew,levels,
-                         linewidths=2, colors="black", origin="lower")
+        #znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
+        #cs = ax2.contour(X,Y,znew,levels,
+        #                 linewidths=2, colors="black", origin="lower")
         #manual_locations = [(-2.0, -12.0),(-1.75,-11.2),(-2.75,-11.5),(-2.25,-11.0),(-2.3,-10.2)]
         #clabel(cs, fontsize=24, inline=1, manual=manual_locations)
 
@@ -656,17 +669,17 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
         print("Not making contours.")
 
 
-    ax2.scatter(rsamp, fsamp, color="black")
-    ax2.axis([-4.5,0.5, -13.0, -7.5])
-    ax2.text(0.5,0.05, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(sprf_mean[0], sprf_std[0]),
+    ax2.scatter(rsamp, fsamp, color="black", alpha=0.7)
+    ax2.axis([-4.,0., -13.0, -7.])
+    ax2.text(0.5,0.1, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(sprf_mean[0], sprf_std[0]),
                 verticalalignment='center', horizontalalignment='center', color='black', transform=ax2.transAxes,
-                fontsize=18)
+                fontsize=22)
     ax2.set_xlabel(r"$\log_{10}{(\mathrm{Rise\, timescale} \; \mathrm{[s]})}$ ", fontsize=24)
     setp(ax2.get_yticklabels(), visible=False)
     draw()
     plt.tight_layout()
 
-    savefig('%s_correlations.pdf'%froot, format="pdf")
+    savefig('f7.pdf', format="pdf")
     close()
 
     return
@@ -758,8 +771,8 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
 
     #spda_mean = np.mean(spda, axis=0)
     #spda_std = np.std(spda, axis=0)
-    #spsf_mean = np.mean(spsf, axis=0)
-    #spsf_std = np.std(spsf, axis=0)
+    spsf_mean = np.mean(spsf, axis=0)
+    spsf_std = np.std(spsf, axis=0)
 
 
     fig = figure(figsize=(12,9))
@@ -818,6 +831,9 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
     ax1.set_xlabel(r"$\log_{10}{(\mathrm{Flux}} \; A/\tau)$ [counts/s] ", fontsize=24)
     ax1.set_ylabel(r"$\log_{10}{(\mathrm{Skewness})}$", fontsize=24)
 
+    ax1.text(0.5,0.05, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(spsf_mean[0], spsf_std[0]),
+                verticalalignment='center', horizontalalignment='center', color='black', transform=ax1.transAxes,
+                fontsize=22)
 
     ### first plot: duration versus flux
 #    ax2 = fig.add_subplot(122)
@@ -863,7 +879,7 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
     draw()
     plt.tight_layout()
 
-    savefig('%s_skewness_correlations.pdf'%froot, format="pdf")
+    savefig('f8.pdf', format="pdf")
     close()
 
     return
@@ -873,14 +889,14 @@ def all_dnest_plots(datadir="./", nsims=100, froot="sgr1550"):
 
 
     par_filtered, bids_filtered = \
-        dnest_sample.extract_sample(datadir=datadir+"finished/",nsims=nsims, filter_weak=True, trigfile="%s_ttrig.dat"%froot)
+        dnest_sample.extract_sample(datadir=datadir, nsims=nsims, filter_weak=True, trigfile="%s_ttrig.dat"%froot)
 
     par_unfiltered, bids_unfiltered = \
-        dnest_sample.extract_sample(datadir=datadir+"finished/", nsims=nsims, filter_weak=False, trigfile="%s_ttrig.dat"%froot)
+        dnest_sample.extract_sample(datadir=datadir, nsims=nsims, filter_weak=False, trigfile="%s_ttrig.dat"%froot)
 
 
 
-    par_exp,bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
+    par_exp, bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
                                                       filter_weak=False, trigfile="%s_ttrig.dat"%froot)
     par_logn, bids_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
                                                       filter_weak=False, trigfile="%s_ttrig.dat"%froot)
@@ -889,6 +905,7 @@ def all_dnest_plots(datadir="./", nsims=100, froot="sgr1550"):
 
     nspike_plot(par_unfiltered, par_filtered)
     correlation_plots(par_filtered)
+    correlation_plots_skewness(par_filtered)
     waitingtime_plot(par_unfiltered, bids_unfiltered)
     differential_plots(par_filtered)
     priors_nspikes(par_exp, par_logn)

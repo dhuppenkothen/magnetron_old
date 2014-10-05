@@ -454,29 +454,28 @@ using the definition in \ref{ch6:data}, and refer to a ``spike'' when talking ab
 \toprule
 \bf{Parameter} & \bf{Meaning} & \bf{Probability Distribution} \\ \midrule
 \it{Hyperparameters} && \\ \midrule
-$\mu_A$ & Mean of exponential (log-normal) prior distribution for spike amplitude $A$ &  $\mathrm{LogUniform}(10^{-3}\mu_\counts, 10^3\mu_\counts)$\tnote{\emph{a}}  \\
+$\mu_A$ & Mean of exponential (log-normal) prior distribution for spike amplitude $A$ &  $\mathrm{truncated Cauchy distribution}(10^{-21}, 10^{21})$  \\
 ($\sigma_A$)\footnotemark[2] & Standard deviation of log-normal prior distribution for spike amplitude $A$ & \\
-$\mu_\tau$ & Mean of exponential (log-normal) prior distribution for spike exponential rise time scale $\tau$& $\mathrm{LogUniform}(10^{-3}T_\mathrm{b}, 10^3{T_\mathrm{b}})$\tnote{\emph{c}}  \\
+$\mu_\tau$ & Mean of exponential (log-normal) prior distribution for spike exponential rise time scale $\tau$& $\mathrm{LogUniform}(10^{-3}T_\mathrm{b}, 10^3{T_\mathrm{b}})$\tnote{\emph{b}}  \\
 ($\sigma_\tau$)\footnotemark[2]  & Standard deviation of log-normal prior distribution for spike exponential rise timescale $\tau$& \\
 $\mu_s$ & Mean of uniform prior distribution for spike skewness $s$ & $\mathrm{Uniform}(-10, 10)$ \\
 $\sigma_s$ & Half-width of uniform prior distribution for spike skewness $s$& $\mathrm{Uniform}(0,2)$\\ \midrule
 \it{Individual Burst Parameters} && \\ \midrule
 $t_0$ & Position of spike peak & $\mathrm{Uniform}(t_{\mathrm{start}}, t_{\mathrm{end}})$ \\
 $\tau$ & Exponential rise time scale & $\mathrm{Exponential}(\mu_\tau)$ \\
- && ($\mathrm{LogNormal}(\mu_\tau, \sigma^2_{\tau}))\tnote{\emph{b}} $ \\
+ && ($\mathrm{LogNormal}(\mu_\tau, \sigma^2_{\tau}))\tnote{\emph{a}} $ \\
 $A$ & Amplitude of spike peak in units of counts per bin &$\mathrm{Exponential}(\mu_A)$ \\
- && ($\mathrm{LogNormal}(\mu_A, \sigma^2_{A}))\tnote{\emph{b}} $ \\ 
+ && ($\mathrm{LogNormal}(\mu_A, \sigma^2_{A}))\tnote{\emph{a}} $ \\ 
 $s$ & Skewness parameter, such that exponential fall time $\tau_{\mathrm{fall}} = s\tau$ & \\
-$\counts_{\mathrm{bg}}$ & Flat sky/instrumental background in counts per bin & $\mathrm{LogUniform}(10^{-3}\mu_\counts, 10^3\mu_\counts)\tnote{\emph{c}}$ \\
+$\counts_{\mathrm{bg}}$ & Flat sky/instrumental background in counts per bin & $\mathrm{truncated Cauchy distribution}(10^{-21}, 10^{21})$ \\
 $N$ & Number of components (spikes) per burst & $\mathrm{Uniform}(0,100)$  \\\bottomrule
 \end{tabularx}
    \begin{tablenotes}
       %\footnotesize
       \item{An overview over the model parameters and hyperparameters with their respective prior probability distributions. For parameters where we have explored an alternative distribution in Section 
 \ref{ch6:priortest}, we give parameters and distributions for both priors.}
-      \item[\emph{a}]{$\mu_\counts$: mean number of counts per bin for a given burst}
-     \item[\emph{b}]{See Section \ref{ch6:priortest} for a discussion on testing an alternative, log-normal prior for spike amplitude and exponential rise time scale.}
-     \item[\emph{3}]{$T_\mathrm{b}$: duration of total burst}
+     \item[\emph{a}]{See Section \ref{ch6:priortest} for a discussion on testing an alternative, log-normal prior for spike amplitude and exponential rise time scale.}
+     \item[\emph{a}]{$T_\mathrm{b}$: duration of total burst}
 \end{tablenotes}
 \end{threeparttable}
 \label{tab:priortable}
@@ -516,23 +515,22 @@ that positive and negative skews are equally likely a priori.
 
 %\begin{sidewaystable}[htbp]
 
-The prior on the background parameter depends on the count rate of the burst data. 
-The prior is log-uniform, with boundaries set by the average count rate $\mu_\counts$ in a burst:
-$\log{(10^{-3}\mu_\counts)} < \log{(\counts_{\mathrm{bg}})} < \log{(10^{3} \mu_\counts)}$. 
-Note that this is, in principle, not a valid prior: the prior for the parameters should not depend on the data
-itself, because the data cannot be regarded as prior knowledge in the Bayesian sense (although limitations of the instrument, for example,
-could be). In practice, it is convenient to define the prior on the background count rate in this way as long as one does not need to compute the marginal likelihood,
-where the prior's impropriety could make an important difference. 
-In a more in-depth analysis involving the marginal likelihood where, for example, one might test whether any results change with a 
-change of prior, or where different models for the individual components might be compared, one would need to discard this prior for one that is formally valid.
+%The prior on the background parameter depends on the count rate of the burst data. 
+%The prior is log-uniform, with boundaries set by the average count rate $\mu_\counts$ in a burst:
+%$\log{(10^{-3}\mu_\counts)} < \log{(\counts_{\mathrm{bg}})} < \log{(10^{3} \mu_\counts)}$. 
+%Note that this is, in principle, not a valid prior: the prior for the parameters should not depend on the data
+%itself, because the data cannot be regarded as prior knowledge in the Bayesian sense (although limitations of the instrument, for example,
+%could be). In practice, it is convenient to define the prior on the background count rate in this way as long as one does not need to compute the marginal likelihood,
+%where the prior's impropriety could make an important difference. 
+%In a more in-depth analysis involving the marginal likelihood where, for example, one might test whether any results change with a 
+%change of prior, or where different models for the individual components might be compared, one would need to discard this prior for one that is formally valid.
 
-The priors on the hyperparameters $\mu_{A}$ and $\mu_{\tau}$ are log-uniform. The prior range for
+The prior on the hyperparameter $\mu_{\tau}$ is log-uniform. The prior range for
 $\mu_{\tau}$ depends on the length of the data set, such that $\log{(10^{-3}t_{\mathrm{burst}})} < \log{(\mu_{\tau})} < \log{(10^{3}t_\mathrm{burst})}$.
-Like the prior on the background count rate $\counts_{\mathrm{bg}}$, the hyper prior on the width of the amplitude prior distribution
-depends on the count rate in a burst, $\mu_\counts$: $\log{(10^{-3}\mu_\counts)} < \log{(\mu_{A})} < \log{(10^{3} \mu_\counts)}$. The same reasoning applies as
-for the background prior, such that for a more complicated analysis involving the marginal likelihood it needs to be replaced
-by a prior that is formally valid. For a summary of all model parameters, their definition and prior distributions, see Table
-\ref{tab:priortable}.
+The priors on the hyperparameters $\mu_A$ and $\counts_{\mathrm{bg}}$ follow a truncated Cauchy distribution between $10^{-21}$ and $10^{21}$. While
+this range is fairly wide, the Cauchy distribution ensures a $\sim 0.5$ chance to be close to unity.
+
+For a summary of all model parameters, their definition and prior distributions, see Table \ref{tab:priortable}.
 
 
 \begin{figure*}[htbp]
@@ -593,7 +591,7 @@ be extended again to make inferences across, for example, different magnetars. T
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{ch6f4.pdf}%sgr1550_nspikes.pdf}
+\includegraphics[width=9cm]{f4.pdf}%sgr1550_nspikes.pdf}
 \caption{Number of components in a given burst for $332$ modelled bursts, for both the raw (unfiltered) sample (blue) as well as the sample after
 filtering out all components with an amplitude smaller than the inferred background count rate (red). We computed the distributions by picking single samples
 from the posterior for each burst and formed an ensemble of these individual draws for all bursts to make a single distribution. We repeated this process $100$ times,
@@ -606,7 +604,7 @@ and computed the mean number of bursts for each bin (corresponding to the number
 \label{ch6:exploration}
   \begin{figure*}[htbp]
 \begin{center}
-\includegraphics[width=\textwidth]{ch6f5.pdf}%sgr1550_diff_dist.pdf}
+\includegraphics[width=\textwidth]{f5.pdf}%sgr1550_diff_dist.pdf}
 \caption{Differential distributions for the duration, count-space amplitude and fluence for all model components from $332$ bursts. In each bin, we plot the mean for
 that bin from $100$ ensembles of random draws from the posterior distribution of each burst (see text for details). All three distributions are strongly peaked and appear slightly 
 skewed towards larger values. }
@@ -656,7 +654,7 @@ in our model, and thus easily extracted. We compute spike duration by finding th
  various quantities for a single source at a fixed distance, this conversion is irrelevant.
   \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{ch6f6.pdf}%sgr1550_waitingtimes.pdf}
+\includegraphics[width=9cm]{f6.pdf}%sgr1550_waitingtimes.pdf}
 \caption{Waiting time distribution between consecutive spikes for $332$ bursts. Waiting times are the times between peak amplitudes of spikes, and are only computed for
 continuous stretches of data between them, i.e.\ time series without data gaps. This effectively sets an upper limit to the waiting time that can be measured of $330\,\mathrm{s}$, the 
 length of a single \fermi/GBM TTE data file. This cut-off introduces a bias into the distribution at long waiting times, and shifts the peak at long waiting times to smaller values.}
@@ -698,7 +696,7 @@ that there is a characteristic time scale determining the waiting time between i
 
 \begin{figure*}[htbp]
 \begin{center}
-\includegraphics[width=\textwidth]{ch6f7.pdf}%sgr1550_correlations.pdf}
+\includegraphics[width=\textwidth]{f7.pdf}%sgr1550_correlations.pdf}
 \caption{Joint distributions of spike duration and fluence (left) and spike rise time and fluence (right). Black points indicate an ensemble of burst models, where we drew once
 from the posterior distribution of each burst to build the ensemble. Contours are derived from the combined sample of $100$ draws for all bursts, the shaded background is constructed in
 the same way for illustrative purposes. Contour levels are at $0.01, 0.05, 0.1, 0.2$ and $0.3$.
@@ -712,7 +710,7 @@ this fraction in combination with fluences inferred from spectral modelling \cit
 \end{figure*}
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{ch6f8.pdf}%sgr1550_skewness_correlations.pdf}
+\includegraphics[width=9cm]{f8.pdf}%sgr1550_skewness_correlations.pdf}
 \caption{Flux versus skewness for a sample of spikes in $332$ bursts. We parametrise flux in arbitrary units as the ratio of amplitude $A$ 
 for a spike in count space divided by the exponential rise time scale $\tau$. The skewness $s$ measures the asymmetry
 of exponential rise versus exponential fall in a spike, such that the fall time scale $\tau_{\mathrm{fall}} = s\tau$. Overall, spikes are positively skewed ($\log_{10}{(s)} > 0$), i.e.\ their
@@ -742,7 +740,7 @@ deviation is, however, weak, and requires quantification to draw firm conclusion
 
  \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{ch6f9.pdf}%sgr1550_prior_nspikes.pdf}
+\includegraphics[width=9cm]{f9.pdf}%sgr1550_prior_nspikes.pdf}
 \caption{The number of  components (spikes) per burst for $332$ bursts for both exponential priors (blue) for amplitude and rise time scale, the standard prior assumed in
 deriving the results of this work, and log-normal priors (green) as an alternative hypothesis for the prior distributions on amplitude and rise time scale. Changing the prior has 
 no appreciable effect on the number of components per burst.}
@@ -772,7 +770,7 @@ on the background parameter as well as the hyperparameter for the amplitude, we 
 changes the results reported in the previous section.
 \begin{figure*}[htbp]
 \begin{center}
-\includegraphics[width=\textwidth]{ch6f10.pdf}%sgr1550_prior_diff_dist.pdf}
+\includegraphics[width=\textwidth]{f10.pdf}%sgr1550_prior_diff_dist.pdf}
 \caption{Differential distributions for burst duration (left panel), amplitude (middle panel) and fluence (right panel) for an exponential prior on spike 
 amplitudes and rise timescales (blue; see also Figure \ref{fig:diffdist}),
 and a log-normal prior on the same parameters (green). A log-normal prior leads to a noticeable increase in low-amplitude spikes (middle panel), translating
@@ -965,7 +963,7 @@ where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period
 %        \centering        
 %        \vspace{-0.5cm}
 %        \begin{subfigure}[b]{0.6\textwidth}
-%                \includegraphics[width=\textwidth]{ch6f11a.pdf}
+%                \includegraphics[width=\textwidth]{f11a.pdf}
 %                %\caption{}
 %                \label{fig:sip}
 %        \end{subfigure}%
@@ -973,13 +971,13 @@ where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period
 %        %~%add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
 %          %(or a blank line to force the subfigure onto a new line)
 %        \begin{subfigure}[b]{0.6\textwidth}
-%                \includegraphics[width=\textwidth]{ch6f11b.pdf}
+%                \includegraphics[width=\textwidth]{f11b.pdf}
 %                %\caption{A tiger}
 %                \label{fig:sep}
 %        \end{subfigure}
 %        \vspace{-0.5cm}
 %        \begin{subfigure}[b]{0.6\textwidth}
-%                \includegraphics[width=\textwidth]{ch6f11c.pdf}
+%                \includegraphics[width=\textwidth]{f11c.pdf}
 %                %\caption{A mouse}
 %                \label{fig:mud}
 %        \end{subfigure}
@@ -994,19 +992,19 @@ where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period
 \begin{figure}
 \centering
 \subfigure{
-                \includegraphics[width=0.45\textwidth]{ch6f11a.pdf}
+                \includegraphics[width=0.45\textwidth]{f11a.pdf}
                 %\caption{}
                 \label{fig:sip}}
                 \vspace{-0.1cm}
         %~%add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
           %(or a blank line to force the subfigure onto a new line)
         \subfigure{
-                \includegraphics[width=0.45\textwidth]{ch6f11b.pdf}
+                \includegraphics[width=0.45\textwidth]{f11b.pdf}
                 %\caption{A tiger}
                 \label{fig:sep}}
         \vspace{-0.5cm}
         \subfigure{
-                \includegraphics[width=0.45\textwidth]{ch6f11c.pdf}
+                \includegraphics[width=0.45\textwidth]{f11c.pdf}
                 %\caption{A mouse}
                 \label{fig:mud}}
          \vspace{0.5cm}

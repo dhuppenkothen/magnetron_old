@@ -158,12 +158,33 @@ class TwoExpParameters(Parameters, object):
 
         return self.energy
 
-    def compute_fluence(self, fluence, counts_sum, bkgsum = 0):
+    def compute_fluence(self, fluence, counts_sum, bkgsum = 0.0):
 
-        count_energy = self.compute_energy() - bkgsum
+        try:
+            bkg = self.bkg
+        except AttributeError:
+            bkg = 0.0
+
+        t_start = self.t0 + np.log(bkg/self.amp)*self.scale
+        t_end = self.t0 - np.log(bkg/self.amp)*self.scale*self.skew
+
+        expfactor1 = np.exp((t_start - self.t0)/self.scale)
+        rise_energy = self.scale*self.amp*(1.-expfactor1)
+
+        expfactor2 = np.exp(-(t_end - self.t0)/(self.scale*self.skew))
+        fall_energy = self.scale*self.skew*self.amp*(1. - expfactor2)
+
+        ## energy without background
+        count_energy = rise_energy + fall_energy
+
+        counts_sum -= - bkgsum
+
+        #print("count_energy: " + str(count_energy))
         count_ratio = count_energy/counts_sum
-        self.fluence = fluence*count_ratio
+        #print("count_ratio: " + str(count_ratio))
 
+        self.fluence = fluence*count_ratio
+        #print("self.fluence: " + str(self.fluence))
         return self.fluence
 
     def compute_duration(self, fraction=0.01):

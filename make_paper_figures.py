@@ -786,34 +786,37 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
 
     #xmin, xmax = duration_flat.min(), duration_flat.max()
     #ymin, ymax = fluence_flat.min(), fluence_flat.max()
-    xmin = -1.0 #np.min(flux_flat)
+    xmin = 0.0 #np.min(flux_flat)
     xmax = 6.0 #np.max(flux_flat)
     ymin = -2.5 #np.min(skewness_flat)
     ymax = 3.0 #np.max(skewness_flat)
     ### Perform Kernel density estimate on data
+    cmap = sns.cubehelix_palette(start=.5, rot=-.75, as_cmap=True)
+
     try:
-        X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-        positions = np.vstack([X.ravel(), Y.ravel()])
-        values = np.vstack([flux_flat, skewness_flat])
-        kernel = scipy.stats.gaussian_kde(values)
-        Z = np.reshape(kernel(positions).T, X.shape)
+        #X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        #positions = np.vstack([X.ravel(), Y.ravel()])
+        #values = np.vstack([flux_flat, skewness_flat])
+        #kernel = scipy.stats.gaussian_kde(values)
+        #Z = np.reshape(kernel(positions).T, X.shape)
 
 
-        im = ax1.imshow(np.transpose(Z), interpolation='bicubic', origin='lower',
-                cmap=cm.PuBuGn, extent=(xmin,xmax,ymin,ymax))
-        im.set_clim(0.0,0.5)
+        #im = ax1.imshow(np.transpose(Z), interpolation='bicubic', origin='lower',
+        #        cmap=cm.PuBuGn, extent=(xmin,xmax,ymin,ymax))
+        #im.set_clim(0.0,0.5)
         #plt.colorbar(im)
 
-        znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
-        cs = ax1.contour(X,Y,znew,levels, linewidths=2, colors="black", origin="lower")
+        #znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
+        #cs = ax1.contour(X,Y,znew,levels, linewidths=2, colors="black", origin="lower")
         #manual_locations = [(0.0, -10.5), (-0.9, -11.5), (-0.7,-10.7), (-1.7,11.1), (-1.1,-10.4)]
         #plt.clabel(cs, fontsize=24, inline=1, manual=manual_locations)
 
-        divider = make_axes_locatable(ax1)
-        cax = divider.append_axes("right", size="5%", pad=0.5)
+        #divider = make_axes_locatable(ax1)
+        #cax = divider.append_axes("right", size="5%", pad=0.5)
 
-        im.set_clim(0.0,0.5)
-        plt.colorbar(im, cax=cax)
+        #im.set_clim(0.0,0.5)
+        #plt.colorbar(im, cax=cax)
+        sns.kdeplot(flux_flat, skewness_flat, cmap=cmap, shade=True, cut=5, ax=ax1)
 
 
     except ValueError:

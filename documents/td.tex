@@ -537,6 +537,17 @@ by a prior that is formally valid. For a summary of all model parameters, their 
 
 \begin{figure*}[htbp]
 %\begin{center}
+\includegraphics[width=\textwidth]{f4a.pdf}%example_dnest_result.pdf}
+\caption{We test the model constructed in Section \ref{ch6:methods} on simulated data. We simulated light curves of a single spike with \fermi/GBM-like background count rates and
+varied the amplitude of the spike in order to test detectability. In the left panel, we show the posterior distribution of the number of spikes as a function of the signal-to-noise ratio of the spike
+ as a box plot. The box encompasses the interquartile range (the $0.25$ and $0.75$ quantiles) with the median marked. The whiskers extend out to $1.5$ times the interquartile range; 
+ outliers are marked as scatter points. }
+\label{fig:onespike}
+%\end{center}
+\end{figure*}
+
+\begin{figure*}[htbp]
+%\begin{center}
 \includegraphics[width=\textwidth]{f3.pdf}%example_dnest_result.pdf}
 \caption{An example burst from the magnetar SGR J1550-5418, in an observation taken on 2009 January 22 (ObsID 090122173). In the left
 panel, the light curve at high time resolution, $\Delta t = 5 \times 10^{-4}\,\mathrm{s}$, and model light curves for $10$ random draws from the posterior distribution. 
@@ -545,6 +556,29 @@ quite well constrained between $9$ and $17$ components.}
 \label{fig:dnest_example}
 %\end{center}
 \end{figure*}
+
+
+\section{Simulating from the Model}
+
+
+In order to test how well the model and sampling described above work in an ideal case, we simulated burst light curves from the simplest possible version
+of the model: a single spike with a constant background. We varied the amplitude of the spike between $1$ and $20$ counts per bin (where $\Delta t = 0.005\,\mathrm{s}$ for
+a single bin), but kept all other parameters (duration of the light curve, background noise level, spike rise time scale and skewness) constant. 
+We fixed the background count rate to $1.59\,\mathrm{counts}/(0.005\mathrm{s})$, approximated from fitting a flat line to \fermi/GBM background light curves, and the position
+of the spike in each light curve at $0.06$ from the start of the light curve.
+In Figure \ref{fig:onespike}, we show the results for all four simulated bursts. Predictably, a spike with an amplitude below the background level is impossible for the model
+to detect. Instead, it places a number ($\leq 20$) of extremely low amplitude spikes throughout the entire length of the light curve. Most of these spikes will have an amplitude
+much lower than the background itself. As soon as the spike has an amplitude larger than the background, the model behaves significantly different. 
+For a signal with an amplitude of $\sim 3$ times background count rate, the posterior distribution of the position is peaked sharply at the position of the spike in the light curve, 
+and only few samples are scattered throughout the rest of the light curve. Similarly, the posterior distribution of the amplitude clusters around $5$, with some samples at 
+smaller amplitudes largely below the noise level. This scatter can be easily explained by the uncertainty in the amplitude introduced by the Poisson statistics. Additionally, the posterior distribution of the
+number of spikes is extremely narrow at low values, with only very few samples indicating more than $3$ spikes in the model. 
+Finally, raising the amplitude even further leads to an even stronger clustering in amplitude and position, indicating that the brightest spikes are easily detectable with our model 
+with little ambiguity. 
+In conclusion, it seems reasonable to exclude spikes that have amplitudes lower than the background count rate. These are samples that express an uncertainty in our knowledge of 
+the process: there could be spikes below the background that we have missed, but we cannot be sure about that from the data alone. Conversely, any feature in the data with a count
+rate exceeding the background by a factor of at least $3$ will be modelled fairly unambiguously by our method, allowing us to make inferences about the underlying processes based on
+these models.
 
 
 
@@ -698,7 +732,7 @@ that there is a characteristic time scale determining the waiting time between i
 
 \begin{figure*}[htbp]
 \begin{center}
-\includegraphics[width=\textwidth]{ch6f7.pdf}%sgr1550_correlations.pdf}
+\includegraphics[width=\textwidth]{f7.pdf}%sgr1550_correlations.pdf}
 \caption{Joint distributions of spike duration and fluence (left) and spike rise time and fluence (right). Black points indicate an ensemble of burst models, where we drew once
 from the posterior distribution of each burst to build the ensemble. Contours are derived from the combined sample of $100$ draws for all bursts, the shaded background is constructed in
 the same way for illustrative purposes. Contour levels are at $0.01, 0.05, 0.1, 0.2$ and $0.3$.
@@ -712,7 +746,7 @@ this fraction in combination with fluences inferred from spectral modelling \cit
 \end{figure*}
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{ch6f8.pdf}%sgr1550_skewness_correlations.pdf}
+\includegraphics[width=9cm]{f8.pdf}%sgr1550_skewness_correlations.pdf}
 \caption{Flux versus skewness for a sample of spikes in $332$ bursts. We parametrise flux in arbitrary units as the ratio of amplitude $A$ 
 for a spike in count space divided by the exponential rise time scale $\tau$. The skewness $s$ measures the asymmetry
 of exponential rise versus exponential fall in a spike, such that the fall time scale $\tau_{\mathrm{fall}} = s\tau$. Overall, spikes are positively skewed ($\log_{10}{(s)} > 0$), i.e.\ their
@@ -742,7 +776,7 @@ deviation is, however, weak, and requires quantification to draw firm conclusion
 
  \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{ch6f9.pdf}%sgr1550_prior_nspikes.pdf}
+\includegraphics[width=9cm]{f9.pdf}%sgr1550_prior_nspikes.pdf}
 \caption{The number of  components (spikes) per burst for $332$ bursts for both exponential priors (blue) for amplitude and rise time scale, the standard prior assumed in
 deriving the results of this work, and log-normal priors (green) as an alternative hypothesis for the prior distributions on amplitude and rise time scale. Changing the prior to a log-normal
 distribution leads to an increase in the number of components per burst.}

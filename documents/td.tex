@@ -676,8 +676,7 @@ in our model, and thus easily extracted. We compute spike duration by finding th
 
  Finally, we compute the dissipated energy in a spike by integrating Equation \ref{eqn:word} analytically in count space,
  then converting from count space to fluence using the spectral modelling results from \citet{vanderhorst2012} and \citet{vonkienlin2012}. The authors of these two studies converted from 
- count space to energy space in the following way: first, a detector response was generated in order to deconvolve the source spectrum from effects introduced by the detector. Then, each burst spectrum
- was fit independently in the $8-200\,\mathrm{keV}$ range with six spectral models, with three models being very similar (a Comptonised model, a model using optically thin thermal bremsstrahlung, and a combination of two blackbodies). The fluence of each burst was estimated by integrating the energy spectrum estimated by the best-fit spectral model, taking into account the detector response. Note, however, that this procedure does not include any subtraction of the sky background.
+ count space to energy space in the following way: first, a detector response was generated in order to deconvolve the source spectrum from effects introduced by the detector. Then, each background-subtracted burst spectrum was fit independently in the $8-200\,\mathrm{keV}$ range with six spectral models, with three models being very similar (a Comptonised model, a model using optically thin thermal bremsstrahlung, and a combination of two blackbodies). The fluence of each burst was estimated by integrating the energy spectrum estimated by the best-fit spectral model, taking into account the detector response. Note, however, that this procedure does not include any subtraction of the sky background.
  
  We subtract the integrated number of 
  background photons, derived from the background parameter $\mu_\counts$ for a given model, from the total integrated number of 
@@ -1087,19 +1086,19 @@ where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period
 \begin{figure}
 \centering
 \subfigure{
-                \includegraphics[width=0.45\textwidth]{f11a.pdf}
+                \includegraphics[width=0.45\textwidth]{ch6f11a.pdf}
                 %\caption{}
                 \label{fig:sip}}
                 \vspace{-0.1cm}
         %~%add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
           %(or a blank line to force the subfigure onto a new line)
         \subfigure{
-                \includegraphics[width=0.45\textwidth]{f11b.pdf}
+                \includegraphics[width=0.45\textwidth]{ch6f11b.pdf}
                 %\caption{A tiger}
                 \label{fig:sep}}
         \vspace{-0.5cm}
         \subfigure{
-                \includegraphics[width=0.45\textwidth]{f11c.pdf}
+                \includegraphics[width=0.45\textwidth]{ch6f11c.pdf}
                 %\caption{A mouse}
                 \label{fig:mud}}
          \vspace{0.5cm}

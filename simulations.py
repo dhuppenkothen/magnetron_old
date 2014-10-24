@@ -168,7 +168,8 @@ def singlepeak_results():
     ax5.tick_params(axis='both', which='major', labelsize=fs)
     ax5.set_xlabel('Position since burst start [s]', fontsize=22, labelpad=10)
 
-
+    plt.savefig("f4a.pdf", format="pdf")
+    plt.close()
 
     return
 

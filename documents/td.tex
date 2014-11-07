@@ -102,9 +102,6 @@ with complex temporal structure that is a superposition of different processes. 
 using standard methods, it is possible to introduce systematic errors into inferences made from this type of data. Three examples stand out particularly: solar flares, $\gamma$-ray bursts (GRBs) and magnetar bursts.  All three phenomena are characterised by bursts lasting from $\sim\!\! 1/10$ of a second to hundreds of seconds, and a 
 complex temporal structure that varies strongly from burst to burst (for an example, see Figure \ref{fig:example_bursts}). 
 
-% BJB: you could mention here that taking the fourier transform, while always
-% possible, is only "the right thing to do" if you believe the signal is
-% periodic.
 While Fourier transforming the data is always possible, it is not necessarily the best approach to characterising variability: inferences are most reliable when trying to find
 periodic signals in a background that is straightforward to characterise (in particular, a stationary stochastic background).
 Fourier methods fail in particular when the underlying processes contributing to the observed light curve, especially deterministic 
@@ -138,26 +135,6 @@ the order of $10^{14} \, \mathrm{G}$, well above the quantum-critical limit $B_{
 where quantum effects such as pair production and photon splitting become important \citep[although three sources have been 
 identified with properties similar to magnetars, but inferred dipole fields below this limit;][]{vanderhorst2010,esposito2010,rea2010,rea2012,scholz2012,rea2014}. 
 
-
-%Magnetar bursts are of particular interest for a variety of reasons. Most importantly, the observation of three giant flares, catastrophic
-%outbursts in hard X-rays of energies up to $10^{47} \, \mathrm{erg}$\citep[e.g.\][]{mazets1979,cline1998,hurley1999,feroci1999,palmer2005,hurley2004,hurley2005, borkowski2004, mereghetti2005,mazets2005,yamazaki2005,terasawa2005}.% and the associated detection of quasi-periodic oscillations (QPOs)
-%in the tails of these flares \citep{israel2005,strohmayer2005,strohmayer2006,watts2006}, have opened up a potential new way to look into the neutron star interior via asteroseismology. 
-%In the original model, these giant flares are caused by a catastrophic re-ordering of the neutron star's internal field. As the magnetic field lines, frozen into
-%the solid crust, move, the crust responds by fracturing when its breaking strain is exceeded by the forces exerted by the magnetic field.
-%The energy released in this process is both released into the magnetosphere, where it forms a pair plasma that slowly radiates away and
-%produces the observed emission.%, as well as seismic waves throughout the star. The frequencies of the oscillatory modes depend on
-%the nuclear physics of the star's crust and core, making them a prime diagnostic for the conditions inside the star.
-
-%The crust quake model of \citet{thompson1995} is not the only viable model
-%for the production of magnetar giant flares. \citet{thompson1995} postulated a catastrophic untwisting the internal magnetic field, which leads to mechanical failure of the neutron star crust.
-%Alternatively, the internal magnetic field could unwind slowly, allowing the external magnetic field to follow suit without mechanical failure of the crust. 
-%A catastrophic energy release could then occur in the magnetosphere itself, facilitated by explosive reconnection \citep{lyutikov2003,lyutikov2006,heyl2005,nakar2005,masada2010,gill2010}. 
-%\citet{vanhoven2011} have shown that a giant flare 
-%triggered in the magnetosphere could still excite large-scale shear motions in the crust. In this case, the giant flare would precede the crust quake, and not the other way around.
-%A second argument for this alternative picture, akin more to solar flares than earthquakes, comes from calculations that indicate that the physical conditions in the crust
-%do not allow for mechanical (brittle) failure \citep{jones2003,horowitz2009}. Instead, the crust is more likely to admit ductile failure and plastic deformation \citep{levin2012}.
-%[WHAT DOES THIS MEAN FOR TIME SCALES IN BURSTS?]
-
 Magnetar bursts are of particular interest for a variety of reasons. While the most spectacular outbursts are the rare, but extremely energetic giant flares,
 magnetars also show a complex behaviour of emitting much smaller, shorter recurrent bursts. These bursts have a duration of $\lesssim 1\mathrm{s}$ , with energies
 generally between $10^{38}\,\mathrm{erg}$ and $10^{41}\,\mathrm{erg}$, and have a complex temporal structure with single or
@@ -173,9 +150,7 @@ in particular can be well-modelled by a power law with a power-law index of $\si
 self-organised criticality (SOC; \citealp{bak1987,bak1988}; for a recent introduction and review on SOC in astrophysics see \citealp{aschwanden2014}). 
 In the SOC framework, the physical system in question continuously drives itself towards a critical state,
 without requiring fine tuning. When the critical state is reached, relaxation occurs via a catastrophic release of energy. The system returns
-to a subcritical state, and the cycle begins anew. %The standard example of an SOC system is a sand pile: as sand grains are slowly dropped onto
-%the pile, the slope of the sand pile steepens gradually. However, there is a critical slope, at which the sand pile can no longer support the 
-%additional grains dropped onto it, and relaxation occurs via an avalanche, returning the slope to a sub-critical state. 
+to a subcritical state, and the cycle begins anew. 
 One advantage of describing a system in the SOC framework is that while the details of the process leading to the critical state and subsequent
 relaxation depend on the physical processes specific to the system, many of the overall statistical properties are universal.
 
@@ -183,11 +158,6 @@ At present, it is not clear whether magnetar bursts are smaller-scale versions o
 either a rapid rupturing of the neutron star due to an internal re-structuring of the magnetic field, with the energy of the cracking process
 released in the magnetosphere, or a slow untwisting of the magnetic field leading to ductile deformations in the crust and explosive 
 reconnection in the magnetosphere.
-%or perhaps entirely magnetospheric events. In the latter scenario, the evolution of the magnetic field would operate on timescales
-%slow enough for the crust to respond with plastic deformation rather than brittle fracture, and the energy release would proceed via
-%explosive reconnection in the magnetosphere instead.
-
-%%% do these models predict different timescales, and can we say something here about distinguishing them?
 
 Because of the bursts' complex temporal morphology, differing from burst to burst, it is difficult to extract information from their light curves. 
 Many bursts show a pattern of one or multiple spikes, where these spikes sometimes sit on top of each other. To extract parameters that could be related
@@ -196,8 +166,6 @@ number of spikes per burst as well as the individual parameters of each spike: t
 At the same time, this process needs to operate automatically without the user's intervention, both to avoid biases introduced by manual fitting, as well as
  to allow for an analysis of the large numbers of magnetar bursts observed from various sources.
 
-% BJB: Better to go gently here by saying inference first, then MCMC, and worry about DNest later (it's too scary and many readers
-% would rather understand the modelling ideas and care less about the computation).
 In this paper, we propose a new method to model magnetar bursts as a linear combination of simple shapes. Both the number of components
 per burst as well as the model parameters for each component are free parameters, to be inferred from the data (in practice, using
 Markov Chain Monte Carlo [MCMC]). In Section \ref{ch6:data}, we present our sample of bursts from SGR J1550-5418, observed with the 
@@ -205,10 +173,10 @@ Gamma-ray Burst Monitor (GBM) on board the \fermi\ Gamma-Ray Space Telescope.
 The high sensitivity of the instrument as well as 
 the large number of observed bursts make this source an excellent target to demonstrate the power of the proposed methods, which we
 lay out in detail in Section \ref{ch6:methods}.
-In Section \ref{ch6:oneburst}, we show an example of a model for a single burst, and in Section \ref{ch6:results}, we apply our method to a large data set of bursts, 
+In Section \ref{ch6:modelsims}, we test our model on simple simulations of single-spiked bursts to test how well the model recovers the burst parameters, while
+in Section \ref{ch6:oneburst}, we show an example of a model for a single burst. Finally, in Section \ref{ch6:results}, we apply our method to a large data set of bursts, 
 which allows us to extract a wealth of physically relevant time scales from magnetar bursts. 
 We place these timescales in the context of the SOC framework, and tie them to physical parameters in the system in Section \ref{ch6:discussion}.
-
 
 %Magnetars make bursts.
 %Magnetar bursts have many spikes each.
@@ -259,16 +227,9 @@ count rate of $3.5 \times 10^{5} \, \mathrm{photons} \; \mathrm{s}^{-1}$, any ph
 to flat-topped spikes truncated at the maximum count rate. Any bursts with count rates this high are excluded from the sample, as the model we
 consider is not designed to represent these features. 
 
-%Data for the strongest-field magnetars SGR 1806-20 and SGR 1900+14 are recorded with the {\it Rossi} X-ray Timing Explorer (\rxte\), which someone
-%else will write the details about (but data are still time-tagged photon events and suffer from saturation and dead time). 
-
-%In what follows, the data for one burst are photon counts $\counts_n$ (integer) in $N$ bins $n$.
-%The data from a few example bursts are shown in Figure \ref{fig:example_bursts}.
-
 
 \section{Analysis Methods}
 \label{ch6:methods}
-% BJB: Some minor wording changes in the following paragraph
 In order to successfully model the complex temporal variability in magnetar bursts, any modelling procedure must satisfy the following criteria: (1) it must be flexible enough to be applicable to a large number of bursts with distinctly different morphologies. We achieve this by decomposing magnetar burst light curves into one or more components with simple shapes, which, taken together, make up a burst. (2) The procedure must be largely automated, and be capable of inferring both the number of components as well as the model parameters for each component without human intervention. The latter is achieved by setting up a Bayesian model, where the number of components is a parameter to be inferred together with the corresponding parameters of the individual components. We use MCMC (in the form of Diffusive Nested Sampling, or DNS, as implemented in DNest \citep{brewer2011} to sample the posterior distribution over all parameters including the number of components. From samples of the posterior distribution,
 we can then study the properties of individual burst components, as well as their ensemble properties for a given burst.
 
@@ -284,14 +245,14 @@ For a light curve with $K$ bins with Poisson-distributed counts $\bm{\counts} = 
 %\\
 \mean_k &=& \mean_{\bg} + \sum_{n=1}^N \mean_{nk}
 \\
-\mean_{nk} &\equiv& \int_{t_n-\Delta t/2}^{t_n+\Delta t/2} A_n\,\word\left(\frac{t'-t_n}{\tau_n}\right)\,\dd t' \; ,
+\mean_{nk} &\equiv& \int_{t_k-\Delta t/2}^{t_k+\Delta t/2} A_n\,\word\left(\frac{t'-t_n}{\tau_n}\right)\,\dd t' \; ,
 %\begin{equation}
 %\word(\xi) &=& \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right. \, ,
 %\end{equation}
 \end{eqnarray}
 where $\mean_{nk}$ is the mean count rate of the $n^{\mathrm{th}}$ model component in time bin $k$, 
 $\mean_{bg}$ is the background count rate of that bin,
-and the mean count rate $\mean_{nk}$ in a bin $n$ is defined as the integral over a functional form defining the shape of
+and the mean count rate $\mean_{nk}$ in a bin $k$ is defined as the integral over a functional form defining the shape of
 the model component $\word$ over the the width of that time bin. The component $\word$ is a generic shape,
 and can be modified by an amplitude parameter $A_n$ and a parameter setting the width $\tau_n$, in addition to
 parameters such as the time offset $t_n$ and intrinsic parameters further describing the component's shape.
@@ -355,7 +316,7 @@ where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisati
 % BJB: brackets and H again
 % BJB: Also, you can't integrate over N as it's discrete :) It's a summation
 \begin{eqnarray}
-p(\bm{\counts} \given H) & = & \sum_{N=0}^{N_{\rm max}} \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
+p(\bm{\counts} \given H) & = & \sum_{n=0}^{N} \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
 && p(N\given H)p(\bm{\alpha} \given H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) d\bm{\alpha} d\bm{\theta}_1 ... d\bm{\theta}_N \; .
 \label{eqn:marginal}
 \end{eqnarray}
@@ -454,7 +415,7 @@ using the definition in \ref{ch6:data}, and refer to a ``spike'' when talking ab
 \toprule
 \bf{Parameter} & \bf{Meaning} & \bf{Probability Distribution} \\ \midrule
 \it{Hyperparameters} && \\ \midrule
-$\mu_A$ & Mean of exponential (log-normal) prior distribution for spike amplitude $A$ &  $\mathrm{truncated Cauchy distribution}(10^{-21}, 10^{21})$  \\
+$\mu_A$ & Mean of exponential (log-normal) prior distribution for spike amplitude $A$ &  $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$  \\
 ($\sigma_A$)\footnotemark[2] & Standard deviation of log-normal prior distribution for spike amplitude $A$ & \\
 $\mu_\tau$ & Mean of exponential (log-normal) prior distribution for spike exponential rise time scale $\tau$& $\mathrm{LogUniform}(10^{-3}T_\mathrm{b}, 10^3{T_\mathrm{b}})$\tnote{\emph{b}}  \\
 ($\sigma_\tau$)\footnotemark[2]  & Standard deviation of log-normal prior distribution for spike exponential rise timescale $\tau$& \\
@@ -467,7 +428,7 @@ $\tau$ & Exponential rise time scale & $\mathrm{Exponential}(\mu_\tau)$ \\
 $A$ & Amplitude of spike peak in units of counts per bin &$\mathrm{Exponential}(\mu_A)$ \\
  && ($\mathrm{LogNormal}(\mu_A, \sigma^2_{A}))\tnote{\emph{a}} $ \\ 
 $s$ & Skewness parameter, such that exponential fall time $\tau_{\mathrm{fall}} = s\tau$ & \\
-$\counts_{\mathrm{bg}}$ & Flat sky/instrumental background in counts per bin & $\mathrm{truncated Cauchy distribution}(10^{-21}, 10^{21})$ \\
+$\counts_{\mathrm{bg}}$ & Flat sky/instrumental background in counts per bin & $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$ \\
 $N$ & Number of components (spikes) per burst & $\mathrm{Uniform}(0,100)$  \\\bottomrule
 \end{tabularx}
    \begin{tablenotes}
@@ -550,14 +511,14 @@ varied the amplitude of the spike in order to test detectability. In the left pa
 \caption{An example burst from the magnetar SGR J1550-5418, in an observation taken on 2009 January 22 (ObsID 090122173). In the left
 panel, the light curve at high time resolution, $\Delta t = 5 \times 10^{-4}\,\mathrm{s}$, and model light curves for $10$ random draws from the posterior distribution. 
 On the right, the marginalised posterior distribution over the possible number of components in the model. The posterior for the number of components is 
-quite well constrained between $9$ and $17$ components.}
+quite well constrained between $10$ and $20$ components.}
 \label{fig:dnest_example}
 %\end{center}
 \end{figure*}
 
 
 \section{Simulating from the Model}
-
+\label{ch6:modelsims}
 
 In order to test how well the model and sampling described above work in an ideal case, we simulated burst light curves from the simplest possible version
 of the model: a single spike with a constant background. We varied the amplitude of the spike between $1$ and $20$ counts per bin (where $\Delta t = 0.005\,\mathrm{s}$ for
@@ -645,6 +606,7 @@ skewed towards larger values. }
 \label{fig:diffdist}
 \end{center}
 \end{figure*}
+
 A first exploration of the data reveals that most bursts can be represented with only a few spikes, of the order of 
 $10$ or fewer (see also Figure \ref{fig:spikes}). Because we use very high-resolution data for this analysis in order to
 be sensitive to short timescales of $< 1\mathrm{ms}$, a primary source for potential uncertainties in our analysis is the
@@ -652,9 +614,10 @@ danger that the model might try to represent individual (e.g.\ background) photo
 skew the resulting distributions towards small amplitudes and very short durations. The fact that we have many bursts
 fit with few spikes indicates that this might not be much of a problem. However, we also note that there is an appreciable fraction
 of spikes ($\sim 35\%$) with amplitudes smaller than the inferred background count level for the respective model of which these spikes 
-are part. We cannot say with certainty whether these features are present: they may well be, but the intrinsic sky and instrumental background
+are part, similar to what we observe in the simulations presented in Section \ref{ch6:modelsims}. Where the count rate is low in the
+data, we cannot say with certainty whether there are (weak) features close in amplitude to the background count rate: they may well exist, but the intrinsic sky and instrumental background
  make it difficult to ascertain their presence. Excluding these features from the sample produces a narrower distribution
-of spikes per burst, with the maximum clustered at $2$ spikes per bursts (see Figure \ref{fig:spikes}).
+of spikes per burst, with the maximum clustered at $1$ spike per bursts (see Figure \ref{fig:spikes}).
 
 
 In what follows, we exclude spikes with amplitudes smaller than the background count rate. The reason is because
@@ -676,7 +639,7 @@ in our model, and thus easily extracted. We compute spike duration by finding th
 
  Finally, we compute the dissipated energy in a spike by integrating Equation \ref{eqn:word} analytically in count space,
  then converting from count space to fluence using the spectral modelling results from \citet{vanderhorst2012} and \citet{vonkienlin2012}. The authors of these two studies converted from 
- count space to energy space in the following way: first, a detector response was generated in order to deconvolve the source spectrum from effects introduced by the detector. Then, each background-subtracted burst spectrum was fit independently in the $8-200\,\mathrm{keV}$ range with six spectral models, with three models being very similar (a Comptonised model, a model using optically thin thermal bremsstrahlung, and a combination of two blackbodies). The fluence of each burst was estimated by integrating the energy spectrum estimated by the best-fit spectral model, taking into account the detector response. Note, however, that this procedure does not include any subtraction of the sky background.
+ count space to energy space in the following way: first, a detector response was generated in order to deconvolve the source spectrum from effects introduced by the detector. Then, each background-subtracted burst spectrum was fit independently in the $8-200\,\mathrm{keV}$ range with six spectral models, with three models being very similar (a Comptonised model, a model using optically thin thermal bremsstrahlung, and a combination of two blackbodies). The fluence of each burst was estimated by integrating the energy spectrum estimated by the best-fit spectral model, taking into account the detector response.
  
  We subtract the integrated number of 
  background photons, derived from the background parameter $\mu_\counts$ for a given model, from the total integrated number of 
@@ -685,6 +648,7 @@ in our model, and thus easily extracted. We compute spike duration by finding th
  by the total number of background-subtracted counts in that burst, and multiply the resulting fraction with the burst fluence. 
  Because the distance is not well constrained for SGR J1550-5418, we do not convert from fluence to energy, but for a qualitative comparison to the expected correlation between the 
  various quantities for a single source at a fixed distance, this conversion is irrelevant.
+  
   \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=9cm]{f6.pdf}%sgr1550_waitingtimes.pdf}
@@ -706,7 +670,7 @@ length of a single \fermi/GBM TTE data file. This cut-off introduces a bias into
 
 
  In Figure \ref{fig:diffdist}, we show differential distributions of duration, peak amplitude (measured in count space) and fluence for all spikes in $332$ bursts. All three distributions are
- strongly peaked, and both amplitude and fluence are skewed towards larger values. The latter is exacerbated when considering the unfiltered sample of 
+ strongly peaked, and both amplitude and fluence have longer tails towards small values. The latter is exacerbated when considering the unfiltered sample of 
  spikes (including spikes with peak amplitudes below the background count rate), producing longer tails for both amplitude and fluence, but not changing the qualitative behaviour of the distributions. We will consider the behaviour of
  the differential distributions in detail and compare the observed distributions to predictions from SOC theory in Section \ref{ch6:soc}.
 
@@ -747,15 +711,15 @@ this fraction in combination with fluences inferred from spectral modelling \cit
 \caption{Flux versus skewness for a sample of spikes in $332$ bursts. We parametrise flux in arbitrary units as the ratio of amplitude $A$ 
 for a spike in count space divided by the exponential rise time scale $\tau$. The skewness $s$ measures the asymmetry
 of exponential rise versus exponential fall in a spike, such that the fall time scale $\tau_{\mathrm{fall}} = s\tau$. Overall, spikes are positively skewed ($\log_{10}{(s)} > 0$), i.e.\ their
-exponential rise is faster than their decay. There is a clear correlation between our measure of the flux and the skewness $s$, with a Spearman rank coefficient $R = 0.25 \pm 0.05$ with $p < 3.4 \times 10^{-4}$, although the relationship seems to flatten out for low fluxes.}
+exponential rise is faster than their decay. There is a possible correlation between our measure of the flux and the skewness $s$, with a Spearman rank coefficient $R = 0.17 \pm 0.03$ with $p < 3.4 \times 10^{-4}$.}
 \label{fig:skewness}
 \end{center}
 \end{figure}
 
 
 In Figure \ref{fig:correlations}, we plot rise time and duration against fluence for all $332$ bursts. There is a clear positive
-correlation between both rise time and fluence as well as spike duration and fluence (Spearman rank coefficient $R = 0.30\pm0.06$ with $p < 10^{-5}$ for duration versus fluence,
-and $R = 0.25\pm0.06$ with $p < 0.01$ for duration versus rise time). Clearly, more energetic spikes require more time to rise to the peak,
+correlation between both rise time and fluence as well as spike duration and fluence (Spearman rank coefficient $R = 0.35\pm0.03$ with $p < 10^{-5}$ for duration versus fluence,
+and $R = 0.30\pm0.03$ with $p < 0.01$ for duration versus rise time). Clearly, more energetic spikes require more time to rise to the peak,
 and radiate away their energy for a longer overall time. This is consistent with the results of \citet{vanderhorst2012}, who find a positive correlation between burst duration ($T_{90}$)
 and burst fluence, although the correlation found when considering whole bursts instead of spikes seems to be weaker than that found here. It is also consistent with 
 previous results in \citet{gogus1999}, who found a correlation between
@@ -765,9 +729,9 @@ In Figure \ref{fig:skewness}, we plot a measure of the flux, parametrised as the
 against the skewness parameter $s_n$, in order to test whether bursts with higher luminosity are also more skewed, i.e.\ their ratio of rise time scale to fall time scale deviates significantly
 from $1$. Overall, the spikes modelling magnetar bursts are skewed: the population of skewness parameters resides largely above 1 (corresponding to $\log_{10}{(s)} = 0$), indicating that most
 spikes have faster rise time scales than decays. Moreover, we find that there is a positive correlation between  our flux measure and the skewness: brighter bursts have a higher
-ratio between rise and fall time scales. We also note a possible deviation from a simple power law relationship between these two quantities: while the correlation is fairly strong at high fluxes
-above $A/\tau \sim\! 100$, it seems to flatten out towards a slope of $0$ at lower fluxes: spikes with fluxes below that value have a similar ratio between rise and fall time scale. This 
-deviation is, however, weak, and requires quantification to draw firm conclusions.
+ratio between rise and fall time scales. %We also note a possible deviation from a simple power law relationship between these two quantities: while the correlation is fairly strong at high fluxes
+%above $A/\tau \sim\! 100$, it seems to flatten out towards a slope of $0$ at lower fluxes: spikes with fluxes below that value have a similar ratio between rise and fall time scale. This 
+%deviation is, however, weak, and requires quantification to draw firm conclusions.
 
 
 
@@ -840,7 +804,7 @@ the inferred flux (defined as amplitude divided by rise time scale) and the skew
 
 There are some important limitations on the results presented above. Most importantly, deriving results over a sample of bursts from posterior distributions for individual bursts
 implies a strong prior against detecting a correlation. A formally correct analysis would include the entire sample of bursts in a hierarchical models, where we can explicitly put
-priors on relationships between parameters of the models. This is something to be explored in the future.
+priors on relationships between parameters of the model. This is something to be explored in the future.
 
 Secondly, there could be an energy dependence of the results presented above that we have not explored here. Magnetar bursts are known to have spectra that change with flux 
 \citep[e.g.\ ][]{younes2013}; conversely, some of the correlations found in this work may be energy-dependent. Again, this would require a more complex model, which is beyond the 
@@ -1118,7 +1082,7 @@ where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period
 
 We conclude that the shorter `inter-spike' wait time distributions are, given the extreme simplifications of our models, at least in prinicple compatible with transmission of information via crustal shear, magnetospheric, or core Alfv\'en waves.  The latter possibility was most problematic in terms of fitting the distribution, however we caveat that our choice of stress points in the magnetosphere (which will have a major effect on the predicted wait time distribution) was highly ad hoc.   The longer wait times, by contrast, are clearly inconsistent with any of the communication timescales described here, and are therefore more likely to be set by a slower evolutionary timescale of the system.  
 
-We now move on to consider more complex models and to exploit the other spike properties discussed in this analysis. We will explore three scenarios: (i) crust rupture trigger that leads directly to high energy emission; (ii) crust rupture trigger that leads to magnetic reconnection, with the emisson coming as a consequence of that process; and (iii) magnetospheric trigger leading to spontaneous magnetic reconnection and associated emission.
+We now move on to consider more complex models and to exploit the other spike properties discussed in this analysis. We will explore three scenarios: (i) crust rupture trigger that leads directly to high energy emission; (ii) crust rupture trigger that leads to magnetic reconnection, with the emission coming as a consequence of that process; and (iii) magnetospheric trigger leading to spontaneous magnetic reconnection and associated emission.
 
 We will first explore the crustal rupture model of \citet{thompson1995}. Within this picture, the small magnetar bursts are triggered by crustal ruptures as the crust comes under stress for the decaying interior field. The high energy emission that follows comes from particle acceleration, scattering and, they argue, a high likelihood of pair plasma fireball formation\footnote{\citet{heyl2005b} also discuss the crust rupture mechanism, however in the scenario that they outline, energy is transported by fast MHD waves before forming a pair plasma fireball.}
 
@@ -1155,7 +1119,7 @@ Thus if the bursts are due to reconnection driven by the tearing mode, fluence s
 
 Now consider an alternative scenario, where reconnection is driven directly by crust rupturing, with the speed of reconnection being governed by the shear speed in the crust $v_s$.  Assuming again that the observed rise timescale is the reconnection timescale, but in a situation where $\delta$ is independent of the reconnection timescale, we would now predict $E \propto T_\mathrm{dur}/\tau_{\rm rise}$.  The dependence on rise time is quite different from that predicted for the tearing mode, and is in fact not consistent with the observed correlations.  Although a linear relationship between duration and fluence is certainly possible (see Figure \ref{fig:correlations}, left panel), a negative correlation between the rise time and fluence is strongly disfavoured (Figure \ref{fig:correlations}, right panel).
 
-The cascade models that we have examined in this section are clearly all highly simplified.  They illustrate, however, the potential diagnostic power of the analysis technique presented in this paper, and we hope that the existence of more rigorous techniques like this will motivate the development of detailed theoreti/cal models that link trigger and emission mechanisms in a self-consistent manner.  
+The cascade models that we have examined in this section are clearly all highly simplified.  They illustrate, however, the potential diagnostic power of the analysis technique presented in this paper, and we hope that the existence of more rigorous techniques like this will motivate the development of detailed theoretical models that link trigger and emission mechanisms in a self-consistent manner.  
 
 \section{Conclusions}
 

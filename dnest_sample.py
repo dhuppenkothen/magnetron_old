@@ -85,7 +85,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_
         fname = f.split("/")[-1]
         bid = fname.split("_")[0]
         bids.append(bid)
-        parameters = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile,
+        parameters, hyper_all = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile,
                                       bkg=bkg, prior=prior, datadir=datadir)
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
@@ -98,7 +98,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_
     parameters_red = np.array([np.random.choice(p, replace=False, size=nsims) for p in all_parameters])
     #print("shape of reduced parameter array: " + str(parameters_red.shape))
 
-    return parameters_red, bids
+    return parameters_red, bids, hyper_all
 
 def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True, froot="test"):
 
@@ -1978,7 +1978,8 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
     for p,a,sc,sk in zip(pos_all, amp_all, scale_all, skew_all):
         paras_real.append([(pos+ttrig,scale,amp,skew) for pos,amp,scale,skew in zip(p,a,sc,sk) if pos != 0.0])
 
-    sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax,
+    sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax, "hmean_rise":hyper_mean_risetime,
+                    "hmean_amplitude":hyper_mean_amplitude, "hlower_skew":hyper_lowerlimit_skew, "hupper_skew":hyper_upperlimit_skew,
                    "parameters":paras_real, "fluence": b_fluence}
 
 
@@ -2064,7 +2065,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     else:
         bkg_all = np.ones(len(nbursts_all))*bkg
 
-
+    hyper_all = [sample_dict["hmean_amplitude"], sample_dict["hmean_risetime"], sample_dict["hlower_skew"], sample_dict["hupper_skew"]]
     parameters_all = []
     for pars,nbursts,bkg in zip(pars_all, nbursts_all, bkg_all):
 
@@ -2095,7 +2096,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
 
         parameters_all.append(p)
 
-    return parameters_all
+    return parameters_all, hyper_all
 
 
 def make_model_lightcurves(samplefile, times=None, datadir="./"):

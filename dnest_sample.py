@@ -10,6 +10,8 @@ import word
 from pylab import *
 rc("font", size=20, family="serif", serif="Computer Sans")
 rc("text", usetex=True)
+import seaborn as sns
+sns.set_context("notebook", font_scale=2.5, rc={"axes.labelsize": 26})
 
 import matplotlib.cm as cm
 import scipy.stats
@@ -83,7 +85,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_
         fname = f.split("/")[-1]
         bid = fname.split("_")[0]
         bids.append(bid)
-        parameters = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile,
+        parameters, hyper_all = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile,
                                       bkg=bkg, prior=prior, datadir=datadir)
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
@@ -96,7 +98,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_
     parameters_red = np.array([np.random.choice(p, replace=False, size=nsims) for p in all_parameters])
     #print("shape of reduced parameter array: " + str(parameters_red.shape))
 
-    return parameters_red, bids
+    return parameters_red, bids, hyper_all
 
 def risetime_amplitude(sample=None, datadir="./", nsims=5, dt=0.0005, makeplot=True, froot="test"):
 
@@ -505,26 +507,31 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None,
             #print("n_all.shape: " + str(np.shape(n_all)))
             n_mean = np.mean(np.array(n_all), axis=0)
             #print(n_mean)
-            ax.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], color='navy',
-                   alpha=0.7, linewidth=0, align="center", label="unfiltered sample")
+            ax.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0],
+                   alpha=0.7, linewidth=0, align="center")
 
             axis([np.log10(0.0003), np.log10(330.0), 0.0, np.max(n_mean)+0.1])
 
         else:
             for i,w in enumerate(waitingtime_sample):
 
-                n,bins, patches = hist(log10(w), bins=30, range=[np.log10(0.0001), np.log10(330.0)],
-                                       color="navy",alpha=0.6, normed=True)
+                #n,bins, patches = hist(log10(w), bins=30, range=[np.log10(0.0001), np.log10(330.0)],
+                #                       color="navy",alpha=0.6, normed=True)
+                n, bins = np.histogram(np.log10(w), bins=30, normed=False)
+                sns.distplot(np.log10(w), bins=30, ax=ax, kde=False,
+                 hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
+
+
                 n_all.append(n)
 
             axis([np.log10(0.0001), np.log10(330.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
 
-        xlabel(r"$\log{(\mathrm{waiting\; time})}$ [s]", fontsize=24)
+        xlabel(r"$\log_{10}{(\mathrm{waiting\; time})}$ [s]", fontsize=24)
         ylabel("N(waiting time)", fontsize=24)
         #title()
         draw()
         plt.tight_layout()
-        savefig("%s_waitingtimes.pdf"%froot, format="pdf")
+        savefig("f6.pdf", format="pdf")
         close()
 
     return waitingtime_sample
@@ -1504,42 +1511,54 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
         nf_mean = np.mean(np.array(nf_all), axis=0)
 
     if makeplot:
-        fig = figure(figsize=(24,8))
+        fig, (ax1, ax2, ax3) = plt.subplots(1,3,figsize=(24,8))
         subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
 
         ### first subplot: differential duration distribution
-        ax = fig.add_subplot(131)
+        #ax = fig.add_subplot(131)
         n_all = []
 
         if mean is True:
             for i,d in enumerate(duration_sample):
                 d = np.log10(d)
                 n, bins = np.histogram(d, bins=40, range=[np.log10(0.0001),np.log10(10.0)], normed=False)
+
                 n_all.append(n)
 
             n_mean = np.mean(np.array(n_all), axis=0)
             #print(n_mean)
-            ax.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], color='navy',
+            ax1.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0],
                    alpha=0.7, linewidth=0, align="center", label="unfiltered sample")
 
-            axis([np.log10(0.0001), np.log10(10.0), 0.0, np.max(n_mean)+0.1])
+            #sns.barplot(bins[:-1]+0.5, n_mean, ax=ax1)
+
+
+
+            ax1.set_xlim(np.log10(0.0001), np.log10(10.0))
+            ax1.set_ylim(0.0, np.max(n_mean)+0.1)
 
 
         else:
             for i,d in enumerate(duration_sample):
 
-                n,bins, patches = ax.hist(log10(d), bins=40, range=[np.log10(0.0005/10.0), np.log10(2.0)],
-                                       color=cm.jet(i*20),alpha=0.6, normed=False)
+                n, bins = np.histogram(np.log10(d), bins=40, range=[np.log10(0.0001),np.log10(10.0)], normed=False)
+
+                sns.distplot(np.log10(d), bins=40, ax=ax1, kde=False, norm_hist=False,
+                    hist_kws={"histtype": "stepfilled", "range":[np.log10(0.0001),np.log10(10.0)], "alpha":0.7})
+
+
+                #n,bins, patches = ax.hist(log10(d), bins=40, range=[np.log10(0.0005/10.0), np.log10(2.0)],
+                #                       color=cm.jet(i*20),alpha=0.6, normed=False)
                 n_all.append(n)
 
             axis([np.log10(0.0005/10.0), np.log10(2.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
 
 
-        ax.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$", fontsize=24)
-        ax.set_ylabel("N($\log_{10}{(\mathrm{Duration})}$)", fontsize=24)
+        ax1.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$", fontsize=24)
+        ax1.set_ylabel("N($\log_{10}{(\mathrm{Duration})}$)", fontsize=24)
         #ax.set_title("Differential Duration Distribution", fontsize=24)
 
-        ax1 = fig.add_subplot(132)
+        #ax1 = fig.add_subplot(132)
         n_all = []
         min_a, max_a = [], []
 
@@ -1551,10 +1570,12 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
 
             n_mean = np.mean(np.array(n_all), axis=0)
             #print(n_mean)
-            ax1.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], color='navy',
+            ax2.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0],
                    alpha=0.7, linewidth=0, align="center")
+            #sns.barplot(bins[:-1]+0.5, n_mean, ax=ax2)
 
-            axis([np.log10(0.001), np.log10(2.5e4), 0.0, np.max(n_mean)+0.1])
+            ax2.set_xlim([-2, 3])
+            ax2.set_ylim(0.0, np.max(n_mean)+0.1)
 
 
         else:
@@ -1562,16 +1583,23 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
                 a = np.array(a)/dt
                 min_a.append(np.min(np.log10(a)))
                 max_a.append(np.max(np.log10(a)))
-                n,bins, patches = ax1.hist(log10(a), bins=40, range=[3.0, 6.0],
-                                       color=cm.jet(i*20),alpha=0.6, normed=False)
+                n, bins = np.histogram(np.log10(d), bins=40, range=[-3,4], normed=False)
+
+                sns.distplot(np.log10(d), bins=40, ax=ax2, kde=False, norm_hist = False,
+                    hist_kws={"histtype": "stepfilled", "range":[-3.0, 4.0], "alpha":0.7})
+
+                #n,bins, patches = ax1.hist(log10(a), bins=40, range=[3.0, 6.0],
+                #                       color=cm.jet(i*20),alpha=0.6, normed=False)
                 n_all.append(n)
 
-            axis([np.min(min_a), np.max(max_a), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
-        ax1.set_xlabel(r"$\log_{10}{(\mathrm{Amplitude})}$", fontsize=24)
-        ax1.set_ylabel("N($\log_{10}{(\mathrm{Amplitude})}$)", fontsize=24)
+        ax2.set_xlim([-2., 3.])
+        ax2.set_ylim(np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all]))
+            #axis([-2.,3.,  np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+        ax2.set_xlabel(r"$\log_{10}{(\mathrm{Amplitude})}$", fontsize=24)
+        ax2.set_ylabel("N($\log_{10}{(\mathrm{Amplitude})}$)", fontsize=24)
         #ax1.set_title("Differential Amplitude Distribution", fontsize=24)
 
-        ax2 = fig.add_subplot(133)
+        #ax2 = fig.add_subplot(133)
         n_all = []
         min_e, max_e = [], []
 
@@ -1583,10 +1611,14 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
 
             n_mean = np.mean(np.array(n_all), axis=0)
             #print(n_mean)
-            ax2.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], color='navy',
+            #sns.distplot(np.log10(fluence_sample), bins=40, ax=ax3, kde=False, norm_hist = False,
+            #        hist_kws={"histtype": "stepfilled", "range":[-2.0, 3.0], "alpha":0.7})
+
+            ax3.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0],
                    alpha=0.7, linewidth=0, align="center")
 
-            axis([-14.0, -7.0, 0.0, np.max(n_mean)+0.1])
+            ax3.set_xlim(-14,-7)
+            ax3.set_ylim(0.0, np.max(n_mean)+0.1)
 
         else:
             for i,e in enumerate(fluence_sample):
@@ -1594,20 +1626,25 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
 
                 min_e.append(np.min(np.log10(e)))
                 max_e.append(np.max(np.log10(e)))
+                n, bins = np.histogram(np.log10(e), bins=40, range=[-2,3], normed=False)
 
-                n,bins, patches = ax2.hist(e, bins=40, range=[-1.0, 4.0],
-                                       color=cm.jet(i*20),alpha=0.6, normed=False)
+                sns.distplot(np.log10(e), bins=40, ax=ax3, kde=False, norm_hist = False,
+                    hist_kws={"histtype": "stepfilled", "range":[-2.0, 3.0], "alpha":0.7})
+
+                #n,bins, patches = ax2.hist(e, bins=40, range=[-1.0, 4.0],
+                #                       color=cm.jet(i*20),alpha=0.6, normed=False)
                 n_all.append(n)
 
-            axis([np.min(min_e), np.max(max_e), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
-        ax2.set_xlabel(r"$\log_{10}{(\mathrm{Fluence})}$", fontsize=24)
-        ax2.set_ylabel("N($\log_{10}{(\mathrm{Fluence})}$)", fontsize=24)
+        ax3.set_xlim([-14, -7])
+        ax3.set_ylim(np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all]))
+        ax3.set_xlabel(r"$\log_{10}{(\mathrm{Fluence})}$", fontsize=24)
+        ax3.set_ylabel("N($\log_{10}{(\mathrm{Fluence})}$)", fontsize=24)
         #ax2.set_title("Differential Fluence Distribution", fontsize=24)
 
         draw()
         plt.tight_layout()
 
-        savefig("%s_diff_dist.pdf"%froot, format="pdf")
+        savefig("f5.pdf", format="pdf")
         close()
 
     if mean is True:
@@ -1832,6 +1869,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
 
     """
 
+    print("trigfile: %s"%trigfile)
     if prior == "exp":
         par_ind = 8
     elif prior == "lognormal":
@@ -1863,6 +1901,8 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
         bind = np.where((bids_energy == bid_data) & (np.float(bst_data) == bsts_energy))[0][0]
         #print("bind: %i"%bind)
         b_fluence = fluence[bind]
+    else:
+        b_fluence = None
 
 
     if not trigfile is None:
@@ -1938,9 +1978,10 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
     for p,a,sc,sk in zip(pos_all, amp_all, scale_all, skew_all):
         paras_real.append([(pos+ttrig,scale,amp,skew) for pos,amp,scale,skew in zip(p,a,sc,sk) if pos != 0.0])
 
+    sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax, "hmean_rise":hyper_mean_risetime,
+                    "hmean_amplitude":hyper_mean_amplitude, "hlower_skew":hyper_lowerlimit_skew, "hupper_skew":hyper_upperlimit_skew,
+                   "parameters":paras_real, "fluence": b_fluence}
 
-    sample_dict = {"bkg":bkg, "cdim":burst_dims, "nbursts":nbursts, "cmax":compmax,
-                   "parameters":paras_real, "fluence":b_fluence}
 
     return sample_dict
 
@@ -1993,8 +2034,10 @@ def extract_real_spikes(sample_dict, min_scale=1.0e-4):
 
 
 
-def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None, prior="exp"):
+def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None, prior="exp",
+                     efile="sgr1550_fluence.dat"):
 
+    print("trigfile: %s"%trigfile)
     fname = filename.split("/")[-1]
     fsplit = fname.split("_")
     datafile = "%s%s_%s_all_data.dat"%(datadir, fsplit[0], fsplit[1])
@@ -2004,7 +2047,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     sum_counts = np.sum(counts)
 
     ### extract parameters from file
-    sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile, prior=prior)
+    sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile, prior=prior, efile=efile)
 
     #print("filter_weak " + str(filter_weak))
 
@@ -2014,6 +2057,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     nbursts_all = sample_dict["nbursts"]
 
     fluence = sample_dict["fluence"]
+    #print("Fluence: " + str(fluence))
 
     ### if there's no artificial threshold for the amplitude, then set it to the background level
     if bkg is None:
@@ -2021,7 +2065,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     else:
         bkg_all = np.ones(len(nbursts_all))*bkg
 
-
+    hyper_all = [sample_dict["hmean_amplitude"], sample_dict["hmean_risetime"], sample_dict["hlower_skew"], sample_dict["hupper_skew"]]
     parameters_all = []
     for pars,nbursts,bkg in zip(pars_all, nbursts_all, bkg_all):
 
@@ -2045,11 +2089,14 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
         d_all = p.compute_duration()
 
         bkgsum = len(counts)*p.bkg
-        f_all = p.compute_fluence(fluence, sum_counts, bkgsum)
+
+        if not fluence is None:
+            f_all = p.compute_fluence(fluence, sum_counts, bkgsum)
+
 
         parameters_all.append(p)
 
-    return parameters_all
+    return parameters_all, hyper_all
 
 
 def make_model_lightcurves(samplefile, times=None, datadir="./"):
@@ -2064,7 +2111,7 @@ def make_model_lightcurves(samplefile, times=None, datadir="./"):
     else:
         counts = np.ones(len(times))
 
-    parameters_all = parameter_sample(samplefile, datadir)
+    parameters_all = parameter_sample(samplefile, datadir, trigfile=None, efile=None)
 
     model_counts_all = []
 

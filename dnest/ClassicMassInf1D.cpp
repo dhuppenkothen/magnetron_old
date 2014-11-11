@@ -19,7 +19,8 @@ ClassicMassInf1D::ClassicMassInf1D(double x_min, double x_max,
 
 void ClassicMassInf1D::fromPrior()
 {
-	mu = exp(log(mu_min) + log(mu_max/mu_min)*randomU());
+	mu = tan(M_PI*(0.97*randomU() - 0.485));
+	mu = exp(mu);
 	mu_widths = exp(log(1E-3*(x_max - x_min)) + log(1E3)*randomU());
 
 	a = -10. + 20.*randomU();
@@ -35,8 +36,10 @@ double ClassicMassInf1D::perturb_parameters()
 	if(which == 0)
 	{
 		mu = log(mu);
-		mu += log(mu_max/mu_min)*pow(10., 1.5 - 6.*randomU())*randn();
-		mu = mod(mu - log(mu_min), log(mu_max/mu_min)) + log(mu_min);
+		mu = (atan(mu)/M_PI + 0.485)/0.97;
+		mu += pow(10., 1.5 - 6.*randomU())*randn();
+		mu = mod(mu, 1.);
+		mu = tan(M_PI*(0.97*mu - 0.485));
 		mu = exp(mu);
 	}
 	if(which == 1)

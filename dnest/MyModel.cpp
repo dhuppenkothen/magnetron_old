@@ -30,8 +30,10 @@ using namespace DNest3;
 const Data& MyModel::data = Data::get_instance();
 
 MyModel::MyModel()
+//:bursts(4, 100, false, ClassicMassInf1D(data.get_t_min(), data.get_t_max(),
+//				1E-3*data.get_y_mean(), 1E3*data.get_y_mean()))
 :bursts(4, 100, false, ClassicMassInf1D(data.get_t_min(), data.get_t_max(),
-				1E-3*data.get_y_mean(), 1E3*data.get_y_mean()))
+                1E-10, 5.0*3.5e5*data.get_dt()))
 ,mu(data.get_t().size())
 {
 
@@ -70,8 +72,10 @@ void MyModel::calculate_mu()
 
 void MyModel::fromPrior()
 {
-	background = exp(log(1E-3) + log(1E3)*randomU())*data.get_y_mean();
-	bursts.fromPrior();
+//	background = exp(log(1E-3) + log(1E3)*randomU())*data.get_y_mean();
+    background = tan(M_PI*(0.97*randomU() - 0.485));
+    background = exp(background);
+    bursts.fromPrior();
 	calculate_mu();
 }
 
@@ -83,11 +87,13 @@ double MyModel::perturb()
 	{
 		for(size_t i=0; i<mu.size(); i++)
 			mu[i] -= background;
-
-		background = log(background/data.get_y_mean());
-		background += log(1E3)*pow(10., 1.5 - 6.*randomU())*randn();
-		background = mod(background - log(1E-3), log(1E3)) + log(1E-3);
-		background = exp(background)*data.get_y_mean();
+ 
+		background = log(background);
+		background = (atan(background)/M_PI + 0.485)/0.97;
+		background += pow(10., 1.5 - 6.*randomU())*randn();
+		background = mod(background, 1.);
+		background = tan(M_PI*(0.97*background - 0.485));
+		background = exp(background);
 
 		for(size_t i=0; i<mu.size(); i++)
 			mu[i] += background;

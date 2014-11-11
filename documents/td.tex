@@ -46,15 +46,19 @@
 
 \title{Dissecting Magnetar Variability with Bayesian Hierarchical Models}
 
-\author{D. Huppenkothen\altaffilmark{1, 2}, B. J. Brewer\altaffilmark{3}, D. Hogg\altaffilmark{}, I. Murray\altaffilmark{}, M. Frean\altaffilmark{}, C. Elenbaas\altaffilmark{1}, A. L. Watts\altaffilmark{1}, Y.Levin\altaffilmark{}, A.J. van der Horst\altaffilmark{1}, C. Kouveliotou\altaffilmark{4,5}}
+\author{D. Huppenkothen\altaffilmark{1, 2,3}, B. J. Brewer\altaffilmark{4}, D. Hogg\altaffilmark{5}, I. Murray\altaffilmark{6}, M. Frean\altaffilmark{7}, C. Elenbaas\altaffilmark{1}, A. L. Watts\altaffilmark{1}, Y.Levin\altaffilmark{8}, A.J. van der Horst\altaffilmark{1}, C. Kouveliotou\altaffilmark{9,10}}
  
 \altaffiltext{1}{Anton Pannekoek Institute for Astronomy, University of
   Amsterdam, Postbus 94249, 1090 GE Amsterdam, the Netherlands}
-  \altaffiltext{2}{Email: D.Huppenkothen@uva.nl}
-\altaffiltext{4}{Astrophysics Office, ZP 12, NASA/Marshall Space Flight Center, Huntsville, AL 35812, USA}
-\altaffiltext{5}{NSSTC, 320 Sparkman Drive, Huntsville, AL 35805, USA}
-\altaffiltext{3}{Department of Statistics, The University of Auckland, Private Bag 92019, Auckland 1142, New Zealand}
-\altaffiltext{}{Monash Center for Astrophysics and School of Physics, Monash University, Clayton, Victoria 3800, Australia}
+  \altaffiltext{2}{Center for Data Science, New York University, 726 Broadway, 7th Floor, New York, NY 10003}
+  \altaffiltext{3}{E-mail: daniela.huppenkothen@nyu.edu}
+  \altaffiltext{4}{Department of Statistics, The University of Auckland, Private Bag 92019, Auckland 1142, New Zealand}
+\altaffiltext{5}{Center for Cosmology and Particle Physics, Department of Physics, New York University, 4 Washington Place \#424, New York, NY 10003, USA}
+\altaffiltext{6}{School of Informatics, University of Edinburgh}
+\altaffiltext{7}{School of Engineering and Computer Science, Victoria University of Wellington, New Zealand}
+\altaffiltext{8}{Monash Center for Astrophysics and School of Physics, Monash University, Clayton, Victoria 3800, Australia}
+\altaffiltext{9}{Astrophysics Office, ZP 12, NASA/Marshall Space Flight Center, Huntsville, AL 35812, USA}
+\altaffiltext{10}{NSSTC, 320 Sparkman Drive, Huntsville, AL 35805, USA}
 
 
 \begin{abstract}
@@ -97,6 +101,16 @@ X-ray binaries (XRBs) change over milliseconds \citep[e.g.\ ][]{xrb_khzqpos}, wh
 Variability studies have the potential to unravel fundamental physical processes: studying variability in XRBs can help us unravel accretion processes and constrain theories of viscosity and strong gravity. 
 Similarly, giant flares from magnetars have the potential to map the neutron star interior via neutron star seismology \citep{steiner2009}. 
 
+\begin{figure*}[htbp]
+\begin{center}
+\includegraphics[width=\textwidth]{f1.pdf}%example_bursts.pdf}
+\caption{Six example bursts observed with \fermi/GBM from the magnetar SGR J1550-5418. Bursts show a complex morphology of one or more
+spikes that differs drastically from burst to burst, making development of a common model for all burst light curves difficult. For details on the source
+and this sample, see Section \ref{ch6:data}.}
+\label{fig:example_bursts}
+\end{center}
+\end{figure*}
+
 While much of the variability exhibited for example in XRBs can be characterised and made sense of using standard Fourier methodology, this is not true for an important group of sources: for any transients 
 with complex temporal structure that is a superposition of different processes. When attempting to disentangle the individual components (for example, a periodic signal from underlying stochastic variability)
 using standard methods, it is possible to introduce systematic errors into inferences made from this type of data. Three examples stand out particularly: solar flares, $\gamma$-ray bursts (GRBs) and magnetar bursts.  All three phenomena are characterised by bursts lasting from $\sim\!\! 1/10$ of a second to hundreds of seconds, and a 
@@ -111,16 +125,6 @@ it is difficult to postulate a common model applicable to a large sample of ligh
 At the same time, there is a lack of understanding of the underlying physical processes leading to variability in these bursts to inform a choice of model. Here, we aim to develop a probabilistic 
 model for highly variable transient events, based on a decomposition of the light curve into simple shapes, without knowing the number of components in the model a priori. We demonstrate the 
 power of this approach on a large sample of magnetar bursts, and, for the first time, connect variability in magnetar bursts to the time scales thought to govern the underlying physics.
-
-\begin{figure*}[htbp]
-\begin{center}
-\includegraphics[width=\textwidth]{f1.pdf}%example_bursts.pdf}
-\caption{Six example bursts observed with \fermi/GBM from the magnetar SGR J1550-5418. Bursts show a complex morphology of one or more
-spikes that differs drastically from burst to burst, making development of a common model for all burst light curves difficult. For details on the source
-and this sample, see Section \ref{ch6:data}.}
-\label{fig:example_bursts}
-\end{center}
-\end{figure*}
 
 
 Neutron stars, the ultra-dense compact remnants of core-collapse supernovae, are the prime laboratory for studying nuclear 
@@ -341,7 +345,7 @@ integral tractable with numerical integration methods.
 % etc). You can forward-reference my in prep RJObject paper
 % BJB: All nested sampling methods are fine with phase transitions, it's the
 % potential multi-modality that we care about
-The MCMC step is the key challenge in any Nested Sampling algorithm. However, standard MCMC-based Nested Sampling often fails for probability distributions that
+The MCMC step is the key challenge in any Nested Sampling algorithm. Standard MCMC-based Nested Sampling often fails for probability distributions that
 are multi-modal. It is here that DNS provides a reliable alternative \citep[for details, see][]{brewer2011}. 
 Instead of recording the end point of an MCMC chain as the new particle, the likelihoods of parameter sets visited during the MCMC exploration step
  are recorded. One can then compute the $1-e^{-1}$ quantile, and record this value as the new likelihood contour, such that the prior space
@@ -349,11 +353,11 @@ Instead of recording the end point of an MCMC chain as the new particle, the lik
  two regions, and the particle may escape into the lower-likelihood region, where it can explore more freely. Once enough samples are accumulated,
  one again computes the $1-e^{-1}$ quantile, and constructs a new likelihood contour. This process is repeated, and as in the classical Nested Sampling
  approach, the population contracts towards regions of high likelihood, but it will do so even for complex probability distributions subject to multi-modality.
- Details on an implementation of DNS for hierarchical models with an unknown number of model components can be found in an upcoming publication (Brewer et al., in prep).
+ Details on an implementation of DNS for hierarchical models with an unknown number of model components can be found in an upcoming publication (Brewer et al., submitted).
  
 % BJB: Techically the posterior isn't a PDF here because N is discrete.
 DNS as implemented in {\it DNest3}\footnote{the code is available under the GNU public license at \url{https://github.com/eggplantbren/DNest3}} can return both an estimate for the marginal likelihood,
-suitable for model selection purposes, as well as a samples drawn from the posterior distribution for a given burst. The latter is done by letting a particle explore
+suitable for model comparison, as well as samples drawn from the posterior distribution for a given burst. The latter is done by letting a particle explore
 the final mixture of levels freely via MCMC. 
 \begin{figure}[h]
 \begin{center}
@@ -382,14 +386,7 @@ Magnetar bursts are short events composed of one or more sharp, spike-like featu
 with a sharp spike consisting of an exponential rise and an exponential decay of the type:
 
 
-%The model for the data in or near one burst is
-%\begin{eqnarray}
-%p(\counts_n\given\pars) &=& \Poisson(\counts_n\given\mean_n)
-%\\
-%\mean_n &=& \mean_{\bg} + \sum_{k=1}^K \mean_{nk}
-%\\
-%\mean_{nk} &\equiv& \int_{t_n-\Delta/2}^{t_n+\Delta/2} A_n\,\word(\frac{t'-t_n}{\tau})\,\dd t'
-%\\
+
 \begin{equation}
 \word(t) = A \left\{\begin{array}{ll}\exp((t-t_{\mathrm{offset}})/\tau) & \mbox{for $t < t_{\mathrm{offset}}$}\\ 
 \exp(-(t-t_{\mathrm{offset}})/(\tau s)) & \mbox{for $t \geq t_\mathrm{offset}$}\end{array}\right. \, ,
@@ -416,9 +413,9 @@ using the definition in \ref{ch6:data}, and refer to a ``spike'' when talking ab
 \bf{Parameter} & \bf{Meaning} & \bf{Probability Distribution} \\ \midrule
 \it{Hyperparameters} && \\ \midrule
 $\mu_A$ & Mean of exponential (log-normal) prior distribution for spike amplitude $A$ &  $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$  \\
-($\sigma_A$)\footnotemark[2] & Standard deviation of log-normal prior distribution for spike amplitude $A$ & \\
+($\sigma_A$)\footnotemark[1] & Standard deviation of log-normal prior distribution for spike amplitude $A$ & $\mathrm{Uniform}(0,2)$ \\
 $\mu_\tau$ & Mean of exponential (log-normal) prior distribution for spike exponential rise time scale $\tau$& $\mathrm{LogUniform}(10^{-3}T_\mathrm{b}, 10^3{T_\mathrm{b}})$\tnote{\emph{b}}  \\
-($\sigma_\tau$)\footnotemark[2]  & Standard deviation of log-normal prior distribution for spike exponential rise timescale $\tau$& \\
+($\sigma_\tau$)\footnotemark[1]  & Standard deviation of log-normal prior distribution for spike exponential rise timescale $\tau$& $\mathrm{Uniform}(0,2)$\\
 $\mu_s$ & Mean of uniform prior distribution for spike skewness $s$ & $\mathrm{Uniform}(-10, 10)$ \\
 $\sigma_s$ & Half-width of uniform prior distribution for spike skewness $s$& $\mathrm{Uniform}(0,2)$\\ \midrule
 \it{Individual Burst Parameters} && \\ \midrule
@@ -446,8 +443,8 @@ $N$ & Number of components (spikes) per burst & $\mathrm{Uniform}(0,100)$  \\\bo
 \end{table*}
 
 
-For each component $n$, we have a set of free parameters $\{t_n, A_n, \tau_n, s_n \}$, for each model, such that for each
-linear combination of components, we have a set of free parameters $\{\mean_{bg}, \{t_n, A_n, \tau_n, s_n\} \}$.
+For each component $n$ we have a set of free parameters $\{t_n, A_n, \tau_n, s_n \}$; for each model, (a 
+linear combination of components) we have a set of free parameters $\{\mean_{bg}, \{t_n, A_n, \tau_n, s_n\} \}$.
 We set a uniform prior on the number of components $N$, where $N$ may lie between $0$ and $100$. 
 The priors for the free parameters of the individual components, given the hyperparameters, are independent and identically distributed, such that priors 
 are the same for a given type of parameter between components. 
@@ -461,11 +458,14 @@ For the amplitude $A_n$ and the rise timescale $\tau_n$, we choose exponential p
 \begin{eqnarray}
 p(A \given \mu_A) &=& e^{(A/\mu_A)} \\
 p(\tau \given \mu_{\tau}) & = & e^{(\tau - \tau_{\mathrm{min}})/\mu_{\tau}} \; ,
+\label{eqn:exponential_prior}
 \end{eqnarray}
 
 where $\mu_A$ and $\mu_{\mathrm{\tau}}$ are hyperparameters describing the width of the exponential distribution.
-We set a minimum possible rise time scale $\tau_{\mathrm{min}}$ to be a fraction of the light curve's time resolution,
-$\tau_{\mathrm{min}} = \Delta t/3$: the time resolution effectively limits the information on the rise time we can extract.
+We set the hard limit on the minimum possible rise time scale $\tau_{\mathrm{min}}$ to be a fraction of the light curve's time resolution,
+$\tau_{\mathrm{min}} = \Delta t/3$: the time resolution effectively limits the information on the rise time we can extract. This is necessary because
+the exponential distribution defined in Equation \ref{eqn:exponential_prior} will always have large mass at the smallest rise times, and cannot move away
+from this behaviour unless we impose it via $\tau_{\mathrm{min}}$.
 
 The prior on the skewness parameter $s_n$ is a uniform distribution with a mean of $\mu_s$ and a half-width of $\sigma_s$, such
 that the log-skewness must lie in the range $(\mu_s-\sigma_s) < \log{(s)} < (\mu_s+\sigma_s)$. A definition in terms of mean and half-width ensures
@@ -489,7 +489,7 @@ that positive and negative skews are equally likely a priori.
 The prior on the hyperparameter $\mu_{\tau}$ is log-uniform. The prior range for
 $\mu_{\tau}$ depends on the length of the data set, such that $\log{(10^{-3}t_{\mathrm{burst}})} < \log{(\mu_{\tau})} < \log{(10^{3}t_\mathrm{burst})}$.
 The priors on the hyperparameters $\mu_A$ and $\counts_{\mathrm{bg}}$ follow a truncated Cauchy distribution between $10^{-21}$ and $10^{21}$. While
-this range is fairly wide, the Cauchy distribution ensures a $\sim 0.5$ chance to be close to unity.
+this range is fairly wide (we have little prior knowledge of the brightness of a spike or the background, other than instrumental limits), the Cauchy distribution ensures a $\sim 0.5$ chance to be close to unity.
 
 For a summary of all model parameters, their definition and prior distributions, see Table \ref{tab:priortable}.
 
@@ -525,14 +525,16 @@ of the model: a single spike with a constant background. We varied the amplitude
 a single bin), but kept all other parameters (duration of the light curve, background noise level, spike rise time scale and skewness) constant. 
 We fixed the background count rate to $1.59\,\mathrm{counts}/(0.005\mathrm{s})$, approximated from fitting a flat line to \fermi/GBM background light curves, and the position
 of the spike in each light curve at $0.06$ from the start of the light curve.
-In Figure \ref{fig:onespike}, we show the results for all four simulated bursts. Predictably, a spike with an amplitude below the background level is impossible for the model
+
+In Figure \ref{fig:onespike}, we show the results for all four simulated bursts. A spike with an amplitude below the background level is impossible for the model
 to detect. Instead, it places a number ($\leq 20$) of extremely low amplitude spikes throughout the entire length of the light curve. Most of these spikes will have an amplitude
-much lower than the background itself. As soon as the spike has an amplitude larger than the background, the model behaves significantly different. 
-For a signal with an amplitude of $\sim 3$ times background count rate, the posterior distribution of the position is peaked sharply at the position of the spike in the light curve, 
-and only few samples are scattered throughout the rest of the light curve. Similarly, the posterior distribution of the amplitude clusters around $5$, with some samples at 
-smaller amplitudes largely below the noise level. This scatter can be easily explained by the uncertainty in the amplitude introduced by the Poisson statistics. Additionally, the posterior distribution of the
-number of spikes is extremely narrow at low values, with only very few samples indicating more than $3$ spikes in the model. 
-Finally, raising the amplitude even further leads to an even stronger clustering in amplitude and position, indicating that the brightest spikes are easily detectable with our model 
+much lower than the background itself. 
+
+If the burst has an amplitude larger than the background, the model behaves significantly different. For a signal with a signal-to-noise ratio of $\sim 3$ times background count rate (equivalent to $5$ counts per bin), the posterior distribution of the spike position is peaked sharply at the position of the burst peak in the light curve, 
+and only few samples are scattered throughout the rest of the light curve. Similarly, the posterior distribution of the amplitude clusters around $5 \,\mathrm{counts}/(0.005\mathrm{s})$, with some samples at 
+smaller amplitudes largely below the noise level. This scatter can be explained by the uncertainty in the amplitude introduced by the Poisson statistics. Additionally, the posterior distribution of the
+number of spikes is extremely narrow, with only very few samples indicating more than $3$ spikes in the model. 
+Finally, increasing the burst brightness even further leads to an even stronger clustering in amplitude and position, indicating that the brighter spikes are easily detectable with our model 
 with little ambiguity. 
 In conclusion, it seems reasonable to exclude spikes that have amplitudes lower than the background count rate. These are samples that express an uncertainty in our knowledge of 
 the process: there could be spikes below the background that we have missed, but we cannot be sure about that from the data alone. Conversely, any feature in the data with a count
@@ -550,8 +552,7 @@ as well as the hyperparameters listed in Table \ref{tab:priortable}. We can make
 discrete variables) over all nuisance parameters (e.g.\ the hyperparameters). 
 
 In Figure \ref{fig:dnest_example}, we show an example of a burst light curve, together with $10$ random draws from the posterior distribution (left panel).
-The burst was chosen specifically for its multi-peaked structure such that we can investigate how well the method does for
-inferences in a single burst. Overall, the algorithm reliably finds both positions and shape parameters for the components modelling
+The burst was chosen specifically for its multi-peaked structure such that we can investigate how well the method does in inferring the properties of a single burst. Overall, the algorithm reliably finds both positions and shape parameters for the components modelling
 the brightest spikes. There is some ambiguity for weaker features on whether there should be a component, or whether perhaps a
 particular feature should be modelled as a superposition of two components, but this ambiguity is generally small, and while there is some
 spread in model parameters and positions, samples drawn from the posterior are remarkably similar in position, amplitude and shape. 
@@ -563,7 +564,7 @@ that position. For the parameters we are interested in below, this is not necess
 uncertainty in the distribution of waiting times between spikes.
 
 The number of components (spikes) per burst (Figure \ref{fig:dnest_example}, right panel) is well-constrained for this burst: the posterior distribution is bounded, and all samples drawn
-from this distribution contain between $9$ and $17$ components, with a 
+from this distribution contain between $10$ and $20$ components, with a 
 clear maximum around $13$ components. This number is slightly higher than the features that are immediately obvious to the eye 
 in the burst itself, but may in part be due to some features being superposition of spikes. 
 
@@ -761,23 +762,24 @@ could give rise to a population of very short, very small spikes modelling indiv
 Section \ref{ch6:exploration} that the generally low number of components per burst disfavours this interpretation, but that there is a population of spikes
  with very small amplitudes. In order
 to improve our understanding of how this prior could influence our results, we implemented a log-normal prior for both rise time
-and amplitude, with the mean and standard deviations of each distribution free hyperparameters. We do not perform formal model comparison
+and amplitude, with the mean and standard deviations of each distribution free hyperparameters with truncated Cauchy priors on the location parameter of
+the log-normal distribution, and a uniform prior on the standard deviations (see also Table \ref{tab:priortable}). We do not perform formal model comparison
 (e.g.\ using the marginal likelihood introduced in Equation \ref{eqn:marginal}), but simply explore how the use of different priors
 changes the results reported in the previous section.
+
 \begin{figure*}[htbp]
 \begin{center}
 \includegraphics[width=\textwidth]{f10.pdf}%sgr1550_prior_diff_dist.pdf}
 \caption{Differential distributions for burst duration (left panel), amplitude (middle panel) and fluence (right panel) for an exponential prior on spike 
 amplitudes and rise timescales (blue; see also Figure \ref{fig:diffdist}),
-and a log-normal prior on the same parameters (green). A log-normal prior leads to a population of short-duration spikes, while the distributions of amplitude and fluence
-largely remain the same. The overall shape and location of the maximum for each distribution, remains unchanged.}
+and a log-normal prior on the same parameters (green). A log-normal prior leads to a larger number of spikes overall (as shown in Figure \ref{fig:nspikes_prior}), but distributions of largely
+similar shape. There is an excess of short-duration spikes when using a log-normal prior compared to an exponential prior. Note also the sharp cut-off in duration when using the exponential prior: this is set by the hard limit on the minimum rise time scale, which we did not include in the lognormal prior. The reason for omitting this limit in the latter case is the fact that the lognormal distribution, by design, can move its mass away from small time scales, if the data demands it, while the exponential distribution cannot. The overall shape and location of the maximum for each distribution, remains unchanged.}
 \label{fig:diff_prior}
 \end{center}
 \end{figure*}
 
-
 In Figures \ref{fig:nspikes_prior} and \ref{fig:diff_prior} we present a comparison between the distributions for the number of spikes 
-per burst from $82$ bursts for each set of priors, and the differential distributions for the most important quantities for both priors.
+per burst from $79$ bursts for each set of priors, and the differential distributions for the most important quantities for both priors.
 In both cases, we consider the full, unfiltered sample here, since it is the spikes with the smallest amplitudes where we expect to see
 an appreciable difference. Overall, there is some increase in the number of components per burst when using a log-normal prior, related to
 an excess in short-duration spikes for a log-normal prior in the differential 
@@ -1095,8 +1097,6 @@ where $B$ is the internal crustal magnetic field, $\theta_{\mathrm{max}}$ is the
 
 Another interesting question is whether the fluence of a burst always scales in the same way with overall duration; or whether there are deviations above a certain energy threshold that might indicate the development of a longer-lived source of emission such as a pair plasma fireball. If this occurs then duration would no longer be set by the rupture process, but would instead be controlled by the fireball evaporation timescale.  There is no direct evidence in the observed correlations for a change of the correlation with high fluences (Figure \ref{fig:correlations}). Due to the large scatter it is not straightforward to see whether the correlation changes at the high end, however, a more complex hierarchical model envisioned for a future work would allow us to make a formally valid inference of whether the data can distinguish between these two hypotheses (change in the correlation at high fluences versus no change).
 
-%[DANIELA - NOTE FOR THE PAPER, I WILL ADD SOMETHING ON FIREBALL FORMATION AT THIS STAGE, THE VARIOUS BLAES/THOMPSON/HEYL PAPERS ARE STILL OPAQUE AND IT'S CLEAR I AM NOT GOING TO FIGURE THIS OUT TODAY.  PERHAPS COMMENT THIS OUT BUT LEAVE IT IN THE FILE SO THAT I REMEMBER TO COME BACK TO IT?!  THIS IS ALSO WHERE I WILL PUT SOMETHING ON THE SKEWNESS.]
-
 The second two scenarios that we explore both involve the high energy emission being generated as a result of magnetic reconnection in the magnetosphere, albeit with different original triggers. In general, the total energy output of a spike generated by reconnection ($E$) is given by the total volume that is reconnected ($V\simeq L_xL_yL_z$) for the duration of the spike ($T_{\rm dur}$) times the local magnetic energy density $u_{\rm B}=B_S^2(R_*/r)^5/8\pi$, where $B_S$ is the surface field, and $r$ is the height of the reconnection region.  For now we consider a twisted external field, for which we use the relation $B(r)\sim B_S(R_*/r)^{5/2}$ \citep{thompson2002}.  This yields
 
 \begin{eqnarray}\label{eq:total energy reconnection}
@@ -1143,8 +1143,7 @@ models evolve, they can inform the probabilistic models we build for studying va
 
 
 \paragraph{acknowledgements}
-We thank the organizers of MaxEnt2013.
-\clearpage
+DH, BJB, DWH, MF and IM thank the organizers of MaxEnt2013. DH was partially supported by a Netherlands Organization for Scientific Research (NWO) Vidi Fellowship (PI A. Watts) and the Moore-Sloan Data Science Environment at NYU. 
 
 \bibliography{td}
 \bibliographystyle{apj}

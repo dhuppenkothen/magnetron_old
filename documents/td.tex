@@ -325,7 +325,7 @@ independent and identically distributed, we can re-write this equation as:
 \begin{equation}
 p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N|H)p(\bm{\alpha}|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \; .
 \end{equation}
-Thus, the posterior probability density becomes
+Thus, the posterior probability distribution becomes
 
 % BJB: Brackets and H again
 \begin{equation}
@@ -344,12 +344,12 @@ p(\bm{\counts} \given H) & = & \sum_{n=0}^{N} \int_{-\infty}^{\infty}{\likelihoo
 
 % BJB: Our model is quite closely related to some other ones in the literature
 % that we should cite. Let's do this later
-
+% I changed posterior density --> posterior distribution, because it's not a density (since N is discrete)
 % BJB: Consider an abbreviation (DNS?) for Diffusive Nested Smapling
 % BJB: added footnote
 The marginal likelihood involves integration in a high-dimensional parameter space as well as summation over $N$, which is analytically intractable for all but the
 simplest cases. Here, we use DNS to efficiently traverse parameter space and approximate the marginal 
-likelihood as well as sample from the posterior probability density. 
+likelihood as well as sample from the posterior probability distribution. 
 Nested sampling \citep{skilling2006} samples parameter space by uniformly sampling $M$ points (particles) from the space allowed by the prior. 
 One then computes the likelihood values associated with each particle, and the particle with the lowest likelihood is discarded. A new point
 can be generated, for example, via MCMC\footnote{In our case, the MCMC process will include trans-dimensional jumps that change the number of components $N$.}, subject to the hard constraint that the

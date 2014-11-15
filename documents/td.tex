@@ -429,7 +429,7 @@ using the definition in \ref{ch6:data}, and refer to a ``spike'' when talking ab
 \toprule
 \bf{Parameter} & \bf{Meaning} & \bf{Probability Distribution} \\ \midrule
 \it{Hyperparameters} && \\ \midrule
-$\mu_A$ & Mean of exponential (log-normal) prior distribution for spike amplitude $A$ &  $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$  \\
+$\mu_A$ & Mean of exponential (log-normal) prior distribution for spike amplitude $A$ &  $\log(\mu_A) \sim \textnormal{Cauchy}(0, 1)T(-21, 21)$  \\
 ($\sigma_A$)\footnotemark[1] & Standard deviation of log-normal prior distribution for spike amplitude $A$ & $\mathrm{Uniform}(0,2)$ \\
 $\mu_\tau$ & Mean of exponential (log-normal) prior distribution for spike exponential rise time scale $\tau$& $\mathrm{LogUniform}(10^{-3}T_\mathrm{b}, 10^3{T_\mathrm{b}})$\tnote{\emph{b}}  \\
 ($\sigma_\tau$)\footnotemark[1]  & Standard deviation of log-normal prior distribution for spike exponential rise timescale $\tau$& $\mathrm{Uniform}(0,2)$\\
@@ -442,7 +442,7 @@ $\tau$ & Exponential rise time scale & $\mathrm{Exponential}(\mu_\tau)$ \\
 $A$ & Amplitude of spike peak in units of counts per bin &$\mathrm{Exponential}(\mu_A)$ \\
  && ($\mathrm{LogNormal}(\mu_A, \sigma^2_{A}))\tnote{\emph{a}} $ \\ 
 $s$ & Skewness parameter, such that exponential fall time $\tau_{\mathrm{fall}} = s\tau$ & \\
-$\counts_{\mathrm{bg}}$ & Flat sky/instrumental background in counts per bin & $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$ \\
+$\counts_{\mathrm{bg}}$ & Flat sky/instrumental background in counts per bin & $\log(\counts_{\mathrm{bg}}) \sim \textnormal{Cauchy}(0, 1)T(-21, 21)$ \\
 $N$ & Number of components (spikes) per burst & $\mathrm{Uniform}(0,100)$  \\\bottomrule
 \end{tabularx}
    \begin{tablenotes}
@@ -505,8 +505,8 @@ that positive and negative skews are equally likely a priori.
 
 The prior on the hyperparameter $\mu_{\tau}$ is log-uniform. The prior range for
 $\mu_{\tau}$ depends on the length of the data set, such that $\log{(10^{-3}t_{\mathrm{burst}})} < \log{(\mu_{\tau})} < \log{(10^{3}t_\mathrm{burst})}$.
-The priors on the hyperparameters $\mu_A$ and $\counts_{\mathrm{bg}}$ follow a truncated Cauchy distribution between $10^{-21}$ and $10^{21}$. While
-this range is fairly wide (we have little prior knowledge of the brightness of a spike or the background, other than instrumental limits), the Cauchy distribution ensures a $\sim 0.5$ chance to be close to unity.
+The priors on the natural logs of the hyperparameters $\mu_A$ and $\counts_{\mathrm{bg}}$ follow a truncated Cauchy distribution between $-21$ and $21$. While
+this range is fairly wide (we have little prior knowledge of the brightness of a spike or the background, other than instrumental limits), allowing the hyperparameters to vary from $\sim 10^{-9}$ to $10^{9}$, the Cauchy distribution ensures a $\sim 0.5$ chance to be close to unity.
 
 For a summary of all model parameters, their definition and prior distributions, see Table \ref{tab:priortable}.
 

@@ -261,6 +261,11 @@ For a light curve with $K$ bins with Poisson-distributed counts $\bm{\counts} = 
 %\word(\xi) &=& \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right. \, ,
 %\end{equation}
 \end{eqnarray}
+% BJB: The implementation doesn't actually integrate the model over the bin
+% width, but instead evaluates it at the center. So the thing we actually
+% infer is the signal convolved with a tophat pixel function, rather than
+% the actual underlying signal. Hogg talks about this all the time for images
+% so can probably provide a good explanation if you think it's needed.
 where $\mean_{nk}$ is the mean count rate of the $n^{\mathrm{th}}$ model component in time bin $k$, 
 $\mean_{bg}$ is the background count rate of that bin,
 and the mean count rate $\mean_{nk}$ in a bin $k$ is defined as the integral over a functional form defining the shape of

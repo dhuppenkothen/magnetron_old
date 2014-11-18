@@ -256,10 +256,7 @@ For a light curve with $K$ bins with Poisson-distributed counts $\bm{\counts} = 
 %\\
 \mean_k &=& \mean_{\bg} + \sum_{n=1}^N \mean_{nk}
 \\
-\mean_{nk} &\equiv& \int_{t_k-\Delta t/2}^{t_k+\Delta t/2} A_n\,\word\left(\frac{t'-t_n}{\tau_n}\right)\,\dd t' \; ,
-%\begin{equation}
-%\word(\xi) &=& \left\{\begin{array}{ll}\exp(\xi) & \mbox{for $\xi<0$}\\ \exp(-\xi/s) & \mbox{for $\xi\geq 0$}\end{array}\right. \, ,
-%\end{equation}
+\mean_{nk} &\equiv& A_n\,\word\left(\frac{t_k+\Delta t/2-t_n}{\tau_n}\right) \; ,
 \end{eqnarray}
 % BJB: The implementation doesn't actually integrate the model over the bin
 % width, but instead evaluates it at the center. So the thing we actually
@@ -274,26 +271,12 @@ and can be modified by an amplitude parameter $A_n$ and a parameter setting the 
 parameters such as the time offset $t_n$ and intrinsic parameters further describing the component's shape.
 We will define a component model $\word$ for magnetar bursts in Section \ref{ch6:wordmodel} below, and
 restrict ourselves here to a general description of the model.
- 
-%where $\Poisson(\counts\given\mean)$ is the Poisson probability of getting count $y$ given mean rate $\mean$,
-%  $\pars$ is the vector or blob of all model parameters,
-%  $\mean_{\bg}$ is the background (DC) level in the bin,
-%  $t_n$ is the time of the center of the bin,
-%  $\Delta$ is the full width of the bin,
-%  $K$ is the number of words (spikes) $k$ making up the burst,
-%  $\phi(\xi)$ is the dimensionless word function,
-%  $A_n, t_n$ are the amplitudes and time offsets of the words,
-%  and $s, \tau$ set the shape (asymmetry or skew) and rise time of the words.
 
-% BJB: Reworded  
-
-% BJB: Is it possible to get the equation to fit within the column?
 The posterior probability distribution for all model parameters is given by:
-\begin{equation}
-p(N, \bm{\alpha},\{\bm{\theta}_n \} \given \bm{\counts}, H) = \frac{p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_n \}, H) p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H)}{p(\bm{\counts} | H)} \, .
-\end{equation}
-% BJB: The words "hierarchical model" should appear somewhere around here, but
-% I didn't insert them. Might want to define interim prior as p(thetas | alphas, N, H)
+\begin{eqnarray}
+p(N, \bm{\alpha},\{\bm{\theta}_n \} \given \bm{\counts}, H) &   \\\nonumber
+ 						 = & \frac{p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_n \}, H) p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H)}{p(\bm{\counts} | H)} \, .
+\end{eqnarray}
 % BJB: Lately I've heard interim prior for a different concept, so I think
 % 'conditional prior' now makes more sense.
 

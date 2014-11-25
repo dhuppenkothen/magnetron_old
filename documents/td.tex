@@ -82,9 +82,12 @@ Neutron stars are one of the prime laboratories for testing physical processes u
 Among the zoo of neutron star phenomena, magnetars stand out for their bursting behaviour, ranging from extremely bright, but rare giant flares to numerous,
 but less energetic recurrent bursts. The exact trigger and emission mechanisms for these bursts are not known; favoured models involve either a crust fracture
 and subsequent energy release into the magnetosphere, or explosive reconnection. 
-In the absence of a predictive model, understanding the physical processes responsible for the variable emission in magnetar burst variability is difficult. Here, we 
+In the absence of a predictive model, understanding the physical processes responsible for
+%the variable emission in % -- variable...variability seemed clumsy?
+magnetar burst variability is difficult. Here, we 
 develop an empirical model that decomposes magnetar bursts into a superposition of small spike-like features with a simple functional forms, where the number 
-of model components is part of the inference problem. By doing this we effectively model bursts as cascades of spikes, such as might be formed by avalanches of reconnection, or crust rupture aftershocks.
+of model components is part of the inference problem.
+The cascades of spikes that we model might be formed by avalanches of reconnection, or crust rupture aftershocks.
 Using Markov Chain Monte Carlo sampling, we characterise the posterior distributions of the model 
 parameters and the number of components per burst. We relate these model parameters to physical quantities in the system, and show for the first time that 
 the variability within a burst does not agree with predictions from self-organised criticality.  We also examine how well the properties of the spikes fit the predictions of simplified cascade models for the different trigger mechanisms.  
@@ -97,9 +100,9 @@ the variability within a burst does not agree with predictions from self-organis
 
 With current and upcoming telescopes monitoring the sky regularly across the entire electromagnetic spectrum, time domain astronomy is emerging as one of the key fields in which major 
 new discoveries are being made.  A large fraction of astrophysical sources are known to be variable. The timescales span more than five orders of magnitude: fast oscillations in 
-X-ray binaries (XRBs) change over milliseconds \citep[e.g.\ ][]{xrb_khzqpos}, while red giants have been observed to change over decades or even centuries \citep[e.g.\ ][]{dasch_giants}. 
+X-ray binaries (XRBs) change over milliseconds \citep[e.g.][]{xrb_khzqpos}, while red giants have been observed to change over decades or even centuries \citep[e.g.][]{dasch_giants}. 
 Variability studies have the potential to unravel fundamental physical processes: studying variability in XRBs can help us unravel accretion processes and constrain theories of viscosity and strong gravity. 
-Similarly, giant flares from magnetars have the potential to map the neutron star interior via neutron star seismology \citep[e.g.~][]{steiner2009}. 
+Similarly, giant flares from magnetars have the potential to map the neutron star interior via neutron star seismology \citep[e.g.][]{steiner2009}. 
 
 \begin{figure*}[htbp]
 \begin{center}
@@ -111,7 +114,7 @@ and this sample, see Section \ref{ch6:data}.}
 \end{center}
 \end{figure*}
 
-While much of the variability exhibited for example in XRBs can be characterised and made sense of using standard Fourier methodology, this is not true for an important group of sources: for any transients 
+While much of the variability exhibited for example in XRBs can be characterised and made sense of using standard Fourier methodology, these methods are not appropriate for an important group of sources: for any transients 
 with complex temporal structure that is a superposition of different processes. When attempting to disentangle the individual components (for example, a periodic signal from underlying stochastic variability)
 using standard methods, it is possible to introduce systematic errors into inferences made from this type of data. Three examples stand out particularly: solar flares, $\gamma$-ray bursts (GRBs) and magnetar bursts.  All three phenomena are characterised by bursts lasting from $\sim\!\! 1/10$ of a second to hundreds of seconds, and a 
 complex temporal structure that varies strongly from burst to burst (for an example, see Figure \ref{fig:example_bursts}). 
@@ -141,13 +144,13 @@ emission characteristics. In the last decade, however, both groups have been fou
 is powered by the slow evolution and decay of the source's strong magnetic field, instead of the loss of rotational energy as is generally the case for standard radio pulsars \citep{thompson1995,thompson2001}. 
 
 Most magnetars share common properties \citep[for general overviews, see ][]{woods2006,mereghetti2011}: slow spin periods between
-$2 - 12 \, \mathrm{s}$, which, coupled with generally high period derivatives, lead to large inferred dipole magnetic fields of
+$2$--$12\,\mathrm{s}$, which, coupled with generally high period derivatives, lead to large inferred dipole magnetic fields of
 the order of $10^{14} \, \mathrm{G}$, well above the quantum-critical limit $B_{\mathrm{QED}} = 4.4 \times 10^{13} \, \mathrm{G}$,
 where quantum effects such as pair production and photon splitting become important \citep[although three sources have been 
 identified with properties similar to magnetars, but inferred dipole fields below this limit;][]{vanderhorst2010,esposito2010,rea2010,rea2012,scholz2012,rea2014}. 
 
 Magnetar bursts are of particular interest for a variety of reasons. While the most spectacular outbursts are the rare, but extremely energetic giant flares,
-magnetars also show a complex behaviour of emitting much smaller, shorter recurrent bursts. These bursts have a duration of $\lesssim 1\mathrm{s}$ , with energies
+magnetars also show a complex behaviour of emitting much smaller, shorter recurrent bursts. These bursts have a duration of $\lesssim 1\,\mathrm{s}$, with energies
 generally between $10^{38}\,\mathrm{erg}$ and $10^{41}\,\mathrm{erg}$, and have a complex temporal structure with single or
 multiple peaks that differs from one burst to the next. They are observed either appearing individually, or in burst 
 storms, where tens or hundreds of bursts can occur over a timescale of single days to weeks \citep{mazets1999,goetz2006b,israel2008,mereghetti2009,savchenko2010,israel2010,scholz2011,dib2012,vanderhorst2012,vonkienlin2012}. 
@@ -172,7 +175,7 @@ reconnection in the magnetosphere.
 
 Because of the bursts' complex temporal morphology, differing from burst to burst, it is difficult to extract information from their light curves. 
 Many bursts show a pattern of one or multiple spikes, where these spikes sometimes sit on top of each other. To extract parameters that could be related
-to physical quantities such as the rise time of each spike and the waiting time distribution between spikes, we need to be able to both infer the 
+to physical quantities such as the rise time of each spike and the waiting time distribution between spikes, we need to be able to infer both the 
 number of spikes per burst as well as the individual parameters of each spike: this requires efficient sampling over a large parameter space.
 At the same time, this process needs to operate automatically without the user's intervention, both to avoid biases introduced by manual fitting, as well as
  to allow for an analysis of the large numbers of magnetar bursts observed from various sources.
@@ -209,9 +212,9 @@ available: each trigger records high time-resolution photon arrival times called
 before each trigger to $300\,\mathrm{s}$ after each trigger, upon which the instrument cannot trigger for another $\sim\!\! 300 \,\mathrm{s}$. The data taken in other observing modes in between data covered
 by individual triggers is not of sufficiently high time resolution to perform detailed timing studies, hence we exclude all bursts without TTE data available.
 Within a GBM trigger, subsequent bursts do not trigger the instrument, but can be found in an untriggered burst search.
-We use data from the $12$ NaI detectors, whose energy range of $8$ keV to $4$ MeV is sufficient to cover most of the burst emission. Since SGR bursts rarely exhibit radiation above $200$ keV, we restrict ourselves 
-here to data in the range of $8 - 200 \,\mathrm{keV}$. 
-Additionally, we only used detectors with viewing angles to the source $< 60^{\circ}$, and checked whether the source was occulted by the spacecraft and the other instrument, the Large Area Telescope (LAT). 
+We use data from the $12$ NaI detectors, whose energy range of $8\,\mathrm{keV}$ to $4\,\mathrm{MeV}$ is sufficient to cover most of the burst emission. Since SGR bursts rarely exhibit radiation above $200\,\mathrm{keV}$, we restrict ourselves 
+here to data in the range of $8$--$200\,\mathrm{keV}$.
+Additionally, we only used detectors with viewing angles to the source $< 60^{\circ}$, and checked whether the source was occulted by the spacecraft and the other instrument, the Large Area Telescope (LAT)\@. 
 
 We use the combined samples of bursts from \citet{vonkienlin2012} and \citet{vanderhorst2012}, and include a total of $367$ bursts with available TTE data in our analysis. The duration of a burst, $T_{90}$, is defined as the time in which the central $90\%$ of the photons, starting at $5\%$ and ending at $95\%$, reach the detector.  We extract data from this time interval and add $20\%$ of the $T_{90}$ duration on either side of start and end time to ensure the entire burst is within our data set. Due to their complex structure, defining exactly which temporal features in the light curve belong to a single burst, and which should be regarded as separate bursts, is 
 not entirely unambiguous. For this sample, \citet{vanderhorst2012} \fermi/GBM searched data with a time resolution of $0.064\,\mathrm{s}$ for time bins in excess of $5.5\sigma$ 
@@ -229,10 +232,13 @@ in the data on short time scales, while at the same time having a reasonable num
 
 The data are affected by both dead time and saturation. 
 Dead time occurs because the instrument cannot record a second photon within $2.6\mu\mathrm{s}$ of arrival of a previous photon. 
-The second photon is thus either not recorded at all, or, on occasion, recorded as a single photon with the combined energy. This effectively 
-imposes a time scale onto the data, which means that the data then deviate away from the expected Poisson distribution. 
+The second photon is thus either not recorded at all, or, on occasion, recorded as a single photon with the combined energy. These deletions and combinations 
+impose a minimum time scale onto the data not predicted by a Poisson model. 
 Dead time is harder to quantify and account for than saturation. It is possible to correct count rates based on simulations of the instrument \citep{meegan2009,briggs2010,chaplin2013},
-but this will not correct the statistical distributions. We currently do not take dead time into account in our analysis.   Saturation may also significantly alter the shape of the arriving bursts. Saturation occurs when the number of arriving photons per second
+but this will not correct the statistical distributions.
+% IM TODO: Not 100% sure what that means. Suggest:
+% but the distribution over timings will still be incorrect. (?)
+We currently do not take dead time into account in our analysis.   Saturation may also significantly alter the shape of the arriving bursts. Saturation occurs when the number of arriving photons per second
 measured in a single GBM detector exceeds the maximum data throughput rate of the science data bus. In this case, transmitted rates are capped at a 
 count rate of $3.5 \times 10^{5} \, \mathrm{photons} \; \mathrm{s}^{-1}$, any photons exceeding that number are lost. For very bright bursts, this leads
 to flat-topped spikes truncated at the maximum count rate. Any bursts with count rates this high are excluded from the sample, as the model we
@@ -266,7 +272,7 @@ For a light curve with $K$ bins with Poisson-distributed counts $\bm{\counts} = 
 where $\mean_{nk}$ is the mean count rate of the $n^{\mathrm{th}}$ model component in time bin $k$, 
 $\mean_{bg}$ is the background count rate of that bin,
 and the mean count rate $\mean_{nk}$ in a bin $k$ is defined as the integral over a functional form defining the shape of
-the model component $\word$ over the the width of that time bin. The component $\word$ is a generic shape,
+the model component $\word$ over the width of that time bin. The component $\word$ is a generic shape,
 and can be modified by an amplitude parameter $A_n$ and a parameter setting the width $\tau_n$, in addition to
 parameters such as the time offset $t_n$ and intrinsic parameters further describing the component's shape.
 We will define a component model $\word$ for magnetar bursts in Section \ref{ch6:wordmodel} below, and
@@ -275,7 +281,7 @@ restrict ourselves here to a general description of the model.
 The posterior probability distribution for all model parameters is given by:
 \begin{eqnarray}
 p(N, \bm{\alpha},\{\bm{\theta}_n \} \given \bm{\counts}, H) &   \\\nonumber
- 						 = & \frac{p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_n \}, H) p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H)}{p(\bm{\counts} | H)} \, .
+ 						 = & \frac{p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_n \}, H)\, p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H)}{p(\bm{\counts} \given H)} \, .
 \end{eqnarray}
 % BJB: Lately I've heard interim prior for a different concept, so I think
 % 'conditional prior' now makes more sense.
@@ -299,7 +305,7 @@ overall prior for this model is
 
 % BJB "Given H" was missing from some of these terms
 \begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N | H)p(\bm{\alpha}\given N, H)p(\{\bm{\theta}_n\}\given \bm{\alpha}, N, H) \; .
+p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N | H)p(\bm{\alpha}\given N, H)p(\{\bm{\theta}_n\}\given \bm{\alpha}, N, H)  .
 \end{equation}
 Under the assumption that $\bm{\alpha}$ and $N$ are independent, and that the conditional priors of the individual model components are
 independent and identically distributed, we can re-write this equation as:
@@ -358,7 +364,7 @@ Instead of recording the end point of an MCMC chain as the new particle, the lik
 % BJB: Techically the posterior isn't a PDF here because N is discrete.
 DNS as implemented in {\it DNest3}\footnote{the code is available under the GNU public license at \url{https://github.com/eggplantbren/DNest3}} can return both an estimate for the marginal likelihood,
 suitable for model comparison, as well as samples drawn from the posterior distribution for a given burst. The latter is done by letting a particle explore
-the final mixture of levels freely via MCMC. 
+the final mixture of levels freely via MCMC\@. 
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=9cm]{f2.pdf}%word.pdf}
@@ -419,7 +425,7 @@ $\mu_s$ & Mean of uniform prior distribution for spike skewness $s$ & $\mathrm{U
 $\sigma_s$ & Half-width of uniform prior distribution for spike skewness $s$& $\mathrm{Uniform}(0,2)$\\ \midrule
 \it{Individual Burst Parameters} && \\ \midrule
 $t_0$ & Position of spike peak & $\mathrm{Uniform}(t_{\mathrm{start}}, t_{\mathrm{end}})$ \\
-$\tau$ & Exponential rise time scale & $\mathrm{Exponential}(\mu_\tau)$ \\
+$\tau$ & Exponential rise time scale & truncated $\mathrm{Exponential}(\mu_\tau)$, $\tau>\tau_{\mathrm{min}}$ \\
  && ($\mathrm{LogNormal}(\mu_\tau, \sigma^2_{\tau}))\tnote{\emph{a}} $ \\
 $A$ & Amplitude of spike peak in units of counts per bin &$\mathrm{Exponential}(\mu_A)$ \\
  && ($\mathrm{LogNormal}(\mu_A, \sigma^2_{A}))\tnote{\emph{a}} $ \\ 
@@ -450,8 +456,8 @@ the start and end times of the burst light curve, $t_{\mathrm{start}} < t_n < t_
 For the amplitude $A_n$ and the rise timescale $\tau_n$, we choose exponential priors \citep{skilling1998}:
 
 \begin{eqnarray}
-p(A \given \mu_A) &=& e^{(A/\mu_A)} \\
-p(\tau \given \mu_{\tau}) & = & e^{(\tau - \tau_{\mathrm{min}})/\mu_{\tau}} \; ,
+p(A \given \mu_A) &\propto& e^{A/\mu_A} \\
+p(\tau \given \mu_{\tau}) & \propto & e^{(\tau - \tau_{\mathrm{min}})/\mu_{\tau}}, ~~\tau>\tau_{\mathrm{min}},
 \label{eqn:exponential_prior}
 \end{eqnarray}
 
@@ -588,7 +594,7 @@ that bin from $100$ ensembles of random draws from the posterior distribution of
 
 A first exploration of the data reveals that most bursts can be represented with only a few spikes, of the order of 
 $10$ or fewer (see also Figure \ref{fig:spikes}). Because we use very high-resolution data for this analysis in order to
-be sensitive to short timescales of $< 1\mathrm{ms}$, a primary source for potential uncertainties in our analysis is the
+be sensitive to short timescales of $< 1\,\mathrm{ms}$, a primary source for potential uncertainties in our analysis is the
 danger that the model might try to represent individual (e.g.\ background) photons as spike features; this would greatly
 skew the resulting distributions towards small amplitudes and very short durations. The fact that we have many bursts
 fit with few spikes indicates that this might not be much of a problem. However, we also note that there is an appreciable fraction
@@ -604,7 +610,7 @@ This effectively puts a lower limit on the spike amplitudes we consider, which t
 that including the smallest features in the analysis does not change our results in a significant way: distributions for 
 waiting times and amplitudes have a stronger tail at small waiting times and amplitudes, but their inclusion changes neither
 the qualitative behaviour nor the conclusions we draw from this analysis. It would be interesting to explore their possible presence
-using bursts observed with an X-ray telescope less affected by sky background than \fermi/GBM.
+using bursts observed with an X-ray telescope less affected by sky background than \fermi/GBM\@.
 
 Five quantities are of particular interest for their potential connection with physical processes: the spike duration $T$, the exponential rise time scale $\tau$, the exponential fall
 time scale as parametrised by the skewness parameter $s$, $\tau_{\mathrm{fall}} = s\tau$, the total dissipated energy $E$ and waiting time between consecutive spikes $t_\mathrm{wait}$. The exponential rise time scale and skewness for each model component are free parameters
@@ -621,7 +627,7 @@ in our model, and thus easily extracted. We compute spike duration by finding th
  
  We subtract the integrated number of 
  background photons, derived from the background parameter $\mu_\counts$ for a given model, from the total integrated number of 
- counts in a burst in the full $8-200\,\mathrm{keV}$ energy band, to compute the total burst energy in count space; and have a direct conversion between count space and 
+ counts in a burst in the full $8$--$200\,\mathrm{keV}$ energy band, to compute the total burst energy in count space; and have a direct conversion between count space and 
  the fluences computed in \citet{vanderhorst2012}. To compute the fluence in a single spike, we divide the dissipated energy in that spike (integrated analytically)
  by the total number of background-subtracted counts in that burst, and multiply the resulting fraction with the burst fluence. 
  Because the distance is not well constrained for SGR J1550-5418, we do not convert from fluence to energy, but for a qualitative comparison to the expected correlation between the 
@@ -781,7 +787,7 @@ implies a strong prior against detecting a correlation. A formally correct analy
 priors on relationships between parameters of the model. This is something to be explored in the future.
 
 Secondly, there could be an energy dependence of the results presented above that we have not explored here. Magnetar bursts are known to have spectra that change with flux 
-\citep[e.g.\ ][]{younes2013}; conversely, some of the correlations found in this work may be energy-dependent. Again, this would require a more complex model, which is beyond the 
+\citep[e.g.][]{younes2013}; conversely, some of the correlations found in this work may be energy-dependent. Again, this would require a more complex model, which is beyond the 
 scope of this current work.
 
 Below, we discuss the results of the previous section first in the context of the SOC framework, then compare the derived correlations with predictions of toy models of burst trigger and
@@ -895,7 +901,7 @@ processes, with two different characteristic time scales, operate in producing t
 
 
 \subsection{Comparison with simple models of the burst process}
-As outlined in the Introduction, the mechanisms responsible for triggering magnetar bursts, and the associated emission processes, are still very poorly understood. The basic picture, however, is as follows. Magnetic field decay in the stellar interior (via ambipolar diffusion, the Hall effect, and Ohmic decay), leads to the build up of stress in the system. Stress may build up in the solid crust, which resists motion of the magnetic field lines that are frozen into it. Alternatively, if the crust yields plastically, stress may build up in the external magnetosphere if the prevailing plasma conditions permit. Bursts occur when this stress is released on a very rapid timescale, be that a crust rupture or a plasma instability. Magneto-hydrodynamic instabilities in the core itself may also play a role.
+As outlined in the Introduction, the mechanisms responsible for triggering magnetar bursts, and the associated emission processes, are still poorly understood. The basic picture, however, is as follows. Magnetic field decay in the stellar interior (via ambipolar diffusion, the Hall effect, and Ohmic decay), leads to the build up of stress in the system. Stress may build up in the solid crust, which resists motion of the magnetic field lines that are frozen into it. Alternatively, if the crust yields plastically, stress may build up in the external magnetosphere if the prevailing plasma conditions permit. Bursts occur when this stress is released on a very rapid timescale, be that a crust rupture or a plasma instability. Magneto-hydrodynamic instabilities in the core itself may also play a role.
 
 The stress release process leads to high energy X-ray and gamma-ray emission, which we observe as a magnetar burst. This emission may comprise both a non-thermal component (from particle acceleration or scattering), and a thermal component (as parts of the system are heated). The picture is further complicated by the fact that energy from the initial stress release event may be `stored' and then released over a longer timescale. Energy may be locked up temporarily in the form of seismic or magnetospheric oscillations, or in the form of an optically thick pair-plasma fireball that may get trapped within closed magnetic field lines. One of the main goals of magnetar research is to search for unique signatures of these various possibilities, and hence to distinguish between the various mechanisms suggested.
 
@@ -910,10 +916,9 @@ We start by considering the bimodal distribution of wait times (Figure \ref{fig:
 For transmission of information via Alfv\'en waves through the neutron star interior, the appropriate timescale is set by the Alfv\'en speed $v_A = B/\sqrt{4\pi\rho}$ where $B$ is the magnetic field strength, giving
 
 \begin{equation}
-v_A = 10^8 \mathrm{cm/s} \left(\frac{B}{10^{16} \mathrm{G}}\right) \left(\frac{10^{15} \mathrm{g/cm}^3}{\rho}\right)^{1/2}
+v_A = 10^8 \mathrm{cm/s} \left(\frac{B}{10^{16} \mathrm{G}}\right) \left(\frac{10^{15} \mathrm{g/cm}^3}{\rho}\right)^{1/2}.
 \end{equation}
-
-This yields timescales for transmission of information through the neutron star core via torsional Alfv\'en waves of $\lesssim 2R/v_A = 0.02 (R/$10 km) s. Note however that the value of the field strength $B$ in magnetar cores is highly uncertain, as is the appropriate value of the density $\rho$. In principle only the charged component ($\sim$ 5-10\% of the core mass) should participate in Alfv\'en waves, reducing $\rho$, however there are mechanisms associated with superfluidity and superconductivity that can couple the charged and neutral components. As such this value is also consistent with the inter-spike timescale distribution. In Figure \ref{fig:wtmodels} (top panel panel), we show the expected distribution of waiting times for propagation through the neutron star interior. 
+This yields timescales for transmission of information through the neutron star core via torsional Alfv\'en waves of $\lesssim 2R/v_A = 0.02 (R/$10 km) s. Note however that the value of the field strength $B$ in magnetar cores is highly uncertain, as is the appropriate value of the density $\rho$. In principle only the charged component ($\sim$ 5--10\% of the core mass) should participate in Alfv\'en waves, reducing $\rho$, however there are mechanisms associated with superfluidity and superconductivity that can couple the charged and neutral components. As such this value is also consistent with the inter-spike timescale distribution. In Figure \ref{fig:wtmodels} (top panel panel), we show the expected distribution of waiting times for propagation through the neutron star interior. 
 
 The distance between two random points on a sphere of radius $R_*$ may be written in terms of the colatitude angle $\phi\in[0,\pi]$. Where we adopt spherical coordinates ($r,\phi,\theta$) and orientate our coordinate system such that one point is located at ($R_*,0,0$) and the other point at ($R_*,\phi,0$) -- note that due to rotational symmetry the distance is independent of the azimuthal angle $\theta\in[0,2\pi)$. The distance between the two points is then
 \begin{equation}\label{eq}
@@ -927,7 +932,7 @@ such that we obtain
 \begin{equation}\label{eq}
 s(x)=2R_*(1-x)^{1/2}.
 \end{equation}
-Dividing the above equation by the appropriate velocity, i.e. the core Alfv\'en speed  $v_A$, gives us the following transformation function
+Dividing the above equation by the appropriate velocity, i.e.\ the core Alfv\'en speed  $v_A$, gives us the following transformation function
 \begin{equation}\label{eq:trans1}
 t(x)=\frac{2R_*}{v_A}(1-x)^{1/2},
 \end{equation}
@@ -969,7 +974,7 @@ Using Eq.~(\ref{eq:phi(x)}) we get
 \begin{equation}\label{eq}
 s(x)=R_*\arccos(2x-1),
 \end{equation}
-which leads to the following transformation function when divided by the corresponding velocity, i.e. the shear speed in the crust $v_s$, 
+which leads to the following transformation function when divided by the corresponding velocity, i.e.\ the shear speed in the crust $v_s$, 
 \begin{equation}\label{eq:trans2}
 t(x)=\frac{R_*}{v_s}\arccos\left(2x-1\right),
 \end{equation}
@@ -992,7 +997,7 @@ For the last model, transmission through the magnetosphere, the Alfv\'en speed i
 \begin{equation}\label{eq}
 \Delta t^{\rm max}\sim2\pi \frac{R_L}{c}=P,
 \end{equation}
-where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period. For magnetars $P\sim2-12$ s. The typical value $\Delta T\sim10^{-2}$ s roughly corresponds to a height of $r_{\rm rec}\sim10^{-2} c/(2\pi)\sim5\times10^7$ cm. If we distribute reconnection events in the magnetosphere in the region [$r^{\rm min}=10^{-4}c$, $r^{\rm max}=10^{-1}c$] such that the number of events per radius remains constant, we find the waiting time distribution shown in Figure~\ref{fig:wtmodels}, lower left. Here, we have distributed weak points uniformly in a shell of inner radius $r^{\rm min}$ and outer radius $r^{\rm max}$ around the star, and assumed that propagation of energy and information to other weak points must proceed through this shell. The waiting time distribution expected from the simple toy model is in remarkably good qualitative agreement with the observed distribution (compare Figure \ref{fig:waitingtimes}): it peaks at roughly at the right waiting time, and has an extended tail towards smaller waiting times. This tail is more pronounced in the toy model compared to the observations, but this could potentially be due to observational effects (such as the low-amplitude events that we cannot constrain reliably from the data, and which were excluded from this analysis). 
+where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period. For magnetars $P\sim2$--$12\,\mathrm{s}$. The typical value $\Delta T\sim10^{-2}\,\mathrm{s}$ roughly corresponds to a height of $r_{\rm rec}\sim10^{-2} c/(2\pi)\sim5\times10^7\,\mathrm{cm}$. If we distribute reconnection events in the magnetosphere in the region [$r^{\rm min}=10^{-4}c$, $r^{\rm max}=10^{-1}c$] such that the number of events per radius remains constant, we find the waiting time distribution shown in Figure~\ref{fig:wtmodels}, lower left. Here, we have distributed weak points uniformly in a shell of inner radius $r^{\rm min}$ and outer radius $r^{\rm max}$ around the star, and assumed that propagation of energy and information to other weak points must proceed through this shell. The waiting time distribution expected from the simple toy model is in remarkably good qualitative agreement with the observed distribution (compare Figure \ref{fig:waitingtimes}): it peaks at roughly at the right waiting time, and has an extended tail towards smaller waiting times. This tail is more pronounced in the toy model compared to the observations, but this could potentially be due to observational effects (such as the low-amplitude events that we cannot constrain reliably from the data, and which were excluded from this analysis). 
 
 %\begin{figure*}
 %        \centering        
@@ -1057,7 +1062,7 @@ where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period
 
 
 
-We conclude that the shorter `inter-spike' wait time distributions are, given the extreme simplifications of our models, at least in prinicple compatible with transmission of information via crustal shear, magnetospheric, or core Alfv\'en waves.  The latter possibility was most problematic in terms of fitting the distribution, however we caveat that our choice of stress points in the magnetosphere (which will have a major effect on the predicted wait time distribution) was highly ad hoc.   The longer wait times, by contrast, are clearly inconsistent with any of the communication timescales described here, and are therefore more likely to be set by a slower evolutionary timescale of the system.  
+We conclude that the shorter `inter-spike' wait time distributions are, given the extreme simplifications of our models, at least in principle compatible with transmission of information via crustal shear, magnetospheric, or core Alfv\'en waves.  The latter possibility was most problematic in terms of fitting the distribution, however we caveat that our choice of stress points in the magnetosphere (which will have a major effect on the predicted wait time distribution) was highly ad hoc.   The longer wait times, by contrast, are clearly inconsistent with any of the communication timescales described here, and are therefore more likely to be set by a slower evolutionary timescale of the system.  
 
 \subsubsection{Simple Models of Spike Properties}
 We now move on to consider more complex models and to exploit the other spike properties discussed in this analysis. We will explore three scenarios: (i) crust rupture trigger that leads directly to high energy emission; (ii) crust rupture trigger that leads to magnetic reconnection, with the emission coming as a consequence of that process; and (iii) magnetospheric trigger leading to spontaneous magnetic reconnection and associated emission.

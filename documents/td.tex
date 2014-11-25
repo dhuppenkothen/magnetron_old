@@ -843,15 +843,15 @@ uncertainties with predictions made by the fractal-diffusive SOC model outlined 
 Similarly, the differential distributions of burst duration, peak amplitude and total dissipated energy can be shown to be
 
 \begin{eqnarray}
+\label{eqn:differential_dists}
 N(T) dT &=& T^{-\alpha_T}dT \;  \mbox{; $\alpha_T = 1 + (d-1)\beta/2$} = 2\nonumber \\ 
 N(P) dA &=& T^{-\alpha_P}dP \; \mbox{; $\alpha_P = 2 - 1/d$} = 5/3 \\
 N(E) dE & = &T^{-\alpha_E}dE  \;\mbox{; $\alpha_E = 1 + (d-1)/(D_d + 2/b)$} =  3/2 \; ,  \nonumber
-\label{eqn:diffdist}
 \end{eqnarray}
 
 again for the standard assumptions stated above. Observations of solar flares in hard X-rays with a number of different telescopes
 agree with fractal-diffusive SOC predictions; the power law-like distributions in $T$, $P$ and $E$ and the values of $\alpha_T$, $\alpha_P$
-and $\alpha_E$ match those of Equations \ref{eqn:diffdist}.
+and $\alpha_E$ match those of Equations \ref{eqn:differential_dists}.
 
 As expected from SOC predictions, we see a positive correlation between spike duration and 
 fluence (a proxy for the total dissipated energy) for spikes in magnetar bursts, similar to that seen when taking the bursts as a whole \citep{gogus1999}. 
@@ -903,13 +903,16 @@ In this paper we have explored the idea that each burst is made up of cascades o
 
 In connecting physics to observables, we need to be aware of the limitations of what we can infer from our measurements. In particular the following considerations apply: (i) The fluence that we measure is the energy released in the X-ray/Gamma-ray waveband. As such it is a lower bound, since energy may be lost at other wavelengths or even in other forms such as neutrinos (depending on the precise location of the energy release). (ii) The rise time that we measure is the rise time of the emission process, not necessarily that of the stress release process. (iii) The duration that we measure may be the duration of the stress release event, or may be set by the prolongation mechanisms discussed above. We will revisit these caveats in the discussion that follows.
 
-We start by considering the bimodal distribution of wait times (Figure \ref{fig:waitingtimes}). Within the cascade picture, the wait times represent the time for information about the change in configuration resulting from a local release of stress to be communicated to the next failure point (be that a weakened part of the crust, or another part of the magnetosphere). The distribution is bimodal, with one peak at $\Delta T\sim 0.05\,\mathrm{s}$ that is the wait time between individual spikes, and one at longer timescales (of at least $10\,\mathrm{s}$) that is the timescale between individual bursts. We would like to understand whether the distributions are consistent with the timescales on which such information might be conveyed: that is to say the shear timescale in the crust, or the Alfv\'en timescales in the stellar interior or magnetosphere.
+\subsubsection{Three Toy Models for the Waiting Time Distribution}
+
+We start by considering the bimodal distribution of wait times (Figure \ref{fig:waitingtimes}). Within the cascade picture, the wait times represent the time for information about the change in configuration resulting from a local release of stress to be communicated to the next failure point (be that a weakened part of the crust, or another part of the magnetosphere). The distribution is bimodal, with one peak at $\Delta T\sim 0.05\,\mathrm{s}$ that is the wait time between individual spikes, and one at longer timescales (of at least $10\,\mathrm{s}$) that is the timescale between individual bursts. We would like to understand whether the distributions are consistent with the timescales on which such information might be conveyed either (a) through the crust (set by the shear timescale), (b) through the stellar interior, or (c) through the magnetosphere (the latter two are dominated by their respective Alfv\'en timescales).
 
 For transmission of information via Alfv\'en waves through the neutron star interior, the appropriate timescale is set by the Alfv\'en speed $v_A = B/\sqrt{4\pi\rho}$ where $B$ is the magnetic field strength, giving
 
 \begin{equation}
 v_A = 10^8 \mathrm{cm/s} \left(\frac{B}{10^{16} \mathrm{G}}\right) \left(\frac{10^{15} \mathrm{g/cm}^3}{\rho}\right)^{1/2}
 \end{equation}
+
 This yields timescales for transmission of information through the neutron star core via torsional Alfv\'en waves of $\lesssim 2R/v_A = 0.02 (R/$10 km) s. Note however that the value of the field strength $B$ in magnetar cores is highly uncertain, as is the appropriate value of the density $\rho$. In principle only the charged component ($\sim$ 5-10\% of the core mass) should participate in Alfv\'en waves, reducing $\rho$, however there are mechanisms associated with superfluidity and superconductivity that can couple the charged and neutral components. As such this value is also consistent with the inter-spike timescale distribution. In Figure \ref{fig:wtmodels} (top panel panel), we show the expected distribution of waiting times for propagation through the neutron star interior. 
 
 The distance between two random points on a sphere of radius $R_*$ may be written in terms of the colatitude angle $\phi\in[0,\pi]$. Where we adopt spherical coordinates ($r,\phi,\theta$) and orientate our coordinate system such that one point is located at ($R_*,0,0$) and the other point at ($R_*,\phi,0$) -- note that due to rotational symmetry the distance is independent of the azimuthal angle $\theta\in[0,2\pi)$. The distance between the two points is then
@@ -937,7 +940,7 @@ u_X(x) = \left\{
 \end{array} \right.
 \end{equation}
 Then together with Eq.~(\ref{eq:trans1}), we find that the probability density function (PDF) for the variable $T$ is given by
-\begin{equation}\label{eq}
+\begin{equation}\label{eq:interior_pdf}
 f_T(t) = \left\{
 \begin{array}{ll}
 \frac{1}{2}\left(v_A/R_*\right)^2t &  {\rm if~} 0<t\leq2R_*/v_A,\\
@@ -947,16 +950,16 @@ f_T(t) = \left\{
 
 To derive this distribution, we distributed a number of weak points across the crust of a neutron star with typical radius, and then assumed failure at one initial point. We then calculated the time it would take for the information about that failure to propagate through the neutron star interior. It is assumed that the impact of the original failure is sufficient to trigger subsequent failure events in other weak points; the waiting time distribution is then the time for the information to travel between these weak points.
 
-The expected distribution (Figure \ref{fig:wtmodels}, upper panel) is clearly at odds with what is observed: while it extends to values high enough to explain the long waiting times, the distribution is dominated by a power law with a positive exponent and a sharp drop-off at $\sim\!\! 0.04\,\mathrm{s}$. This is clearly not observed in the data, where the inter-spike waiting times resemble much more a log-normal distribution. However, the model assumed here does not include seismic waves traveling through the star multiple times. Instead, it is assumed that the energy transferred in the first instance is sufficient to trigger a follow-up event, such that the waiting times are directly related to the distance through the star between two points on the surface. The sharp drop-off at long waiting times in this case corresponds to the travel time between the furthest two points on the star (i.e. $2R$). It is possible that seismic waves could be reflected and travel through the interior multiple times, transferring small amounts of energy every time, and that then the waiting time is determined by the time it takes for the cumulative energy transmitted to a weak point to be sufficient to trigger a starquake. However, including these effects would require much more detailed knowledge about the energy threshold for crust failure than is available, and beyond the scope of this simple toy model.  
+In Figure \ref{fig:wtmodels} (top panel), we show the expected distribution of waiting times for transmission of information about failure points through the neutron star interior. We show both the analytical solution (from Equantion \ref{eq:interior_pdf}) as well as the result of $10^{6}$ Monte Carlo simulations of the process.
+The expected distribution is clearly at odds with what is observed: while it extends to values high enough to explain the long waiting times, the distribution is dominated by a power law with a positive exponent and a sharp drop-off at $\sim\!\! 0.04\,\mathrm{s}$. This is clearly not observed in the data, where the inter-spike waiting times resemble much more a log-normal distribution. However, the model assumed here does not include seismic waves traveling through the star multiple times. Instead, it is assumed that the energy transferred in the first instance is sufficient to trigger a follow-up event, such that the waiting times are directly related to the distance through the star between two points on the surface. The sharp drop-off at long waiting times in this case corresponds to the travel time between the furthest two points on the star (i.e. $2R$). It is possible that seismic waves could be reflected and travel through the interior multiple times, transferring small amounts of energy every time, and that then the waiting time is determined by the time it takes for the cumulative energy transmitted to a weak point to be sufficient to trigger a starquake. However, including these effects would require much more detailed knowledge about the energy threshold for crust failure than is available, and beyond the scope of this simple toy model.  
 
-The governing factor in the case where information is propagated through the neutron star crust is the shear speed in the crust, $v_s = (\mu_s/\rho)^{1/2}$ where $\mu_s$ is the shear modulus and $\rho$ the density. The shear modulus is of the order of the Coulomb potential energy $\sim Z^2e^2/r$ per unit volume $r^3$, where $r\sim(\rho/Am_p)^{-1/3}$ is the inter-ion spacing, while $Z$ and $A$ are the effective atomic number and mass number, respectively, of the ions in the crust. Using the shear modulus computed by \citet{strohmayer1991} and scaling by typical values for the inner crust \citep{douchin2001}, the shear velocity is:
+For the second possible toy model, where information propagates through the neutron star crust only, the governing factor is the shear speed in the crust, $v_s = (\mu_s/\rho)^{1/2}$ where $\mu_s$ is the shear modulus and $\rho$ the density. The shear modulus is of the order of the Coulomb potential energy $\sim Z^2e^2/r$ per unit volume $r^3$, where $r\sim(\rho/Am_p)^{-1/3}$ is the inter-ion spacing, while $Z$ and $A$ are the effective atomic number and mass number, respectively, of the ions in the crust. Using the shear modulus computed by \citet{strohmayer1991} and scaling by typical values for the inner crust \citep{douchin2001}, the shear velocity is:
 
 \begin{eqnarray}
 v_s & = & 1.1 \times 10^8 \mathrm{cm/s} \left(\frac{\rho}{10^{14} \mathrm{g/cm}^3}\right)^{1/6} \left(\frac{Z}{38}\right) \\
 && \times \left(\frac{302}{A}\right)^{2/3} \left(\frac{1-X_n}{0.25}\right)^{2/3} \nonumber \, ,
 \end{eqnarray}
 where $X_n$ is the fraction of neutrons (see also \citet{piro2005}). The timescales for transmission of information via shear waves around the crust are therefore $\lesssim \pi R/v_s = 0.03$ ($R$/10 km) s. This is certainly consistent the values that we found for the wait times between individual spikes. 
-
 
 The distance between to points on a sphere of radius $R_*$ that is measured across the surface of the sphere, may equally be represented solely in terms of the colatitude angle $\phi\in[0,\pi]$. Following a similar procedure as before we find that the distance between two points, as measured across the surface of the sphere, is then
 \begin{equation}\label{eq}
@@ -971,7 +974,7 @@ which leads to the following transformation function when divided by the corresp
 t(x)=\frac{R_*}{v_s}\arccos\left(2x-1\right),
 \end{equation}
 where the waiting time $t$ is expressed in terms of the variable $x$. Assuming again that the random variable $X$ is distributed according to Eq.~(\ref{eq:uniform dist}) and with the transformation function Eq.~(\ref{eq:trans2}) we finally obtain the PDF for the variable $T$ in this case
-\begin{equation}\label{eq}
+\begin{equation}\label{eq:crust_pdf}
 g_T(t) = \left\{
 \begin{array}{ll}
 \frac{1}{2}v_s\sin(v_st/R_*)/R_* &  {\rm if~} 0<t<\pi R_*/v_s,\\
@@ -981,10 +984,10 @@ g_T(t) = \left\{
 
 Again, we have assumed a number of weak points on the neutron star surface, but this time, propagation proceeds entirely around the star under the assumption that transmission proceeds purely through shear waves in the crust, assuming the canonical values given in the expression for shear speed above.  As above a single failure triggers an energy release that is communicated through the star and triggers failures at other weak points in the crust; the waiting time distribution now depends on the distance between two points on the surface of the star, and the crustal shear speed. 
 
-The distribution of wait times that might result is shown in the middle panel of Figure \ref{fig:wtmodels}.   In general, this model reproduces the observed waiting time distribution in Figure \ref{fig:waitingtimes} fairly well: it peaks at similar time scales ($\sim\!\! 0.01\,\mathrm{s}$, with a sharp drop at long waiting times and a long tail towards shorter waiting times that is more pronounced than we observe in the data. However, we note that the waiting times may be artificially shortened by line-of-sight effects: if a single event at a point triggers two successive events at different positions on the star or in the magnetosphere, we might see all three in rapid succession depending on our line of sight. This may lead us to conclude that there is a small waiting time between successive (causally connected) events, whereas in reality, two of the three hypothetical events in this example are unconnected.
+The distribution of wait times that might result is shown in the middle panel of Figure \ref{fig:wtmodels} for both the analytical solution given in Equation \ref{eq:crust_pdf} and $10^{6}$ simulations. In general, this model reproduces the observed waiting time distribution in Figure \ref{fig:waitingtimes} fairly well: it peaks at similar time scales ($\sim\!\! 0.01\,\mathrm{s}$, with a sharp drop at long waiting times and a long tail towards shorter waiting times that is more pronounced than we observe in the data. However, we note that the waiting times may be artificially shortened by line-of-sight effects: if a single event at a point triggers two successive events at different positions on the star or in the magnetosphere, we might see all three in rapid succession depending on our line of sight. This may lead us to conclude that there is a small waiting time between successive (causally connected) events, whereas in reality, two of the three hypothetical events in this example are unconnected.
 
 
-Within the magnetosphere, the Alfv\'en speed is of order the speed of light. An upper limit for the waiting time between causally connected spikes is given by the light crossing time of the circumference of the light cylinder ($2\pi R_L=2 \pi c/\Omega$) i.e.
+For the last model, transmission through the magnetosphere, the Alfv\'en speed is of order the speed of light. An upper limit for the waiting time between causally connected spikes is given by the light crossing time of the circumference of the light cylinder ($2\pi R_L=2 \pi c/\Omega$) i.e.
 
 \begin{equation}\label{eq}
 \Delta t^{\rm max}\sim2\pi \frac{R_L}{c}=P,
@@ -1056,6 +1059,7 @@ where $\Omega$ is the spin frequency of the neutron star and $P$ the spin period
 
 We conclude that the shorter `inter-spike' wait time distributions are, given the extreme simplifications of our models, at least in prinicple compatible with transmission of information via crustal shear, magnetospheric, or core Alfv\'en waves.  The latter possibility was most problematic in terms of fitting the distribution, however we caveat that our choice of stress points in the magnetosphere (which will have a major effect on the predicted wait time distribution) was highly ad hoc.   The longer wait times, by contrast, are clearly inconsistent with any of the communication timescales described here, and are therefore more likely to be set by a slower evolutionary timescale of the system.  
 
+\subsubsection{Simple Models of Spike Properties}
 We now move on to consider more complex models and to exploit the other spike properties discussed in this analysis. We will explore three scenarios: (i) crust rupture trigger that leads directly to high energy emission; (ii) crust rupture trigger that leads to magnetic reconnection, with the emission coming as a consequence of that process; and (iii) magnetospheric trigger leading to spontaneous magnetic reconnection and associated emission.
 
 We will first explore the crustal rupture model of \citet{thompson1995}. Within this picture, the small magnetar bursts are triggered by crustal ruptures as the crust comes under stress for the decaying interior field. The high energy emission that follows comes from particle acceleration, scattering and, they argue, a high likelihood of pair plasma fireball formation\footnote{\citet{heyl2005b} also discuss the crust rupture mechanism, however in the scenario that they outline, energy is transported by fast MHD waves before forming a pair plasma fireball.}
@@ -1120,7 +1124,7 @@ models evolve, they can inform the probabilistic models we build for studying va
 
 \paragraph{acknowledgements}
 DH, BJB, DWH, MF and IM thank the organizers of MaxEnt2013. DH was partially supported by a Netherlands Organization for Scientific Research (NWO) Vidi Fellowship (PI A. Watts) and the Moore-Sloan Data Science Environment at NYU. BJB is supported
-by a Marsden Fast Start grant from the Royal Society of New Zealand.
+by a Marsden Fast Start grant from the Royal Society of New Zealand. AJvdH acknowledges support from the European Research Council via Advanced Investigator Grant no. 247295 (PI: R.A.M.J. Wijers).
 
 \bibliography{td}
 \bibliographystyle{apj}

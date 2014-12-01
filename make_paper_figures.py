@@ -207,6 +207,82 @@ def plot_example_dnest_lightcurve():
     return
 
 
+
+def make_lightcurve_grid():
+ 
+    files = glob.glob("*data.dat")
+    low_fluence, mid_fluence, high_fluence = [], [], []
+    for f in files:
+        data = np.loadtxt(f)
+        fluence = np.sum(data[:,1])
+        samplefile = glob.glob(f[:18] + "*posterior_sample.txt")[0]
+        sample = np.atleast_2d(np.loadtxt(samplefile))
+        nbursts = nbursts = sample[:, 7]
+        lcs = (sample[:,-data.shape[0]:]/0.0005)/1.e4
+        plt.figure(figsize=(12,6))
+        plt.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2)
+        sampleinds = np.random.randint(0,len(lcs), 10)
+        for s in sampleinds:
+            plt.plot(data[:,0]-data[0,0],lcs[s, :], lw=1)
+        bid = f.split("_")[0]
+        bst = f.split("_")[1]
+        plt.title("ObsID: %s, t_st = %s, nbursts = %i, fluence =%i"%(bid, bst, np.mean(nbursts), fluence))
+        if fluence < 1000:
+            tag = "lf"
+        elif 1000. <= fluence <= 10000.0:
+            tag = "mf"
+        else:
+            tag = "hf"
+        plt.savefig(tag + "_" + bid + "_" + bst + "lcs.pdf", format="pdf")
+        plt.close()
+
+    
+    plot files = [["090122044_+288.53", "090122037a_+146.71", "090122104_+164.55"],
+                  ["090122052_-024.53", "090122037a_+143.09", "090122283_+131.84"],
+                  ["090122037a_+180.67", "090122044_+031.42", "090122187_+064.99"],
+                  ["090222540_-000.15", "1090122194_+058.83", "090122173_+241.34"],
+                  ["090122052_+237.81", "090122037a_+142.46", "090122187_+292.95"]]
+
+    plot_nbursts = [[1, 2, 3],
+                    [4, 5, 5],
+                    [8, 10, 8],
+                    [15, 13 ,13],
+                    [48, 33, 13]]
+
+
+
+
+    ### bursts for plotting:
+    ## 0,0: 090122044_+288.534 , nbursts = 1, fluence =482
+    ## 0,1: 090122052, t_st = -024.534, nbursts = 4, fluence =746
+    ## 0,2: 090122037a, t_st = +180.676, nbursts = 8, fluence =878
+    ## 0,3: 090222540, t_st = -000.152, nbursts = 15, fluence =787
+    ## 0,4: 090122052, t_st = +237.815, nbursts = 48, fluence =259
+ 
+    ## 1,0: 090122037a, t_st = +146.710, nbursts = 2, fluence =1773
+    ## 1,1: 090122037a, t_st = +143.096, nbursts = 5, fluence =1502
+    ## 1,2: 090122044, t_st = +031.426, nbursts = 10, fluence =2233
+    ## 1,3: 1090122194, t_st = +058.836, nbursts = 13, fluence =4212
+    ## 1,4: 090122037a, t_st = +142.468, nbursts = 33, fluence =1210
+     
+    ## 2,0: 090122104, t_st = +164.550, nbursts = 3, fluence =5805
+    ## 2,1: 090122283, t_st = +131.840, nbursts = 5, fluence =10506
+    ## 2,2: 090122187, t_st = +064.998, nbursts = 8, fluence =5606
+    ## 2,3: 090122173, t_st = +241.347, nbursts = 13, fluence =8587
+    ## 2,4: 090122187, t_st = +292.952, nbursts = 13, fluence =7275
+
+
+#        if fluence < 1000:
+#            low_fluence.append([f, data, nbursts, lcs])
+#        elif 1000. <= fluence < 10000.:
+#            mid_fluence.append([f, data, nbursts, lcs])
+#        else:
+#            high_fluence.append([f, data, nbursts, lcs])
+
+
+    return
+
+
 def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100):
     """
     Make a histogram of the number of spikes per bin

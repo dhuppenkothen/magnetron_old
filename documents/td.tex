@@ -46,14 +46,14 @@
 
 \title{Dissecting Magnetar Variability with Bayesian Hierarchical Models}
 
-\author{D. Huppenkothen\altaffilmark{1, 2, 3}, B. J. Brewer\altaffilmark{4}, D. Hogg\altaffilmark{5}, I. Murray\altaffilmark{6}, M. Frean\altaffilmark{7}, C. Elenbaas\altaffilmark{1}, A. L. Watts\altaffilmark{1}, Y.Levin\altaffilmark{8}, A.J. van der Horst\altaffilmark{1}, C. Kouveliotou\altaffilmark{9,10}}
+\author{Daniela Huppenkothen\altaffilmark{1, 2, 3, 4}, Brendon J. Brewer\altaffilmark{5}, David W. Hogg\altaffilmark{3}, Iain Murray\altaffilmark{6}, Marcus Frean\altaffilmark{7}, Chris Elenbaas\altaffilmark{1}, Anna L. Watts\altaffilmark{1}, Yuri Levin\altaffilmark{8}, Alexander J. van der Horst\altaffilmark{1}, Chryssa Kouveliotou\altaffilmark{9,10}}
  
 \altaffiltext{1}{Anton Pannekoek Institute for Astronomy, University of
   Amsterdam, Postbus 94249, 1090 GE Amsterdam, the Netherlands}
   \altaffiltext{2}{Center for Data Science, New York University, 726 Broadway, 7th Floor, New York, NY 10003}
-  \altaffiltext{3}{E-mail: daniela.huppenkothen@nyu.edu}
-  \altaffiltext{4}{Department of Statistics, The University of Auckland, Private Bag 92019, Auckland 1142, New Zealand}
-\altaffiltext{5}{Center for Cosmology and Particle Physics, Department of Physics, New York University, 4 Washington Place \#424, New York, NY 10003, USA}
+  \altaffiltext{3}{Center for Cosmology and Particle Physics, Department of Physics, New York University, 4 Washington Place \#424, New York, NY 10003, USA}
+  \altaffiltext{4}{E-mail: daniela.huppenkothen@nyu.edu}
+  \altaffiltext{5}{Department of Statistics, The University of Auckland, Private Bag 92019, Auckland 1142, New Zealand}
 \altaffiltext{6}{School of Informatics, University of Edinburgh}
 \altaffiltext{7}{School of Engineering and Computer Science, Victoria University of Wellington, New Zealand}
 \altaffiltext{8}{Monash Center for Astrophysics and School of Physics, Monash University, Clayton, Victoria 3800, Australia}
@@ -230,7 +230,7 @@ time longer than $0.5\,\mathrm{s}$ between individual peaks in a single burst. C
 exceed the inferred background count rate makes the exact burst definition instrument-specific, such that a single burst could be regarded as two separate events
 if part of the variability is hidden underneath the background level.
 
-Here we will nevertheless proceed with the definitions from \citet{vandrrhorst2012} to identify individual bursts, with intra-burst variability to be further characterised using the 
+Here we will nevertheless proceed with the definitions from \citet{vanderhorst2012} to identify individual bursts, with intra-burst variability to be further characterised using the 
 methods described below in the \ref{ch6:methods}. For every burst, the photon arrival times 
 are barycentered before analysis, i.e.\ projected to the centre of mass of the solar system, to account for the effects of the relative motion of the spacecraft and the Earth.
 We choose a time resolution of $0.5\,\mathrm{ms}$ for our light curves. The time resolution is chosen small enough to preserve features
@@ -239,10 +239,10 @@ in the data on short time scales, while at the same time having a reasonable num
 Photon arrival times recorded with \fermi/GBM are affected by both dead time and saturation. 
 Dead time occurs because the instrument cannot record a second photon within $2.6\mu\mathrm{s}$ of arrival of a previous photon. 
 The second photon is thus either not recorded at all, or, on occasion, recorded as a single photon with the combined energy of the two. These deletions and combinations 
-impose a minimum time scale onto the data not predicted by a Poisson model. 
-Dead time is harder to quantify and account for than saturation. It is possible to heuristically correct count rates based on simulations of the instrument \citep{meegan2009,briggs2010,chaplin2013},
-but this will not remove the deviation of the statistical distribution of the counts in a bin from a Poisson distribution.
-We currently do not take dead time into account in our analysis.   Saturation may also significantly alter the shape of the arriving bursts. Saturation occurs when the number of arriving photons per second
+impose a minimum time scale onto the data not predicted by a Poisson model, and thus when time-binning photons, the resulting statistical distribution of the counts in a bin will
+deviate from the expected Poisson distribution. This effect will scale with count rate, such that higher count rates lead to stronger deviations in the statistical distributions of the data.
+Dead time is harder to quantify and account for than saturation. It is possible to correct for the fraction of photons lost due to dead time at a given observed count rate using simulations of the instrument \citep{meegan2009,briggs2010,chaplin2013}. While this correction is useful for analyses that rely on accurate estimate of the total number of photons, it is not useful for timing analyses, because the count rate correction will not remove the deviation of the statistical distributions of the counts in a bin from a Poisson distribution. 
+We currently do not take dead time into account in our analysis. Saturation may also significantly alter the shape of the arriving bursts. Saturation occurs when the number of arriving photons per second
 measured in a single GBM detector exceeds the maximum data throughput rate of the science data bus. In this case, transmitted rates are capped at a 
 count rate of $3.5 \times 10^{5} \, \mathrm{photons} \; \mathrm{s}^{-1}$; any photons exceeding that number are lost. For very bright bursts, this leads
 to flat-topped spikes truncated at the maximum count rate. Any bursts with count rates this high are excluded from the sample, as the model we
@@ -466,10 +466,16 @@ p(\tau \given \mu_{\tau}) & \propto & e^{(\tau - \tau_{\mathrm{min}})/\mu_{\tau}
 \end{eqnarray}
 
 where $\mu_A$ and $\mu_{\mathrm{\tau}}$ are hyperparameters describing the width of the exponential distribution.
-We set the hard limit on the minimum possible rise time scale $\tau_{\mathrm{min}}$ to be a fraction of the light curve's time resolution,
-$\tau_{\mathrm{min}} = \Delta t/3$: the time resolution effectively limits the information on the rise time we can extract. This is necessary because
-the exponential distribution defined in Equation \ref{eqn:exponential_prior} will always have large mass at the smallest rise times, and cannot move away
-from this behaviour unless we impose it via $\tau_{\mathrm{min}}$.
+%We set the hard limit on the minimum possible rise time scale $\tau_{\mathrm{min}}$ to be a fraction of the light curve's time resolution,
+%$\tau_{\mathrm{min}} = \Delta t/3$: the time resolution effectively limits the information on the rise time we can extract. This is necessary because
+%the exponential distribution defined in Equation \ref{eqn:exponential_prior} will always have large mass at the smallest rise times, and cannot move away
+%from this behaviour unless we impose it via $\tau_{\mathrm{min}}$.
+We set a hard limit on the minimum possible rise time scale
+$\tau_{\mathrm{min}}$ to be a fraction of the light curve's time
+resolution, $\tau_{\mathrm{min}} = \Delta t/3$. While very narrow spikes
+may be possible, considering all possible placements of these events,
+which we can't measure, would be distracting for our exploratory
+analysis of the data.
 
 The prior on the skewness parameter $s_n$ is a uniform distribution with a mean of $\mu_s$ and a half-width of $\sigma_s$, such
 that the log-skewness must lie in the range $(\mu_s-\sigma_s) < \log{(s)} < (\mu_s+\sigma_s)$. A definition in terms of mean and half-width ensures

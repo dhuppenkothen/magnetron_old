@@ -46,7 +46,7 @@
 
 \title{Dissecting Magnetar Variability with Bayesian Hierarchical Models}
 
-\author{Daniela Huppenkothen\altaffilmark{1, 2, 3, 4}, Brendon J. Brewer\altaffilmark{5}, David W. Hogg\altaffilmark{3}, Iain Murray\altaffilmark{6}, Marcus Frean\altaffilmark{7}, Chris Elenbaas\altaffilmark{1}, Anna L. Watts\altaffilmark{1}, Yuri Levin\altaffilmark{8}, Alexander J. van der Horst\altaffilmark{1}, Chryssa Kouveliotou\altaffilmark{9,10}}
+\author{Daniela Huppenkothen\altaffilmark{1, 2, 3, 4}, Brendon J. Brewer\altaffilmark{5}, David W. Hogg\altaffilmark{3,2}, Iain Murray\altaffilmark{6}, Marcus Frean\altaffilmark{7}, Chris Elenbaas\altaffilmark{1}, Anna L. Watts\altaffilmark{1}, Yuri Levin\altaffilmark{8}, Alexander J. van der Horst\altaffilmark{1}, Chryssa Kouveliotou\altaffilmark{9,10}}
  
 \altaffiltext{1}{Anton Pannekoek Institute for Astronomy, University of
   Amsterdam, Postbus 94249, 1090 GE Amsterdam, the Netherlands}
@@ -78,19 +78,19 @@
 %  the width of the spikes in each burst,
 %  and the shape of the dimensionless spike function.
 %The phenomenology of spike multiplicity, shape, and width is discussed.
-Neutron stars are one of the prime laboratories for testing physical processes under conditions of strong gravity, high density and extreme magnetic fields.
-Among the zoo of neutron star phenomena, magnetars stand out for their bursting behaviour, ranging from extremely bright, but rare giant flares to numerous,
-but less energetic recurrent bursts. The exact trigger and emission mechanisms for these bursts are not known; favoured models involve either a crust fracture
+Neutron stars are a prime laboratory for testing physical processes under conditions of strong gravity, high density, and extreme magnetic fields.
+Among the zoo of neutron star phenomena, magnetars stand out for their bursting behaviour, ranging from extremely bright, rare giant flares to numerous, 
+less energetic recurrent bursts. The exact trigger and emission mechanisms for these bursts are not known; favoured models involve either a crust fracture
 and subsequent energy release into the magnetosphere, or explosive reconnection of magnetic field lines. 
 In the absence of a predictive model, understanding the physical processes responsible for
 %the variable emission in % -- variable...variability seemed clumsy?
 magnetar burst variability is difficult. Here, we 
 develop an empirical model that decomposes magnetar bursts into a superposition of small spike-like features with a simple functional form, where the number 
-of model components is part of the inference problem.
+of model components is itself part of the inference problem.
 The cascades of spikes that we model might be formed by avalanches of reconnection, or crust rupture aftershocks.
-Using Markov Chain Monte Carlo sampling, we characterise the posterior distributions of the model 
+Using Markov Chain Monte Carlo (MCMC) sampling augmented with reversible jumps between models with different numbers of parameters, we characterise the posterior distributions of the model 
 parameters and the number of components per burst. We relate these model parameters to physical quantities in the system, and show for the first time that 
-the variability within a burst does not agree with predictions from self-organised criticality.  We also examine how well the properties of the spikes fit the predictions of simplified cascade models for the different trigger mechanisms.  
+the variability within a burst does not conform to predictions from ideas of self-organised criticality.  We also examine how well the properties of the spikes fit the predictions of simplified cascade models for the different trigger mechanisms.  
 
 \end{abstract}
 
@@ -540,9 +540,21 @@ the process: there could be spikes below the background that we have missed, but
 rate exceeding the background by a factor of at least $3$ will be modelled fairly unambiguously by our method, allowing us to make inferences about the underlying processes based on
 these models.
 
+\begin{figure*}[htbp]
+%\begin{center}
+\includegraphics[width=\textwidth]{f4b.pdf}%example_dnest_result.pdf}
+\caption{Light curves of $15$ examples of bursts from SGR J1550-5418, each with $10$ random draws from the posterior distribution of the model. We sorted bursts by maximum count rate 
+(left to right) and by the average number of spike components in a given burst inferred from the model (top to bottom). Note that the y-axes are different for each burst, and, in particular, change
+quite drastically from left to right. At high count rates 
+(with maximum count rates $ > 3\times10^{4}\,\mathrm{counts}\,\mathrm{s}^{-1}$, there are no bursts with an average number of components inferred from the model larger than $15$, and components
+ for these models are very well constrained. Conversely, at low count rates $< 3\times10^{4}\,\mathrm{counts}\,\mathrm{s}^{-1}$, there is a population of bursts with a small signal-to-noise ratio, which the 
+ model tends to overfit a large number of extremely low-amplitude spikes at random positions in the light curve (compare last row of panels). This behaviour was also observed in the simulations in Section 
+ \ref{ch6:modelsims}.}
+\label{fig:lcpanel}
+%\end{center}
+\end{figure*}
 
-
-\section{A Single Burst}
+\section{Individual Bursts}
 \label{ch6:oneburst}
 
 The model described above considers each burst individually, and tries to fit the burst light curve with a superposition of spikes with unknown parameters, where the number of
@@ -556,7 +568,6 @@ of a single burst. Overall, the algorithm reliably finds both positions and shap
 the brightest spikes. There is some ambiguity for weaker features on whether there should be a component, or whether perhaps a
 particular feature should be modelled as a superposition of two components, but this ambiguity is generally small, and while there is some
 spread in model parameters and positions, samples drawn from the posterior are remarkably similar in position, amplitude and shape. 
-Even for bursts with lower count rates, this remains true, such that we can use the modelling results with some confidence in our further analysis.
 
 If we were interested in deciding whether a feature should be modelled with a spike component, we could marginalise out all other parameters
 except for the position parameter and infer the presence of a feature based on its position and the number of samples in which a component appears at
@@ -568,6 +579,16 @@ from this distribution contain between $10$ and $20$ components, with a
 clear maximum around $13$ components. This number is slightly higher than the features that are immediately obvious to the eye 
 in the burst itself, but may in part be due to some features being superpositions of spikes. 
 
+In Figure \ref{fig:lcpanel}, we show a grid of light curves with random draws from the posterior distribution of the model for each burst displayed. We choose a wide range
+of peak count rates from very weak bursts to the brightest examples in our sample, as well as light curves that vary strongly in complexity, from light curves with only one
+ or two peaks to examples with many distinct features. In general, the model will pick out the brightest features and model each of them with a single spike, or a superposition of 
+ spikes if the features shows complex structure or a broad peak (the latter are not well matched to our simple exponential model shape). While brighter bursts preferentially have
+ models with more model spikes than weaker ones (Figure \ref{fig:lcpanel}, left column), the number of spikes for a given burst as well as spike parameters are very well constrained for high signal-to-noise ratios. 
+ For the large majority of low-count rate bursts (Figure \ref{fig:lcpanel}, right column), the model is nevertheless well constrained to few model components per light curve. 
+ The sole exception are the very weakest bursts, with very little emission above the sky background.
+ In this case, the model has no obvious features to pick out, and instead fits a large number of very-low amplitude spikes at random positions in the light curve (see Figure \ref{fig:lcpanel},
+ last row, left panel). 
+ 
 
 \section{Results}
 \label{ch6:results}

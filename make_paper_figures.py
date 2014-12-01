@@ -16,8 +16,8 @@ import matplotlib.cm as cm
 import scipy.ndimage
 
 rc("font", size=24, family="serif", serif="Computer Sans")
+rc("axes", titlesize=20, labelsize=20)
 rc("text", usetex=True)
-
 
 
 def example_word():
@@ -214,6 +214,7 @@ def make_lightcurve_grid():
     low_fluence, mid_fluence, high_fluence = [], [], []
     for f in files:
         data = np.loadtxt(f)
+        max_cr = np.max((data[:,1]/0.0005)/1.e4)
         fluence = np.sum(data[:,1])
         samplefile = glob.glob(f[:18] + "*posterior_sample.txt")[0]
         sample = np.atleast_2d(np.loadtxt(samplefile))
@@ -227,9 +228,9 @@ def make_lightcurve_grid():
         bid = f.split("_")[0]
         bst = f.split("_")[1]
         plt.title("ObsID: %s, t_st = %s, nbursts = %i, fluence =%i"%(bid, bst, np.mean(nbursts), fluence))
-        if fluence < 1000:
+        if max_cr < 3.:
             tag = "lf"
-        elif 1000. <= fluence <= 10000.0:
+        elif 3. <= max_cr <= 8.:
             tag = "mf"
         else:
             tag = "hf"
@@ -237,18 +238,97 @@ def make_lightcurve_grid():
         plt.close()
 
     
-    plot files = [["090122044_+288.53", "090122037a_+146.71", "090122104_+164.55"],
-                  ["090122052_-024.53", "090122037a_+143.09", "090122283_+131.84"],
-                  ["090122037a_+180.67", "090122044_+031.42", "090122187_+064.99"],
-                  ["090222540_-000.15", "1090122194_+058.83", "090122173_+241.34"],
-                  ["090122052_+237.81", "090122037a_+142.46", "090122187_+292.95"]]
+    #plot_files = [["090122044_+288.53", "090122037a_+146.71", "090122104_+164.55"],
+    #              ["090122052_-024.53", "090122037a_+143.09", "090122283_+131.84"],
+    #              ["090122037a_+180.67", "090122044_+031.42", "090122187_+064.99"],
+    #              ["090222540_-000.15", "090122194_+058.83", "090122173_+241.34"],
+    #              ["090122052_+237.81", "090122037a_+142.46", "090122187_+292.95"]]
 
-    plot_nbursts = [[1, 2, 3],
-                    [4, 5, 5],
-                    [8, 10, 8],
-                    [15, 13 ,13],
-                    [48, 33, 13]]
+    #plot_nbursts = [[1, 2, 3],
+    #                [4, 5, 5],
+    #                [8, 10, 8],
+    #                [15, 13 ,13],
+    #                [48, 33, 13]]
 
+
+    ### Picking bursts by maximum count rate
+    ##
+    ## 1,1: 081003377a, t_st = -000.048, nbursts = 1, fluence =1723
+    ## 1,2: 090122037a, t_st = +143.096, nbursts = 5, fluence =1502
+    ## 1,3: 090122037a, t_st = +155.722, nbursts = 6, fluence =1154
+    ## 1,5: 090122037a, t_st = +142.468, nbursts = 33, fluence =1210
+ 
+    ## LF: 137 bursts, 20 > 10 mean spikes, much higher values!
+
+    ## 2,1: 081004050, t_st = -000.023, nbursts = 1, fluence =1057
+    ## 2,2: 090202862, t_st = -000.048, nbursts = 5, fluence =3143
+    ## 2,3: 090122052, t_st = +185.790, nbursts = 9, fluence =2409
+    ## 2.4: 090122283, t_st = +145.752, nbursts = 13, fluence =7660 
+
+    ## MF:
+    ## only 5 out of 131 bursts with > 10 mean spikes
+
+    ## 3,1: 090122104, t_st = -000.013, nbursts = 2, fluence =2446
+    ## 3,2: 090210941, t_st = -000.032, nbursts = 5, fluence =2315
+    ## 3,3: 090129588, t_st = +000.069, nbursts = 9, fluence =6519
+    ## 3,5: 090122194, t_st = +058.836, nbursts = 13, fluence =4212
+
+    ## 11 our of 63 bursts > 10, but none above 15 --> well constrained
+
+    plot_files = [["081003377a_-000.04", "081004050_-000.02", "090122104_-000.013"],
+                  ["090122037a_+143.09", "090202862_-000.04", "090210941_-000.032"],
+                  ["090122037a_+155.72", "090122052_+185.79", "090129588_+000.06"],
+                  ["090122037a_+142.46", "090122283_+145.75", "090122194_+058.83"]]
+
+    plot_nbursts = [[1,1,2],
+                    [5,5,5],
+                    [6,9,9],
+                    [33,13,13]]
+
+
+    fig = plt.figure(figsize=(18, 20)) 
+    plt.subplots_adjust(top=0.98, bottom=0.05, left=0.05, right=0.98, wspace=0.15, hspace=0.15)
+    sns.set_style("white")
+    ax = fig.add_subplot(111)
+    # Turn off axis lines and ticks of the big subplot
+    ax.spines['top'].set_color('none')
+    ax.spines['bottom'].set_color('none')
+    ax.spines['left'].set_color('none')
+    ax.spines['right'].set_color('none')
+    ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+    sns.despine()
+
+    sns.set_style("darkgrid")
+    rc("font", size=20, family="serif", serif="Computer Sans")
+    rc("axes", titlesize=16, labelsize=20)
+    rc("text", usetex=True) 
+    plt.subplots_adjust(top=0.98, bottom=0.05, left=0.05, right=0.98, wspace=0.15, hspace=0.15)
+
+    for i in range(4):
+        for j in range(3):
+            print("I am on file: " + plot_files[i][j])
+            ax2 = fig.add_subplot(4,3,(i*3)+j+1)
+            dfile = glob.glob(plot_files[i][j] + "*_data.dat")[0]
+            data = np.loadtxt(dfile)
+            ax2.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2)
+            samplefile = glob.glob(plot_files[i][j] + "*posterior_sample.txt")[0]
+            sample = np.atleast_2d(np.loadtxt(samplefile))
+            lcs = (sample[:,-data.shape[0]:]/0.0005)/1.e4
+            sampleinds = np.random.randint(0,len(lcs), 10)
+            for s in sampleinds:
+                ax2.plot(data[:,0]-data[0,0],lcs[s, :], lw=1)
+            bid = plot_files[i][j].split("_")[0]
+            bst = plot_files[i][j].split("_")[1] 
+            ax2.set_title("ObsID: %s, $t_\mathrm{start} = %.3f$s, $\mu_{nspikes} = %i$"%(bid, np.float(bst), plot_nbursts[i][j]),fontsize=16)
+            ax2.set_xlim([0.001, data[-1,0]-data[0,0]])
+            ax2.tick_params(axis='both', which='major', labelsize=16)
+
+    ax.set_xlabel("Time since burst start [s]", fontsize=20, labelpad=15)
+    ax.set_ylabel("Count rate [$10^{4}$ counts/s]", fontsize=20, labelpad=15)
+    #plt.draw()
+    #plt.tight_layout()
+    plt.savefig("f4b.pdf", format="pdf")
+    plt.close()
 
 
 

@@ -1554,7 +1554,7 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
             axis([np.log10(0.0005/10.0), np.log10(2.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
 
 
-        ax1.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$", fontsize=24)
+        ax1.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$ [s]", fontsize=24)
         ax1.set_ylabel("N($\log_{10}{(\mathrm{Duration})}$)", fontsize=24)
         #ax.set_title("Differential Duration Distribution", fontsize=24)
 
@@ -1580,6 +1580,7 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
 
         else:
             for i,a in enumerate(amp_sample):
+                print("dt: " + str(dt))
                 a = np.array(a)/dt
                 min_a.append(np.min(np.log10(a)))
                 max_a.append(np.max(np.log10(a)))
@@ -1595,7 +1596,7 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
         ax2.set_xlim([-2., 3.])
         ax2.set_ylim(np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all]))
             #axis([-2.,3.,  np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
-        ax2.set_xlabel(r"$\log_{10}{(\mathrm{Amplitude})}$", fontsize=24)
+        ax2.set_xlabel(r"$\log_{10}{(\mathrm{Amplitude})}$ [$\mathrm{counts}/\mathrm{s}$]", fontsize=24)
         ax2.set_ylabel("N($\log_{10}{(\mathrm{Amplitude})}$)", fontsize=24)
         #ax1.set_title("Differential Amplitude Distribution", fontsize=24)
 
@@ -1637,7 +1638,7 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
 
         ax3.set_xlim([-14, -7])
         ax3.set_ylim(np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all]))
-        ax3.set_xlabel(r"$\log_{10}{(\mathrm{Fluence})}$", fontsize=24)
+        ax3.set_xlabel(r"$\log_{10}{(\mathrm{Fluence})}$ [erg/cm$^2$]", fontsize=24)
         ax3.set_ylabel("N($\log_{10}{(\mathrm{Fluence})}$)", fontsize=24)
         #ax2.set_title("Differential Fluence Distribution", fontsize=24)
 
@@ -2049,7 +2050,9 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     ### extract parameters from file
     sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile, prior=prior, efile=efile)
 
-    #print("filter_weak " + str(filter_weak))
+    
+    print("filter_weak " + str(filter_weak))
+    print("sample_dict.keys: " + str(sample_dict.keys()))
 
     ### I need the parameters, the number of components, and the background parameter
     pars_all = sample_dict["parameters"]
@@ -2065,7 +2068,7 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
     else:
         bkg_all = np.ones(len(nbursts_all))*bkg
 
-    hyper_all = [sample_dict["hmean_amplitude"], sample_dict["hmean_risetime"], sample_dict["hlower_skew"], sample_dict["hupper_skew"]]
+    hyper_all = [sample_dict["hmean_amplitude"], sample_dict["hmean_rise"], sample_dict["hlower_skew"], sample_dict["hupper_skew"]]
     parameters_all = []
     for pars,nbursts,bkg in zip(pars_all, nbursts_all, bkg_all):
 

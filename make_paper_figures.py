@@ -375,10 +375,10 @@ def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100)
 
     ### parameters both filtered for low-amplitude bursts (with amp < bkg) and unfiltered
     if par_unfiltered is None and par_filtered is None:
-        par_filtered, bids_filtered = \
+        par_filtered, bids_filtered, hyper_filtered = \
             dnest_sample.extract_sample(datadir=datadir,nsims=nsims, filter_weak=True, trigfile="sgr1550_ttrig.dat")
 
-        par_unfiltered, bids_unfiltered = \
+        par_unfiltered, bids_unfiltered, hyper_filered = \
             dnest_sample.extract_sample(datadir=datadir, nsims=nsims, filter_weak=False, trigfile="sgr1550_ttrig.dat")
 
 
@@ -457,7 +457,7 @@ def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100)
 def waitingtime_plot(sample=None, bids=None, datadir="./", nsims=100, mean=True, filtered=True):
 
     if sample is None and bids is None:
-        sample,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
+        sample,bids,hyper = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
                                                           filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
 
 
@@ -471,91 +471,10 @@ def waitingtime_plot(sample=None, bids=None, datadir="./", nsims=100, mean=True,
 def differential_plots(sample=None, datadir="./", nsims=100, mean=True, filtered=True, froot="sgr1550"):
 
     if sample is None:
-        sample,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
+        sample,bids,hyper = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
                                                           filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
 
     dnest_sample.differential_distributions(sample, nsims=100, mean=True, froot=froot)
-
-    return
-
-
-def priors_nspikes(par_exp=None, par_logn=None, par_gauss=None, datadir="./", nsims=100, filtered=False):
-
-    if par_exp is None:
-        par_exp,bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
-                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
-
-    if par_logn is None:
-        par_logn, bids_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
-                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
-
-#    if par_gauss is None:
-#        par_gauss, bids_gauss = dnest_sample.extract_sample(datadir=datadir+"gaussprior/", nsims=nsims,
-#                                                          filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
-
-
-    nspikes_exp, nspikes_logn, nspikes_gauss= [], [], []
-    for i in xrange(nsims):
-        sample_exp = par_exp[:,i]
-        sample_logn = par_logn[:,i]
-#        sample_gauss = par_gauss[:,i]
-
-
-
-        nspikes_e= np.array([len(s.all) for s in sample_exp])
-        nspikes_l = np.array([len(s.all) for s in sample_logn])
-#        nspikes_g = np.array([len(s.all) for s in sample_gauss])
-
-        nspikes_exp.append(nspikes_e)
-        nspikes_logn.append(nspikes_l)
-#        nspikes_gauss.append(nspikes_g)
-
-
-
-    fig = figure(figsize=(12,9))
-    ax = fig.add_subplot(111)
-    ne_all, nl_all, ng_all = [], [], []
-    #for i,(e,l,g) in enumerate(zip(nspikes_exp, nspikes_logn, nspikes_gauss)):
-    for i,(e,l) in enumerate(zip(nspikes_exp, nspikes_logn)):
-
-        ne, ebins = np.histogram(e, bins=50, range=[1,50], normed=True)
-        ne_all.append(ne)
-
-        nl, lbins = np.histogram(l, bins=50, range=[1,50], normed=True)
-        nl_all.append(nl)
-
-#        ng, gbins = np.histogram(g, bins=50, range=[1,50], normed=True)
-#        ng_all.append(ng)
-
-
-    #print("nu shape " + str(np.shape(nu_all)))
-    ne_mean = np.mean(np.array(ne_all), axis=0)
-    nl_mean = np.mean(np.array(nl_all), axis=0)
-    ng_mean = np.mean(np.array(ng_all), axis=0)
-
-
-    ax.bar(ebins[:-1]+0.5, ne_mean, ebins[1]-ebins[0]+0.005, color='blue',
-           alpha=0.6, linewidth=0, align="center", label="exponential prior")
-
-    ax.bar(lbins[:-1]+0.5, nl_mean, lbins[1]-lbins[0]+0.005, color='limegreen',
-           alpha=0.6, linewidth=0, align="center", label="log-normal prior")
-
-#    ax.bar(gbins[:-1]+0.5, ng_mean, gbins[1]-gbins[0]+0.005, color='limegreen',
-#           alpha=0.6, linewidth=0, align="center", label="normal prior")
-
-    ng_mean = [0.0]
-    axis([1,30, 0.0, np.max([np.max(ne_mean), np.max(nl_mean), np.max(ng_mean)])])
-
-    xlabel("Number of components", fontsize=24)
-    ylabel("Number of bursts", fontsize=24)
-    #title("distribution of the number of components per burst")
-    legend(loc="upper right", prop={"size":24})
-    #savefig("sgr1550_nspikes.png", format="png")
-    #close()
-    draw()
-    plt.tight_layout()
-    savefig("f9.pdf", format="pdf")
-    close()
 
     return
 
@@ -567,7 +486,7 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
     #                                                      filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
 
     if par_logn is None:
-        par_logn, bids_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
+        par_logn, bids_logn, hyper_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
                                                           filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
 
     #if par_gauss is None:
@@ -587,17 +506,17 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
     #db_gauss, nd_gauss, ab_gauss, na_gauss, fb_gauss, nf_gauss = \
     #    dnest_sample.differential_distributions(sample=par_gauss,  nsims=nsims, makeplot=False,
     #                                            dt=0.0005, mean=True, normed=True)
-
+    current_palette = sns.color_palette()
     fig = figure(figsize=(24,8))
     subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
 
     ### first subplot: differential duration distribution
     ax = fig.add_subplot(131)
 
-    ax.bar(db_exp[:-1]+0.5, nd_exp, db_exp[1]-db_exp[0], color='blue',
+    ax.bar(db_exp[:-1]+0.5, nd_exp, db_exp[1]-db_exp[0], color = current_palette[0], 
                alpha=0.7, linewidth=0, align="center", label="exponential prior")
 
-    ax.bar(db_logn[:-1]+0.5, nd_logn, db_logn[1]-db_logn[0], color='limegreen',
+    ax.bar(db_logn[:-1]+0.5, nd_logn, db_logn[1]-db_logn[0], color = current_palette[1],
                alpha=0.7, linewidth=0, align="center", label="log-normal prior")
 
     #ax.bar(db_gauss[:-1]+0.5, nd_gauss, db_gauss[1]-db_gauss[0], color='limegreen',
@@ -606,7 +525,7 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
     axis([-4.0, np.log10(30.0), 0.0, np.max([np.max(nd_exp), np.max(nd_logn)])+10.0])
     legend(loc="upper left", prop={"size":20})
 
-    ax.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$", fontsize=24)
+    ax.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$ [s]", fontsize=24)
     ax.set_ylabel("N($\log_{10}{\mathrm{Duration}}$)", fontsize=24)
     #ax.set_title("Differential Duration Distribution", fontsize=24)
 
@@ -615,10 +534,10 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
 
     min_a, max_a = [], []
 
-    ax1.bar(ab_exp[:-1]+0.5, na_exp, ab_exp[1]-ab_exp[0], color='blue',
+    ax1.bar(ab_exp[:-1]+0.5, na_exp, ab_exp[1]-ab_exp[0], color = current_palette[0],
                alpha=0.6, linewidth=0, align="center", label="exponential prior")
 
-    ax1.bar(ab_logn[:-1]+0.5, na_logn, ab_logn[1]-ab_logn[0], color='limegreen',
+    ax1.bar(ab_logn[:-1]+0.5, na_logn, ab_logn[1]-ab_logn[0], color = current_palette[1],
                alpha=0.6, linewidth=0, align="center", label="log-normal prior")
 
     #ax1.bar(ab_gauss[:-1]+0.5, na_gauss, ab_gauss[1]-ab_gauss[0], color='limegreen',
@@ -626,24 +545,24 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
 
     axis([np.log10(0.001), 3.0, 0.0, np.max([np.max(na_exp), np.max(na_logn)])+10.0])
 
-    ax1.set_xlabel(r"$\log_{10}{(\mathrm{Amplitude})}$", fontsize=24)
+    ax1.set_xlabel(r"$\log_{10}{(\mathrm{Amplitude})}$ [counts/s]", fontsize=24)
     ax1.set_ylabel("N($\log_{10}{\mathrm{Amplitude}}$)", fontsize=24)
     #ax1.set_title("Differential Amplitude Distribution", fontsize=24)
 
     ax2 = fig.add_subplot(133)
-    ax2.bar(fb_exp[:-1]+0.5, nf_exp, fb_exp[1]-fb_exp[0], color='blue',
+    ax2.bar(fb_exp[:-1]+0.5, nf_exp, fb_exp[1]-fb_exp[0], color= current_palette[0],
                alpha=0.6, linewidth=0, align="center", label="exponential prior")
 
-    ax2.bar(fb_logn[:-1]+0.5, nf_logn, fb_logn[1]-fb_logn[0], color='limegreen',
+    ax2.bar(fb_logn[:-1]+0.5, nf_logn, fb_logn[1]-fb_logn[0], color = current_palette[1],
                alpha=0.6, linewidth=0, align="center", label="log-normal prior")
 
     #ax2.bar(fb_gauss[:-1]+0.5, nf_gauss, fb_gauss[1]-fb_gauss[0], color='limegreen',
     #           alpha=0.7, linewidth=0, align="center", label="normal prior")
 
 
-    axis([-14.0, -5.0, 0.0, np.max([np.max(nf_exp), np.max(nf_logn)])+10.0])
-
-    ax2.set_xlabel(r"$\log_{10}{(\mathrm{Fluence})}$", fontsize=24)
+    axis([-13.9, -4.9, 0.0, np.max([np.max(nf_exp), np.max(nf_logn)])+10.0])
+    ax2.set_xticks(np.arange(-13.0, -4.0, 2.0))
+    ax2.set_xlabel(r"$\log_{10}{(\mathrm{Fluence})}$ [erg/cm$^2$]", fontsize=24)
     ax2.set_ylabel("N($\log_{10}{\mathrm{Fluence}}$)", fontsize=24)
     #ax2.set_title("Differential Fluence Distribution", fontsize=24)
 
@@ -672,7 +591,7 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
 
 
     if sample is None:
-        parameters_red,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
+        parameters_red,bids, hyper = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
                                                           filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
     else:
         parameters_red = sample
@@ -855,7 +774,7 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
 
 
     if sample is None:
-        parameters_red,bids = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
+        parameters_red,bids,hyper = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
                                                           filter_weak=filtered, trigfile="sgr1550_ttrig.dat")
     else:
         parameters_red = sample
@@ -1047,17 +966,17 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
 def all_dnest_plots(datadir="./", nsims=100, froot="sgr1550"):
 
 
-    par_filtered, bids_filtered = \
+    par_filtered, bids_filtered, hyper_filtered = \
         dnest_sample.extract_sample(datadir=datadir, nsims=nsims, filter_weak=True, trigfile="%s_ttrig.dat"%froot)
 
-    par_unfiltered, bids_unfiltered = \
+    par_unfiltered, bids_unfiltered, hyper_unfiltered = \
         dnest_sample.extract_sample(datadir=datadir, nsims=nsims, filter_weak=False, trigfile="%s_ttrig.dat"%froot)
 
 
 
-    par_exp, bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
+    par_exp, bids_exp, hyper_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
                                                       filter_weak=False, trigfile="%s_ttrig.dat"%froot)
-    par_logn, bids_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
+    par_logn, bids_logn, hyper_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
                                                       filter_weak=False, trigfile="%s_ttrig.dat"%froot)
 
 

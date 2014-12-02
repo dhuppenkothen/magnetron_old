@@ -460,8 +460,8 @@ the start and end times of the burst light curve, $t_{\mathrm{start}} < t_n < t_
 For the amplitude $A_n$ and the rise timescale $\tau_n$, we choose exponential priors \citep{skilling1998}:
 
 \begin{eqnarray}
-p(A \given \mu_A) &\propto& e^{A/\mu_A} \\
-p(\tau \given \mu_{\tau}) & \propto & e^{(\tau - \tau_{\mathrm{min}})/\mu_{\tau}}, ~~\tau>\tau_{\mathrm{min}},
+    p(A \given \mu_A) &=& {\textstyle \frac{1}{\mu_A}}e^{-A/\mu_A} \\
+    p(\tau \given \mu_{\tau}) &=& {\textstyle \frac{1}{\mu_\tau}}e^{-(\tau - \tau_{\mathrm{min}})/\mu_{\tau}}, ~~\tau>\tau_{\mathrm{min}},
 \label{eqn:exponential_prior}
 \end{eqnarray}
 

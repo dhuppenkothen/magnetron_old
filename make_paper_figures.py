@@ -179,30 +179,33 @@ def plot_example_bursts():
 
 def plot_example_dnest_lightcurve():
 
-    data = loadtxt("data/090122173_+241.347_all_data.dat")
+    data = loadtxt("090122173_+241.347_all_data.dat")
     fig = figure(figsize=(24,9))
-    subplots_adjust(top=0.9, bottom=0.1, left=0.06, right=0.97, wspace=0.1, hspace=0.1)
+    subplots_adjust(top=0.9, bottom=0.1, left=0.06, right=0.97, wspace=0.15, hspace=0.1)
 
     ax = fig.add_subplot(121)
-    plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2, color="black", linestyle="steps-mid")
-    sample = atleast_2d(loadtxt("data/090122173_+241.347_posterior_sample.txt"))
+    ax.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2, color="black", linestyle="steps-mid")
+    sample = atleast_2d(loadtxt("090122173_+241.347_posterior_sample.txt"))
 
     print(sample.shape)
     ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
     for i in ind:
-        plot(data[:,0]-data[0,0], (sample[i,-data.shape[0]:]/0.0005)/1.e4, lw=1)
-    xlabel("Time since burst start [s]", fontsize=24)
-    ylabel(r"Count rate [$10^{4} \, \mathrm{counts} \, \mathrm{s}^{-1}$]", fontsize=24)
+        ax.plot(data[:,0]-data[0,0], (sample[i,-data.shape[0]:]/0.0005)/1.e4, lw=1)
+    ax.set_ylim([0.01, 9.])
+    ax.set_xlim([0.0,0.8])
+    ax.set_xlabel("Time since burst start [s]", fontsize=24)
+    ax.set_ylabel(r"Count rate [$10^{4} \, \mathrm{counts} \, \mathrm{s}^{-1}$]", fontsize=24, labelpad=-1)
 
 
-    ax = fig.add_subplot(122)
+    ax2 = fig.add_subplot(122)
     nbursts = sample[:, 7]
 
-    hist(nbursts, bins=30, range=[np.min(nbursts), np.max(nbursts)], histtype='stepfilled')
-    xlabel("Number of spikes per burst", fontsize=24)
-    ylabel("N(samples)", fontsize=24)
-    savefig("documents/example_dnest_result.pdf", format="pdf")
-    close()
+    ax2.hist(nbursts, bins=30, range=[np.min(nbursts), np.max(nbursts)], histtype='stepfilled')
+    ax2.set_ylim([0.1, 25.])
+    ax2.set_xlabel("Number of spikes per burst", fontsize=24)
+    ax2.set_ylabel("N(samples)", fontsize=24, labelpad=-1)
+    plt.savefig("example_dnest_result.pdf", format="pdf")
+    plt.close()
 
     return
 

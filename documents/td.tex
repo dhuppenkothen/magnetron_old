@@ -62,7 +62,6 @@
 
 
 \begin{abstract}
-%BJB: We should leave this one in for @OverheardOnAstroph:
 %Magnetars are whatever and people need whatever.
 %Magnetars produce bursts,
 %  each of which appears to be composed of a set of one or more spikes.
@@ -102,7 +101,7 @@ With current and upcoming telescopes monitoring the sky regularly across the ent
 new discoveries are being made.  A large fraction of astrophysical sources are known to be variable. The timescales span more than five orders of magnitude: fast oscillations in 
 X-ray binaries (XRBs) change over milliseconds \citep[e.g.][]{xrb_khzqpos}, while red giants have been observed to change over decades or even centuries \citep[e.g.][]{dasch_giants}. 
 Variability studies have the potential to unravel fundamental physical processes: studying variability in XRBs can help us unravel accretion processes and constrain theories of viscosity and strong gravity. 
-Similarly, giant flares from magnetars have the potential to map the neutron star interior via neutron star seismology \citep[e.g.][]{steiner2009}. 
+Similarly, giant flares from magnetars have the potential to map the neutron star interior via neutron star seismology \citep[e.g.\ ][]{steiner2009}. 
 
 \begin{figure*}[htbp]
 \begin{center}
@@ -300,7 +299,7 @@ We use a Poisson likelihood to describe the data,
 
 \begin{eqnarray}
 \likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \}) & = & p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_n \}, H) \\ \nonumber
- &= & \prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }} \; ,
+ &= & \prod\limits_{k=0}^{K}{ \frac{e^{-\lambda}\, \lambda^{y_k} }{y_k! }} \; ,
 \end{eqnarray}
 
 which only depends on the parameters of the individual model components, $\{\bm{\theta}_n\}$. In general, the conditional priors for the model 
@@ -309,20 +308,20 @@ overall prior for this model is
 
 % BJB "Given H" was missing from some of these terms
 \begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N | H)p(\bm{\alpha}\given N, H)p(\{\bm{\theta}_n\}\given \bm{\alpha}, N, H)  .
+p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N | H)\,p(\bm{\alpha}\given N, H)\,p(\{\bm{\theta}_n\}\given \bm{\alpha}, N, H)  .
 \end{equation}
 Under the assumption that $\bm{\alpha}$ and $N$ are independent, and that the conditional priors of the individual model components are
 independent and identically distributed, we can re-write this equation as:
 
 % BJB: Fixed mistake in this equation that was caused by me initially (from that RJObject document). Sorry
 \begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N|H)p(\bm{\alpha}|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \; .
+p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N|H)\, p(\bm{\alpha}|H)\, \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \; .
 \end{equation}
 Thus, the posterior probability distribution becomes
 
 % BJB: Brackets and H again
 \begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_n \}  \given \bm{\counts}, H) =  \frac{\prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }} p(N|H)p(\bm{\alpha}|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha})}{p(\bm{\counts} | H)}
+p(N, \bm{\alpha}, \{\bm{\theta}_n \}  \given \bm{\counts}, H) =  \frac{\prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }}\, p(N|H)\, p(\bm{\alpha}|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha})}{p(\bm{\counts} | H)}
 \end{equation}
 
 where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisation constant in the usual way: 
@@ -331,7 +330,7 @@ where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisati
 % BJB: Also, you can't integrate over N as it's discrete :) It's a summation
 \begin{eqnarray}
 p(\bm{\counts} \given H) & = & \sum_{n=0}^{N} \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
-&& p(N\given H)p(\bm{\alpha} \given H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) d\bm{\alpha} d\bm{\theta}_1 ... d\bm{\theta}_N \; .
+&& p(N\given H)\, p(\bm{\alpha} \given H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \dd\bm{\alpha}\, \dd\bm{\theta}_1 \, ...\, \dd\bm{\theta}_N \; .
 \label{eqn:marginal}
 \end{eqnarray}
 
@@ -363,7 +362,7 @@ Instead of recording the end point of an MCMC chain as the new particle, the lik
  two regions, and the particle may escape into the lower-likelihood region, where it can explore more freely. Once enough samples are accumulated,
  one again computes the $1-e^{-1}$ quantile, and constructs a new likelihood contour. This process is repeated, and as in the classical Nested Sampling
  approach, the population contracts towards regions of high likelihood, but it will do so even for complex probability distributions subject to multi-modality.
- Details of an implementation of DNS for hierarchical models with an unknown number of model components can be found in \citet{brewer2014}.
+ Details of an implementation of DNS for hierarchical models with an unknown number of model components can be found in \citet{brewer2013} and \citet{brewer2014}.
  
 % BJB: Techically the posterior isn't a PDF here because N is discrete.
 DNS as implemented in {\it DNest3}\footnote{the code is available under the GNU public license at \url{https://github.com/eggplantbren/DNest3}} can return both an estimate for the marginal likelihood,
@@ -873,7 +872,7 @@ Simulations of cellular automaton models \citep{aschwanden2012a} and calculation
 suggest that the evolution of the avalanche radius $r(t)$ follows a classical diffusion-type relationship after onset of the instability $t_0$, 
 
 \begin{equation}
-r(t) = \kappa(t- t_0)^{\beta/2}\; ,
+r(t) = \kappa\,(t- t_0)^{\beta/2}\; ,
 \end{equation}
 
 with a diffusion coefficient $\kappa$ and a diffusive spreading coefficient $\beta$.
@@ -1111,7 +1110,9 @@ value $\Delta T\sim10^{-2}\,\mathrm{s}$ roughly corresponds to a height of $r_{\
 If we distribute reconnection events in the magnetosphere in the region [$r^{\rm min}=10^{-4}c$, $r^{\rm max}=10^{-1}c$] such that the number 
 of events per radius remains constant, we find the waiting time distribution shown in Figure~\ref{fig:wtmodels}, lower left. Here, we have distributed 
 weak points uniformly in a shell of inner radius $r^{\rm min}$ and outer radius $r^{\rm max}$ around the star, and assumed that propagation of 
-energy and information to other weak points must proceed through this shell. The waiting time distribution expected from the simple toy model is 
+energy and information to other weak points must proceed through this shell, or, for simplicity, through the star if the shortest distance between
+two failure points intersects the volume occupied by the neutron star.. 
+The waiting time distribution expected from the simple toy model is 
 in remarkably good qualitative agreement with the observed distribution (compare Figure \ref{fig:waitingtimes}): it peaks at roughly at the right 
 waiting time, and has an extended tail towards smaller waiting times. This tail is more pronounced in the toy model compared to the observations, 
 but this could potentially be due to observational effects (such as the low-amplitude events that we cannot constrain reliably from the data, and 

@@ -133,12 +133,12 @@ def plot_example_bursts():
 
     """
 
-    filenames = ["090122218_+048.206_data.dat", "090122194_+058.836_data.dat", "090122173_+241.347_data.dat",
-                 "090122283_+131.840_data.dat", "090122283_+247.198_data.dat", "090122044_-000.043_data.dat"]
+    filenames = ["090122218_+048.206_all_data.dat", "090122194_+058.836_all_data.dat", "090122173_+241.347_all_data.dat",
+                 "090122283_+131.840_all_data.dat", "090122283_+247.198_all_data.dat", "090122044_-000.043_all_data.dat"]
 
     alltimes, allcounts, allbintimes, allbincountrate= [], [], [], []
     for f in filenames:
-        times, counts = burstmodel.read_gbm_lightcurves("data/%s"%f)
+        times, counts = burstmodel.read_gbm_lightcurves(f)
         countrate = np.array(counts)/(times[1] - times[0])
         bintimes, bincountrate = burstmodel.rebin_lightcurve(times, countrate, 10)
         bintimes = bintimes - bintimes[0]
@@ -148,9 +148,11 @@ def plot_example_bursts():
         allbintimes.append(bintimes)
         allbincountrate.append(bincountrate)
 
-    fig = figure(figsize=(30,18))
-    subplots_adjust(top=0.95, bottom=0.08, left=0.06, right=0.97, wspace=0.1, hspace=0.2)
-    ax = fig.add_subplot(111)    # The big subplot
+    fig = figure(figsize=(25,12))
+    subplots_adjust(top=0.95, bottom=0.08, left=0.08, right=0.97, wspace=0.1, hspace=0.2)
+
+    sns.set_style("white")
+    ax = fig.add_subplot(111)
 
     # Turn off axis lines and ticks of the big subplot
     ax.spines['top'].set_color('none')
@@ -158,20 +160,29 @@ def plot_example_bursts():
     ax.spines['left'].set_color('none')
     ax.spines['right'].set_color('none')
     ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+    sns.despine()
+
+    sns.set_style("darkgrid")
+
+    rc("font", size=20, family="serif", serif="Computer Sans")
+    rc("axes", titlesize=16, labelsize=20)
+    rc("text", usetex=True)
 
 
     for i in range(6):
         ax1 = fig.add_subplot(2,3,i)
         ax1.plot(allbintimes[i], allbincountrate[i]/10000.0, lw=2, color="black", linestyle='steps-mid')
-        axis([allbintimes[i][0], allbintimes[i][-1], 0.0, 16.0])
         f = filenames[i].split("_")
+        ax1.xaxis.set_ticks(np.arange(0.0, allbintimes[i][-1], 0.1))
+        axis([allbintimes[i][0], allbintimes[i][-1], 0.1, 16.0])
+ 
         #xlabel("Time since trigger [s]")
         #ylabel(r"Count rate [$10^{4} \, \mathrm{cts}/\mathrm{s}$]")
-        title("ObsID " + f[0] + r", $t_{\mathrm{start}} = $" + str(float(f[1])))
+        ax1.set_title("ObsID " + f[0] + r", $t_{\mathrm{start}} = $" + str(float(f[1])), fontsize=20)
 
-    ax.set_xlabel("Time since burst start [s]", fontsize=34)
-    ax.set_ylabel(r"Count rate [$10^{4} \, \mathrm{counts} \; \mathrm{s}^{-1}$]", fontsize=34)
-    savefig("documents/example_bursts.pdf", format='pdf')
+    ax.set_xlabel("Time since burst start [s]", fontsize=24)
+    ax.set_ylabel(r"Count rate [$10^{4} \, \mathrm{counts} \; \mathrm{s}^{-1}$]", fontsize=24)
+    savefig("example_bursts.pdf", format='pdf')
     plt.close()
 
     return
@@ -180,7 +191,7 @@ def plot_example_bursts():
 def plot_example_dnest_lightcurve():
 
     data = loadtxt("090122173_+241.347_all_data.dat")
-    fig = figure(figsize=(24,9))
+    fig = figure(figsize=(20,8))
     subplots_adjust(top=0.9, bottom=0.1, left=0.06, right=0.97, wspace=0.15, hspace=0.1)
 
     ax = fig.add_subplot(121)

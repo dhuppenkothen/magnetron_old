@@ -224,32 +224,32 @@ def plot_example_dnest_lightcurve():
 
 def make_lightcurve_grid():
  
-    files = glob.glob("*data.dat")
-    low_fluence, mid_fluence, high_fluence = [], [], []
-    for f in files:
-        data = np.loadtxt(f)
-        max_cr = np.max((data[:,1]/0.0005)/1.e4)
-        fluence = np.sum(data[:,1])
-        samplefile = glob.glob(f[:18] + "*posterior_sample.txt")[0]
-        sample = np.atleast_2d(np.loadtxt(samplefile))
-        nbursts = nbursts = sample[:, 7]
-        lcs = (sample[:,-data.shape[0]:]/0.0005)/1.e4
-        plt.figure(figsize=(12,6))
-        plt.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2)
-        sampleinds = np.random.randint(0,len(lcs), 10)
-        for s in sampleinds:
-            plt.plot(data[:,0]-data[0,0],lcs[s, :], lw=1)
-        bid = f.split("_")[0]
-        bst = f.split("_")[1]
-        plt.title("ObsID: %s, t_st = %s, nbursts = %i, fluence =%i"%(bid, bst, np.mean(nbursts), fluence))
-        if max_cr < 3.:
-            tag = "lf"
-        elif 3. <= max_cr <= 8.:
-            tag = "mf"
-        else:
-            tag = "hf"
-        plt.savefig(tag + "_" + bid + "_" + bst + "lcs.pdf", format="pdf")
-        plt.close()
+    #files = glob.glob("*data.dat")
+    #low_fluence, mid_fluence, high_fluence = [], [], []
+    #for f in files:
+    #    data = np.loadtxt(f)
+    #    max_cr = np.max((data[:,1]/0.0005)/1.e4)
+    #    fluence = np.sum(data[:,1])
+    #    samplefile = glob.glob(f[:18] + "*posterior_sample.txt")[0]
+    #    sample = np.atleast_2d(np.loadtxt(samplefile))
+    #    nbursts = nbursts = sample[:, 7]
+    #    lcs = (sample[:,-data.shape[0]:]/0.0005)/1.e4
+    #    plt.figure(figsize=(12,6))
+    #    plt.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2)
+    #    sampleinds = np.random.randint(0,len(lcs), 10)
+    #    for s in sampleinds:
+    #        plt.plot(data[:,0]-data[0,0],lcs[s, :], lw=1)
+    #    bid = f.split("_")[0]
+    #    bst = f.split("_")[1]
+    #    plt.title("ObsID: %s, t_st = %s, nbursts = %i, fluence =%i"%(bid, bst, np.mean(nbursts), fluence))
+    #    if max_cr < 3.:
+    #        tag = "lf"
+    #    elif 3. <= max_cr <= 8.:
+    #        tag = "mf"
+    #    else:
+    #        tag = "hf"
+    #    plt.savefig(tag + "_" + bid + "_" + bst + "lcs.pdf", format="pdf")
+    #    plt.close()
 
     
     #plot_files = [["090122044_+288.53", "090122037a_+146.71", "090122104_+164.55"],
@@ -324,7 +324,7 @@ def make_lightcurve_grid():
             ax2 = fig.add_subplot(4,3,(i*3)+j+1)
             dfile = glob.glob(plot_files[i][j] + "*_data.dat")[0]
             data = np.loadtxt(dfile)
-            ax2.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2)
+            ax2.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2, color="black")
             samplefile = glob.glob(plot_files[i][j] + "*posterior_sample.txt")[0]
             sample = np.atleast_2d(np.loadtxt(samplefile))
             lcs = (sample[:,-data.shape[0]:]/0.0005)/1.e4

@@ -274,8 +274,8 @@ For a light curve with $K$ bins with Poisson-distributed counts $\bm{\counts} = 
 % so can probably provide a good explanation if you think it's needed.
 where $\mean_{nk}$ is the mean count rate of the $n^{\mathrm{th}}$ model component in time bin $k$, 
 $\mean_{bg}$ is the background count rate of that bin,
-and the mean count rate $\mean_{nk}$ in a bin $k$ is defined as the integral over a functional form defining the shape of
-the model component $\word$ over the width of that time bin. The component $\word$ is a generic shape,
+and the count rate $\mean_{nk}$ in a bin $k$ with width $\Delta t$ is defined as the value of a functional form defining the shape of
+the model component $\word$ at the mid-point of that time bin. The component $\word$ is a generic shape,
 and can be modified by an amplitude parameter $A_n$ and a parameter setting the width $\tau_n$, in addition to
 parameters such as the time offset $t_n$ and intrinsic parameters further describing the component's shape.
 We will define a component model $\word$ for magnetar bursts in Section \ref{ch6:wordmodel} below, and
@@ -949,10 +949,9 @@ processes, with two different characteristic time scales, operate in producing t
 
 \subsection{Comparison with simple models of the burst process}
 As outlined in the Introduction, the mechanisms responsible for triggering magnetar bursts, and the associated emission processes,
- are still poorly understood. The basic picture, however, is as follows. Magnetic field decay in the stellar interior (via ambipolar diffusion, 
- the Hall effect, and Ohmic decay), leads to the build up of stress in the system. Stress may build up in the solid crust, which resists motion of the 
- magnetic field lines that are frozen into it. Alternatively, if the crust yields plastically, stress may build up in the external magnetosphere if the 
- prevailing plasma conditions permit. Bursts occur when this stress is released on a very rapid timescale, be that a crust rupture or a plasma instability. 
+ are still poorly understood. The basic picture, however, is as follows. Magnetic field evolution in the stellar interior (via ambipolar diffusion,  the Hall effect, and Ohmic decay, see also \citealt{goldreich1992}), leads to the build up of stress in the system. Stress may build up in the solid crust, which resists motion of the 
+ magnetic field lines that are frozen into it. Alternatively, if the crust yields plastically \citep{jones2003,levin2012}, stress may build up in the external magnetosphere if the 
+ prevailing plasma conditions permit \citep{beloborodov2014}. Bursts occur when this stress is released on a very rapid timescale, be that a crust rupture or a plasma instability. 
  Magneto-hydrodynamic instabilities in the core itself may also play a role.
 
 The stress release process leads to high energy X-ray and gamma-ray emission, which we observe as a magnetar burst. This emission may comprise 
@@ -993,7 +992,7 @@ v_A = 10^8 \mathrm{cm/s} \left(\frac{B}{10^{16} \mathrm{G}}\right) \left(\frac{1
 This yields timescales for transmission of information through the neutron star core via torsional Alfv\'en waves of $\lesssim 2R/v_A = 0.02 (R/$10 km) s.
  Note however that the value of the field strength $B$ in magnetar cores is highly uncertain, as is the appropriate value of the density $\rho$. In principle 
  only the charged component ($\sim$ 5--10\% of the core mass) should participate in Alfv\'en waves, reducing $\rho$, however there are mechanisms 
- associated with superfluidity and superconductivity that can couple the charged and neutral components. As such this value is also consistent with the 
+ associated with superfluidity and superconductivity that can couple the charged and neutral components \citep{vanhoven2008,andersson2009}. As such this value is also consistent with the 
  inter-spike timescale distribution. In Figure \ref{fig:wtmodels} (top panel panel), we show the expected distribution of waiting times for propagation through 
  the neutron star interior. 
 
@@ -1172,7 +1171,7 @@ with the emission coming as a consequence of that process; and (iii) magnetosphe
 and associated emission.
 
 We will first explore the crustal rupture model of \citet{thompson1995}. Within this picture, the small magnetar bursts are triggered by crustal 
-ruptures as the crust comes under stress for the decaying interior field. The high energy emission that follows comes from particle acceleration, 
+ruptures as the crust comes under stress from the evolving interior field. The high energy emission that follows comes from particle acceleration, 
 scattering and, they argue, a high likelihood of pair plasma fireball formation\footnote{\citet{heyl2005b} also discuss the crust rupture mechanism, 
 however in the scenario that they outline, energy is transported by fast MHD waves before forming a pair plasma fireball.}
 

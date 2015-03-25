@@ -9,7 +9,7 @@ authors
 - Brewer (Auckland)
 - Frean (Wellington)
 - Hogg (NYU)
-- **Huppenkothen** (Amsterdam)
+- **Huppenkothen** (NYU)
 - Murray (Edinburgh)
 
 license

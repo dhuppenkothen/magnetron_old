@@ -51,7 +51,7 @@
 \altaffiltext{1}{Anton Pannekoek Institute for Astronomy, University of
   Amsterdam, Postbus 94249, 1090 GE Amsterdam, the Netherlands}
   \altaffiltext{2}{Center for Data Science, New York University, 726 Broadway, 7th Floor, New York, NY 10003}
-  \altaffiltext{3}{Center for Cosmology and Particle Physics, Department of Physics, New York University, 4 Washington Place \#424, New York, NY 10003, USA}
+  \altaffiltext{3}{Center for Cosmology and Particle Physics, Department of Physics, New York University, 4 Washington Place, New York, NY 10003, USA}
   \altaffiltext{4}{E-mail: daniela.huppenkothen@nyu.edu}
   \altaffiltext{5}{Department of Statistics, The University of Auckland, Private Bag 92019, Auckland 1142, New Zealand}
 \altaffiltext{6}{School of Informatics, University of Edinburgh}
@@ -317,12 +317,14 @@ independent and identically distributed, we can re-write this equation as:
 \begin{equation}
 p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N|H)\, p(\bm{\alpha}|H)\, \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \; .
 \end{equation}
+
 Thus, the posterior probability distribution becomes
 
 % BJB: Brackets and H again
-\begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_n \}  \given \bm{\counts}, H) =  \frac{\prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }}\, p(N|H)\, p(\bm{\alpha}|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha})}{p(\bm{\counts} | H)}
-\end{equation}
+\begin{eqnarray}
+p(N, \bm{\alpha}, \{\bm{\theta}_n \}  \given \bm{\counts}, H) & \\\nonumber
+= &  \frac{\prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }}\, p(N|H)\, p(\bm{\alpha}|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha})}{p(\bm{\counts} | H)} 
+\end{eqnarray}
 
 where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisation constant in the usual way: 
 
@@ -576,9 +578,8 @@ that position. For the parameters we are interested in below, this is not necess
 uncertainty in the distribution of waiting times between spikes.
 
 The number of components (spikes) per burst (Figure \ref{fig:dnest_example}, right panel) is well-constrained for this burst: the posterior distribution is bounded, and all samples drawn
-from this distribution contain between $10$ and $20$ components, with a 
-clear maximum around $13$ components. This number is slightly higher than the features that are immediately obvious to the eye 
-in the burst itself, but may in part be due to some features being superpositions of spikes. 
+from this distribution contain between $10$ and $20$ components, with most of the posterior mass between $11$ and $16$ components. This range is slightly higher than the features that are immediately obvious to the eye 
+in the burst itself, but may in part be due to some visible features being superpositions of spikes. 
 
 In Figure \ref{fig:lcpanel}, we show a grid of light curves with random draws from the posterior distribution of the model for each burst displayed. We choose a wide range
 of peak count rates from very weak bursts to the brightest examples in our sample, as well as light curves that vary strongly in complexity, from light curves with only one
@@ -1275,7 +1276,7 @@ models evolve, they can inform the probabilistic models we build for studying va
 
 \paragraph{acknowledgements}
 DH, BJB, DWH, MF and IM thank the organizers of MaxEnt2013. DH was partially supported by a Netherlands Organization for Scientific Research (NWO) Vidi Fellowship (PI A. Watts) and the Moore-Sloan Data Science Environment at NYU. BJB is supported
-by a Marsden Fast Start grant from the Royal Society of New Zealand. AJvdH acknowledges support from the European Research Council via Advanced Investigator Grant no. 247295 (PI: R.A.M.J. Wijers).
+by a Marsden Fast Start grant from the Royal Society of New Zealand. YL acknowledges support from a Monash Reaseach Acceleration grant.  AJvdH acknowledges support from the European Research Council via Advanced Investigator Grant no. 247295 (PI: R.A.M.J. Wijers).
 C.K. and was partially supported by NASA grant NNH07ZDA001-GLAST.  
 
 \bibliography{td}

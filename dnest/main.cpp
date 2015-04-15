@@ -27,7 +27,7 @@ using namespace DNest3;
 
 int main(int argc, char** argv)
 {
-	Data::get_instance().load("/scratch/daniela/data/sgr1550/dnest/properprior/part1/090122037a_+007.162_all_data.dat");
+	Data::get_instance().load("/scratch/daniela/data/sgr1550/dnest/properprior/part2/090122037a_+177.028_all_data.dat");
 	MTSampler<MyModel> sampler = setup_mt<MyModel>(argc, argv);
 	sampler.run();
 	return 0;

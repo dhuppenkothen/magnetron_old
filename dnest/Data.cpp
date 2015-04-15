@@ -52,5 +52,15 @@ void Data::compute_summaries()
 	y_mean /= y.size();
 
 	dt = t[1] - t[0];
+        // Left and right edges of the data bins
+        t_left.assign(t.size(), 0.);
+        t_right.assign(t.size(), 0.);
+        for(size_t i=0; i<t.size(); i++)
+        {
+                t_left[i] = t[i] - 0.5*dt;
+                t_right[i] = t[i] + 0.5*dt;
+        }
+
+
 }
 

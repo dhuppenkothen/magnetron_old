@@ -41,7 +41,8 @@ MyModel::MyModel()
 
 void MyModel::calculate_mu()
 {
-	const vector<double>& t = data.get_t();
+        const vector<double>& t_left = data.get_t_left();
+        const vector<double>& t_right = data.get_t_right();
 
 	// Update or from scratch?
 	bool update = (bursts.get_added().size() < bursts.get_components().size());
@@ -54,20 +55,66 @@ void MyModel::calculate_mu()
 	if(!update)
 		mu.assign(mu.size(), background);
 
-	double scale;
-	for(size_t i=0; i<mu.size(); i++)
-	{
-		for(size_t j=0; j<components.size(); j++)
-		{
-			scale = components[j][2];
-			if(t[i] > components[j][0])
-				scale *= components[j][3];
 
-			mu[i] += components[j][1]
-					*exp(-abs(t[i] - components[j][0])/
-						scale);
-		}
-	}
+        double amplitude, skew, tc;
+        double rise, fall;
+
+        for(size_t j=0; j<components.size(); j++)
+        {
+                tc = components[j][0];
+                amplitude = components[j][1];
+                rise = components[j][2];
+                skew = components[j][3];
+
+                fall = rise*skew;
+
+                for(size_t i=0; i<mu.size(); i++)
+                {
+                        if(tc <= t_left[i])
+                        {
+                                // Bin to the right of peak
+                                mu[i] += amplitude*fall/data.get_dt()*
+                                                (exp((tc - t_left[i])/fall) -
+                                                 exp((tc - t_right[i])/fall));
+                        }
+                        else if(tc >= t_right[i])
+                        {
+                                // Bin to the left of peak
+                                mu[i] += -amplitude*rise/data.get_dt()*
+                                                (exp((t_left[i] - tc)/rise) -
+                                                 exp((t_right[i] - tc)/rise));
+                        }
+                        else
+                        {
+                                // Part to the left
+                                mu[i] += -amplitude*rise/data.get_dt()*
+                                                (exp((t_left[i] - tc)/rise) -
+                                                 1.);
+
+                                // Part to the right
+                                mu[i] += amplitude*fall/data.get_dt()*
+                                                (1. -
+                                                 exp((tc - t_right[i])/fall));
+                        }
+//                      exparg = -fabs(t[i] - components[j][0])/scale;
+//                      if(exparg > -10.)
+//                              mu[i] += amplitude*exp(exparg);
+                }
+        }
+
+//	for(size_t i=0; i<mu.size(); i++)
+//	{
+//		for(size_t j=0; j<components.size(); j++)
+//		{
+//			scale = components[j][2];
+//			if(t[i] > components[j][0])
+//				scale *= components[j][3];
+//
+//			mu[i] += components[j][1]
+//					*exp(-abs(t[i] - components[j][0])/
+//						scale);
+//		}
+//	}
 }
 
 void MyModel::fromPrior()

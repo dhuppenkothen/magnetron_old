@@ -350,7 +350,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
 def run_all_bursts(data_dir="./", dnest_dir="./", levelfilename="test_levels.dat"):
 
     print("I am in run_all_bursts")
-    filenames = glob.glob("%s*_data.txt"%data_dir)
+    filenames = glob.glob("%s*_data.dat"%data_dir)
     print(filenames)
 
     levelfilename = data_dir+levelfilename

@@ -180,8 +180,8 @@ number of spikes per burst as well as the individual parameters of each spike: t
 At the same time, this process needs to operate automatically without the user's intervention, both to avoid biases introduced by manual fitting, as well as
  to allow for an analysis of the large numbers of magnetar bursts observed from various sources.
  
- {\bf Comparable studies abound in the literature on \gamma-Ray Bursts (GRBs), where variability has been used to study the details of the physical processes
- involved in the creation of GRB prompt emission in \gamma-rays. GRBs have morphologically similar light curves, usually 
+ {\bf Comparable studies abound in the literature on $\gamma$-Ray Bursts (GRBs), where variability has been used to study the details of the physical processes
+ involved in the creation of GRB prompt emission in $\gamma$-rays. GRBs have morphologically similar light curves, usually 
  fit with a superposition of pulses, each with an exponential rise and decay as well as a peakedness parameter that parametrizes the roundness of the pulse peak. 
  These studies are generally split into two steps: a pulse-detection step, and an inference step, where detected pulses from many GRBs are combined into an 
  ensemble to infer properties of the entire population of bursts. 
@@ -203,9 +203,7 @@ At the same time, this process needs to operate automatically without the user's
  pulse parameters for each included model component, as well as 
  the hyper parameters determining the prior distributions of the pulse parameters. We make no attempt to state our confidence in any given individual model component, 
  but instead include the inherent uncertainty in weaker components in our inference over the sample.
- 
- 
- }
+  }
 
 In Section \ref{ch6:data}, we present our sample of bursts from SGR J1550-5418, observed with the 
 Gamma-ray Burst Monitor (GBM) on board the \fermi\ Gamma-Ray Space Telescope.
@@ -253,11 +251,12 @@ exceed the inferred background count rate makes the exact burst definition instr
 if part of the variability is hidden underneath the background level.
 
 Here we will nevertheless proceed with the definitions from \citet{vanderhorst2012} to identify individual bursts, with intra-burst variability to be further characterised using the 
-methods described below in the \ref{ch6:methods}. For every burst, the photon arrival times 
+methods described below in the \ref{ch6:methods}. {\bf In what follows, we will use the term ``burst'' to refer to a light curve with significant transient X-ray emission from the magnetar, as defined above. In contrast, we will use the term ``spike'' for features {\it within} bursts that we attempt to model with the methods described below.} 
+
+For every burst, the photon arrival times 
 are barycentered before analysis, i.e.\ projected to the centre of mass of the solar system, to account for the effects of the relative motion of the spacecraft and the Earth.
 We choose a time resolution of $0.5\,\mathrm{ms}$ for our light curves. The time resolution is chosen small enough to preserve features
 in the data on short time scales, while at the same time having a reasonable number of counts per time bin. 
-
 Photon arrival times recorded with \fermi/GBM are affected by both dead time and saturation. 
 Dead time occurs because the instrument cannot record a second photon within $2.6\mu\mathrm{s}$ of arrival of a previous photon. 
 The second photon is thus either not recorded at all, or, on occasion, recorded as a single photon with the combined energy of the two. These deletions and combinations 
@@ -273,10 +272,10 @@ consider is not designed to represent these features, and continue our analysis 
 
 \section{Analysis Methods}
 \label{ch6:methods}
-In order to successfully model the complex temporal variability in magnetar bursts, any modelling procedure must satisfy the following criteria: (1) it must be flexible enough to be applicable to a large number of bursts with distinctly different morphologies. We achieve this by decomposing magnetar burst light curves into one or more components with simple shapes, which, taken together, make up a burst. (2) The procedure must be largely automated, and be capable of inferring both the number of components as well as the model parameters for each component without human intervention. The latter is achieved by setting up a Bayesian model, where the number of components is a parameter to be inferred together with the corresponding parameters of the individual components. We use MCMC (in the form of Diffusive Nested Sampling, or DNS, as implemented in DNest \citep{brewer2011}) to sample the posterior distribution over all parameters including the number of components. From samples of the posterior distribution,
+In order to successfully model the complex temporal variability in magnetar bursts, any modelling procedure must satisfy the following criteria: (1) it must be flexible enough to be applicable to a large number of bursts with distinctly different morphologies. We achieve this by decomposing magnetar burst light curves into one or more components with simple shapes, which, taken together, make up a burst. (2) The procedure must be largely automated, and be capable of inferring both the number of components as well as the model parameters for each component without human intervention. The latter is achieved by setting up a hierarchical statistical model, where the number of components is a parameter to be inferred together with the corresponding parameters of the individual components. We use MCMC (in the form of Diffusive Nested Sampling, or DNS, as implemented in DNest \citep{brewer2011}) to sample the posterior distribution over all parameters including the number of components. From samples of the posterior distribution,
 we can then study the properties of individual burst components, as well as their ensemble properties for a given burst.
 
-\subsection{A Bayesian model for light curves of fast transients}
+\subsection{A hierarchical model for light curves of fast transients}
 \label{ch6:model}
 
 For a light curve with $K$ bins with Poisson-distributed counts $\bm{\counts} = \{\counts_k\}$, we define a model as a superposition of $N$ individual components:
@@ -322,7 +321,7 @@ We use a Poisson likelihood to describe the data,
 
 \begin{eqnarray}
 \likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \}) & = & p(\bm{\counts} \given N, \bm{\alpha}, \{\bm{\theta}_n \}, H) \\ \nonumber
- &= & \prod\limits_{k=0}^{K}{ \frac{e^{-\lambda}\, \lambda^{y_k} }{y_k! }} \; ,
+ &= & \prod\limits_{k=1}^{K}{ \frac{e^{-\lambda}\, \lambda^{y_k} }{y_k! }} \; ,
 \end{eqnarray}
 
 which only depends on the parameters of the individual model components, $\{\bm{\theta}_n\}$. In general, the conditional priors for the model 
@@ -338,7 +337,7 @@ independent and identically distributed, we can re-write this equation as:
 
 % BJB: Fixed mistake in this equation that was caused by me initially (from that RJObject document). Sorry
 \begin{equation}
-p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N|H)\, p(\bm{\alpha}|H)\, \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \; .
+p(N, \bm{\alpha}, \{\bm{\theta}_n \} \given H) = p(N|H)\, p(\bm{\alpha}|H)\, \prod\limits_{n=1}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \; .
 \end{equation}
 
 Thus, the posterior probability distribution becomes
@@ -346,7 +345,7 @@ Thus, the posterior probability distribution becomes
 % BJB: Brackets and H again
 \begin{eqnarray}
 p(N, \bm{\alpha}, \{\bm{\theta}_n \}  \given \bm{\counts}, H) & \\\nonumber
-= &  \frac{\prod\limits_{k=0}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }}\, p(N|H)\, p(\bm{\alpha}|H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha})}{p(\bm{\counts} | H)} 
+= &  \frac{\prod\limits_{k=1}^{K}{ \frac{e^{-\lambda} \lambda^{y_k} }{y_k! }}\, p(N|H)\, p(\bm{\alpha}|H) \prod\limits_{n=1}^{N}  p(\bm{\theta}_n\given \bm{\alpha})}{p(\bm{\counts} | H)} 
 \end{eqnarray}
 
 where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisation constant in the usual way: 
@@ -354,7 +353,7 @@ where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisati
 % BJB: brackets and H again
 % BJB: Also, you can't integrate over N as it's discrete :) It's a summation
 \begin{eqnarray}
-p(\bm{\counts} \given H) & = & \sum_{n=0}^{N} \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
+p(\bm{\counts} \given H) & = & \sum_{n=1}^{N} \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
 && p(N\given H)\, p(\bm{\alpha} \given H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \dd\bm{\alpha}\, \dd\bm{\theta}_1 \, ...\, \dd\bm{\theta}_N \; .
 \label{eqn:marginal}
 \end{eqnarray}
@@ -380,10 +379,10 @@ integral tractable with numerical integration methods.
 % BJB: All nested sampling methods are fine with phase transitions, it's the
 % potential multi-modality that we care about
 The MCMC step is the key challenge in any Nested Sampling algorithm. Standard MCMC-based Nested Sampling often fails for probability distributions that
-are multi-modal. It is here that DNS provides a reliable alternative \citep[for details, see][]{brewer2011}. 
-Instead of recording the end point of an MCMC chain as the new particle, the likelihoods of parameter sets visited during the MCMC exploration step
+are multi-modal. It is here that DNS provides a reliable alternative \citep[for details, see][]{brewer2011}. {\bf Nested Sampling is based on the idea of contracting the prior volume successively based on the likelihood: at each step, a Markov chain explores the prior and records the lowest likelihood value. This likelihood value is then used to set a hard constraint. In the next step, the Markov chain may only explore the prior subject to this hard likelihood constraint, which leads to a contraction of the space towards regions of high likelihood.
+In Diffusive Nested Sampling, this hard constraint is somewhat relaxed.} The likelihoods of all parameter sets visited during the MCMC exploration step
  are recorded. One can then compute the $1-e^{-1}$ quantile, and record this value as the new likelihood contour, such that the prior space
- under consideration contracts by a factor of $\sim\!\! e$. Instead of enforcing a hard likelihood constraint, one now samples a mixture of the 
+ under consideration contracts by a factor of $\sim\!\! e$. Instead of enforcing a hard likelihood constraint as in traditional Nested Sampling, one now samples a mixture of the 
  two regions, and the particle may escape into the lower-likelihood region, where it can explore more freely. Once enough samples are accumulated,
  one again computes the $1-e^{-1}$ quantile, and constructs a new likelihood contour. This process is repeated, and as in the classical Nested Sampling
  approach, the population contracts towards regions of high likelihood, but it will do so even for complex probability distributions subject to multi-modality.
@@ -529,9 +528,9 @@ varied the amplitude of the spike in order to test detectability. In the left pa
 
 \begin{figure*}[htbp]
 %\begin{center}
-\includegraphics[width=\textwidth]{f3.pdf}%example_dnest_result.pdf}
+\includegraphics[width=\textwidth]{f4.pdf}%example_dnest_result.pdf}
 \caption{An example burst from the magnetar SGR J1550-5418, in an observation taken on 2009 January 22 (ObsID 090122173). In the left
-panel, the light curve at high time resolution, $\Delta t = 5 \times 10^{-4}\,\mathrm{s}$, and model light curves for $10$ random draws from the posterior distribution. 
+panel, the light curve at high time resolution (black), $\Delta t = 5 \times 10^{-4}\,\mathrm{s}$, and model light curves for $10$ random draws from the posterior distribution (in colours). 
 On the right, the marginalised posterior distribution over the possible number of components in the model. The posterior for the number of components is 
 quite well constrained between $10$ and $20$ components.}
 \label{fig:dnest_example}
@@ -568,8 +567,8 @@ these models.
 
 \begin{figure*}[htbp]
 %\begin{center}
-\includegraphics[width=\textwidth]{f4b.pdf}%example_dnest_result.pdf}
-\caption{Light curves of $15$ examples of bursts from SGR J1550-5418, each with $10$ random draws from the posterior distribution of the model. We sorted bursts by maximum count rate 
+\includegraphics[width=\textwidth]{f5.pdf}%example_dnest_result.pdf}
+\caption{Light curves (black) of $15$ examples of bursts from SGR J1550-5418, each with $10$ random draws from the posterior distribution of the model (color). We sorted bursts by maximum count rate 
 (left to right) and by the average number of spike components in a given burst inferred from the model (top to bottom). Note that the y-axes are different for each burst, and, in particular, change
 quite drastically from left to right. At high count rates 
 (with maximum count rates $ > 3\times10^{4}\,\mathrm{counts}\,\mathrm{s}^{-1}$, there are no bursts with an average number of components inferred from the model larger than $15$, and components
@@ -626,14 +625,14 @@ to compute the quantity of interest (say, a correlation between two model parame
 for the quantity in question. Note, however, that by positing that individual bursts have no knowledge of each other --- we fit the model for each burst separately --- 
 this imposes a strong prior on this quantity, suggesting that there is, in fact, no correlation present. 
 
-For the type of exploratory data analysis considered here, this is sufficient. A formally correct implementation would have to include a Bayesian hierarchical model,
+For the type of exploratory data analysis considered here, this is sufficient. A formally correct implementation would have to include an additional level of hierarchicy,
 where many bursts are considered in the same model, with appropriate priors on any quantities to be measured across samples of many bursts. This can, in turn,
 be extended again to make inferences across, for example, different magnetars. The latter two steps are beyond the scope of this work, but will be explored in the future.
 
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{f4.pdf}%sgr1550_nspikes.pdf}
+\includegraphics[width=9cm]{f6.pdf}%sgr1550_nspikes.pdf}
 \caption{Number of components in a given burst for $332$ modelled bursts, for both the raw (unfiltered) sample (blue) as well as the sample after
 filtering out all components with an amplitude smaller than the inferred background count rate (green). We computed the distributions by picking single samples
 from the posterior for each burst and formed an ensemble of these individual draws for all bursts to make a single distribution. We repeated this process $100$ times,
@@ -646,7 +645,7 @@ and computed the mean number of bursts for each bin (corresponding to the number
 \label{ch6:exploration}
   \begin{figure*}[htbp]
 \begin{center}
-\includegraphics[width=\textwidth]{f5.pdf}%sgr1550_diff_dist.pdf}
+\includegraphics[width=\textwidth]{f7.pdf}%sgr1550_diff_dist.pdf}
 \caption{Differential distributions for the duration, count-space amplitude and fluence for all model components from $332$ bursts. In each bin, we plot the mean for
 that bin from $100$ ensembles of random draws from the posterior distribution of each burst (see text for details). All three distributions are 
 strongly peaked, duration and amplitude seem to have a slight excess at smaller values.}
@@ -663,13 +662,16 @@ fit with few spikes indicates that this might not be much of a problem. However,
 of spikes ($\sim 35\%$) with amplitudes smaller than the inferred background count level for the respective model of which these spikes 
 are part, similar to what we observe in the simulations presented in Section \ref{ch6:modelsims}. Where the count rate is low in the
 data, we cannot say with certainty whether there are (weak) features close in amplitude to the background count rate: they may well exist, but the intrinsic sky and instrumental background
- make it difficult to ascertain their presence. Excluding these features from the sample produces a narrower distribution
+ make it difficult to ascertain their presence. {\bf In this limit of low source count rates, the model essentially explores the prior. 
+ This problem can be effectively solved with a hierarchical model that considers all bursts at the same time. In this case, all bursts will share the same prior
+ distributions with the same hyperparameters. Consequently, in this model weak bursts will be realizations drawn from the tail of those prior distributions, and their parameters will be much better constrained than when seen individually, because all bursts will inform the inference of all other bursts. However, this analysis is beyond the scope of this exploratory work.} Excluding these features from the sample produces a narrower distribution
 of spikes per burst, with the maximum clustered at one spike per burst (see Figure \ref{fig:spikes}).
 
-In what follows, we exclude spikes with amplitudes smaller than the background count rate. The reason is because
- their parameters, e.g.\ their position in time, are largely unconstrained.
-This effectively puts a lower limit on the spike amplitudes we consider, which then depends on the instrumental and sky background. We note
-that including the smallest features in the analysis does not change our results in a significant way: distributions for 
+In what follows, we exclude spikes with amplitudes smaller than the background count rate. 
+{\bf The reason we choose this (somewhat arbitrary) limit is that for a first exploration of the data, we are mostly interested 
+in the brighter features that may be the most relevant to the underlying source physics. 
+Our choice effectively puts a lower limit on the spike amplitudes we consider, which then depends on the instrumental and sky background. We note
+that including the smallest features in the analysis does not change our results in a qualitative way: distributions for 
 waiting times and amplitudes have a stronger tail at small waiting times and amplitudes, but their inclusion changes neither
 the qualitative behaviour nor the conclusions we draw from this analysis. It would be interesting to explore their possible presence
 using bursts observed with an instrument less affected by sky background than \fermi/GBM\@.
@@ -701,7 +703,7 @@ in our model, and thus easily extracted. We compute spike duration by finding th
   
   \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{f6.pdf}%sgr1550_waitingtimes.pdf}
+\includegraphics[width=9cm]{f8.pdf}%sgr1550_waitingtimes.pdf}
 \caption{Waiting time distribution between consecutive spikes for $332$ bursts. Waiting times are the times between peak amplitudes of spikes, and are only computed for
 continuous stretches of data between them, i.e.\ time series without data gaps. This effectively sets an upper limit to the waiting time that can be measured of $330\,\mathrm{s}$, the 
 length of a single \fermi/GBM TTE data file. This cut-off introduces a bias into the distribution at long waiting times, and shifts the peak at long waiting times to smaller values.}
@@ -746,7 +748,7 @@ that there is a characteristic time scale determining the waiting time between i
 
 \begin{figure*}[htbp]
 \begin{center}
-\includegraphics[width=\textwidth]{f7.pdf}%sgr1550_correlations.pdf}
+\includegraphics[width=\textwidth]{f9.pdf}%sgr1550_correlations.pdf}
 \caption{Joint distributions of spike duration and fluence (left) and spike rise time and fluence (right). Black points indicate an ensemble of burst models, where we drew once
 from the posterior distribution of each burst to build the ensemble. Contours are derived from the combined sample of $100$ draws for all bursts, the shaded background is constructed in
 the same way for illustrative purposes. Contour levels are at $0.01, 0.05, 0.1, 0.2$ and $0.3$.
@@ -760,7 +762,7 @@ this fraction in combination with fluences inferred from spectral modelling \cit
 \end{figure*}
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{f8.pdf}%sgr1550_skewness_correlations.pdf}
+\includegraphics[width=9cm]{f10.pdf}%sgr1550_skewness_correlations.pdf}
 \caption{Flux versus skewness for a sample of spikes in $332$ bursts. We parametrise flux in arbitrary units as the ratio of amplitude $A$ 
 for a spike in count space divided by the exponential rise time scale $\tau$. The skewness $s$ measures the asymmetry
 of exponential rise versus exponential fall in a spike, such that the fall time scale $\tau_{\mathrm{fall}} = s\tau$. Overall, spikes are positively skewed ($\log_{10}{(s)} > 0$), i.e.\ their
@@ -788,7 +790,7 @@ ratio between rise and fall time scales.
 
  \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=9cm]{f9.pdf}%sgr1550_prior_nspikes.pdf}
+\includegraphics[width=9cm]{f11.pdf}%sgr1550_prior_nspikes.pdf}
 \caption{The number of  components (spikes) per burst for $332$ bursts for both exponential priors (blue) for amplitude and rise time scale, the standard prior assumed in
 deriving the results of this work, and log-normal priors (green) as an alternative hypothesis for the prior distributions on amplitude and rise time scale. Changing the prior to a log-normal
 distribution leads to an increase in the number of components per burst.}
@@ -818,7 +820,7 @@ changes the results reported in the previous section.
 
 \begin{figure*}[htbp]
 \begin{center}
-\includegraphics[width=\textwidth]{f10.pdf}%sgr1550_prior_diff_dist.pdf}
+\includegraphics[width=\textwidth]{f12.pdf}%sgr1550_prior_diff_dist.pdf}
 \caption{Differential distributions for burst duration (left panel), amplitude (middle panel) and fluence (right panel) for an exponential prior on spike 
 amplitudes and rise timescales (blue; see also Figure \ref{fig:diffdist}),
 and a log-normal prior on the same parameters (green). A log-normal prior leads to a larger number of spikes overall (as shown in Figure \ref{fig:nspikes_prior}), but distributions of largely

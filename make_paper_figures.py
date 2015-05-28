@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.stats
+import glob
 
 import word
 import burstmodel
@@ -27,7 +28,7 @@ def example_word():
     """
 
     t = linspace(-10., 10., 10001)
-    plot(t, word.TwoExp(t).model(parameters.TwoExpParameters(1.0, 0.5, 1., 3., log=False)), linewidth=2)
+    plot(t, word.TwoExp(t).model(parameters.TwoExpParameters(1.0, 0.5, 1., 3., log=False)), color="black", linewidth=2)
     xlabel('Time [seconds]')
     ylabel('Poisson Rate')
     ylim([0., 1.1])
@@ -35,9 +36,9 @@ def example_word():
     #title('A Word')
 
     # Build an arrow.
-    ar1 = FancyArrow(1., 1.01*exp(-1.), -0.5, 0., length_includes_head=True,
+    ar1 = FancyArrow(1., 1.01*np.exp(-1.), -0.5, 0., length_includes_head=True,
                     color='k', head_width=0.01, head_length=0.2, width=0.001, linewidth=1)
-    ar2 = FancyArrow(1., 0.99*exp(-1.), 1.5, 0., length_includes_head=True,
+    ar2 = FancyArrow(1., 0.99*np.exp(-1.), 1.5, 0., length_includes_head=True,
                     color='k', head_width=0.01, head_length=0.2, width=0.001, linewidth=1)
 
     ar3 = FancyArrow(-3.,0.,0.,1.0, length_includes_head=True,
@@ -61,12 +62,12 @@ def example_word():
     ax.add_artist(ar6)
 
     # Add text
-    text(-0.4, 1.*exp(-1.), r'$\tau$')
-    text(2.7, 1.*exp(-1.), r'$\tau s$')
+    text(-0.4, 1.*np.exp(-1.), r'$\tau$')
+    text(2.7, 1.*np.exp(-1.), r'$\tau s$')
     text(-4.0, 0.5 , r"$A$")
     text(1.2, 0.01, r"$t_{\mathrm{offset}}$")
 
-    savefig('documents/word.pdf', bbox_inches='tight')
+    savefig('f2.pdf', bbox_inches='tight')
 #    show()
     close()
 
@@ -121,7 +122,7 @@ def example_model():
     #title("\n".join(textwrap.wrap(r'three words, /w Poisson, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$, $A=60, 100, 50$, $s=5,1,0.1$', 60)))
     ax.set_title(r'three words, /w Poisson, $t=0.1,0.4,0.7$, $\tau=0.05, 0.01, 0.04$,' + "\n" + r'$A=60, 100, 50$, $s=5,1,0.1$', fontsize=13)
 
-    savefig("documents/example_words.pdf", format='pdf')
+    savefig("word_model.pdf", format='pdf')
     close()
 
     return
@@ -182,7 +183,7 @@ def plot_example_bursts():
 
     ax.set_xlabel("Time since burst start [s]", fontsize=24)
     ax.set_ylabel(r"Count rate [$10^{4} \, \mathrm{counts} \; \mathrm{s}^{-1}$]", fontsize=24)
-    savefig("example_bursts.pdf", format='pdf')
+    savefig("f1.pdf", format='pdf')
     plt.close()
 
     return
@@ -195,13 +196,13 @@ def plot_example_dnest_lightcurve():
     subplots_adjust(top=0.9, bottom=0.1, left=0.06, right=0.97, wspace=0.15, hspace=0.1)
 
     ax = fig.add_subplot(121)
-    ax.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2, color="black", linestyle="steps-mid")
+    ax.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2, color="black", linestyle="steps-mid", alpha=0.7)
     sample = atleast_2d(loadtxt("090122173_+241.347_posterior_sample.txt"))
 
     print(sample.shape)
     ind = np.random.choice(np.arange(len(sample)), replace=False, size=10)
     for i in ind:
-        ax.plot(data[:,0]-data[0,0], (sample[i,-data.shape[0]:]/0.0005)/1.e4, lw=1)
+        ax.plot(data[:,0]-data[0,0], (sample[i,-data.shape[0]:]/0.0005)/1.e4, lw=3)
     ax.set_ylim([0.01, 9.])
     ax.set_xlim([0.0,0.8])
     ax.set_xlabel("Time since burst start [s]", fontsize=24)
@@ -215,7 +216,7 @@ def plot_example_dnest_lightcurve():
     ax2.set_ylim([0.1, 25.])
     ax2.set_xlabel("Number of spikes per burst", fontsize=24)
     ax2.set_ylabel("N(samples)", fontsize=24, labelpad=-1)
-    plt.savefig("example_dnest_result.pdf", format="pdf")
+    plt.savefig("f4.pdf", format="pdf")
     plt.close()
 
     return
@@ -330,7 +331,7 @@ def make_lightcurve_grid():
             lcs = (sample[:,-data.shape[0]:]/0.0005)/1.e4
             sampleinds = np.random.randint(0,len(lcs), 10)
             for s in sampleinds:
-                ax2.plot(data[:,0]-data[0,0],lcs[s, :], lw=1)
+                ax2.plot(data[:,0]-data[0,0],lcs[s, :], lw=3)
             bid = plot_files[i][j].split("_")[0]
             bst = plot_files[i][j].split("_")[1] 
             ax2.set_title("ObsID: %s, $t_\mathrm{start} = %.3f$s, $\mu_{nspikes} = %i$"%(bid, np.float(bst), plot_nbursts[i][j]),fontsize=16)
@@ -341,7 +342,7 @@ def make_lightcurve_grid():
     ax.set_ylabel("Count rate [$10^{4}$ counts/s]", fontsize=20, labelpad=15)
     #plt.draw()
     #plt.tight_layout()
-    plt.savefig("f4b.pdf", format="pdf")
+    plt.savefig("f5.pdf", format="pdf")
     plt.close()
 
 
@@ -461,14 +462,14 @@ def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100)
     #close()
     draw()
     plt.tight_layout()
-    savefig("f4.pdf", format="pdf")
+    savefig("f6.pdf", format="pdf")
     close()
 
     return
 
 
 
-def waitingtime_plot(sample=None, bids=None, datadir="./", nsims=100, mean=True, filtered=True):
+def waitingtime_plot(sample=None, bids=None, datadir="./", nsims=100, mean=True, filtered=True, froot="f8"):
 
     if sample is None and bids is None:
         sample,bids,hyper = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
@@ -477,12 +478,101 @@ def waitingtime_plot(sample=None, bids=None, datadir="./", nsims=100, mean=True,
 
 
     waitingtimes = dnest_sample.waiting_times(sample, bids, datadir=datadir, nsims=nsims, mean=mean,
-                                              trigfile="sgr1550_ttrig.dat", froot="sgr1550")
+                                              trigfile="sgr1550_ttrig.dat", froot=froot)
+
+    return
+
+def priors_nspikes(par_exp=None, par_lognormal=None, datadir="./", nsims=100):
+    """
+    Make a histogram of the number of spikes per bin
+
+    NOTE: requires files sgr1550_ttrig.dat and sgr1550_fluence.dat
+
+    @param datadir: directory with posterior files and data files.
+    @return:
+    """
+
+    ### parameters both filtered for low-amplitude bursts (with amp < bkg) and unfiltered
+    if par_exp is None and par_lognormal is None:
+        par_exp, bids_exp, hyper_exp = \
+            dnest_sample.extract_sample(datadir=datadir+"expprior/",nsims=nsims, filter_weak=False, trigfile="sgr1550_ttrig.dat")
+
+        par_lognormal, bids_lognormal, hyper_lognormal = \
+            dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims, filter_weak=False, trigfile="sgr1550_ttrig.dat")
+
+
+    nspikes_exp, nspikes_lognormal = [], []
+    for i in xrange(nsims):
+
+        sample_exp = par_exp[:,i]
+        sample_lognormal = par_lognormal[:,i]
+
+        nspikes_e = np.array([len(s.all) for s in sample_exp])
+        nspikes_l = np.array([len(s.all) for s in sample_lognormal])
+
+        nspikes_exp.append(nspikes_e)
+        nspikes_lognormal.append(nspikes_l)
+
+
+    fig = figure(figsize=(12,9))
+    ax = fig.add_subplot(111)
+    nu_all, nf_all = [], []
+    for i,(u,f) in enumerate(zip(nspikes_exp, nspikes_lognormal)):
+
+        nu, ubins = np.histogram(u, bins=50, range=[1,50], normed=False)
+        nu_all.append(nu)
+
+        nf, fbins = np.histogram(f, bins=50, range=[1,50], normed=False)
+        nf_all.append(nf)
+
+    #print("nu shape " + str(np.shape(nu_all)))
+    nu_mean = np.mean(np.array(nu_all), axis=0)
+    nf_mean = np.mean(np.array(nf_all), axis=0)
+
+    y_bottom = np.zeros(len(nu_mean))
+
+    #print("len ubins: %i"%(len(ubins)))
+    #print("len y_bottom: %i"%(len(y_bottom)))
+    #print("len nu_means: %i"%(len(nu_mean)))
+
+    #ax.plot(ubins[:-1]+0.5, nu_mean, lw=2, color="navy", linestyle="steps-mid")
+    #ax.fill(ubins[:-1]+0.5, 0.0, nu_mean, color="navy", alpha=0.7)
+    #ax.plot(fbins[:-1]+0.5, nf_mean, lw=2, color="darkred", linestyle="steps-mid")
+    #ax.fill_between(fbins[:-1]+0.5, y_bottom, nf_mean, color="darkred", alpha=0.7, drawstyle='steps-mid')
+
+    #ax.plot(ubins[:-1]+0.5, nu_mean, color='navy',
+    #        linewidth=2, label=None, linestyle="steps-mid")
+
+    sns.distplot(u, bins=50, ax=ax,label="exponential prior", kde=False,
+                 hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
+    #ax.bar(ubins[:-1]+0.5, nu_mean, ubins[1]-ubins[0]+0.005, color='navy',
+    #       alpha=0.6, linewidth=0, align="center", label="unfiltered sample")
+    #ax.plot(fbins[:-1]+0.5, nf_mean, color='darkred',
+    #        linewidth=2, label=None, linestyle="steps-mid")
+
+    sns.distplot(f, ax=ax,label="lognormal prior sample", bins=50, kde=False,
+                 hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
+
+    #ax.bar(fbins[:-1]+0.5, nf_mean, fbins[1]-fbins[0]+0.005, color='darkred',
+    #       alpha=0.6, linewidth=0, align="center", label="filtered sample")
+
+    axis([1,30, 0.0, 70])
+
+    xlabel("Number of components", fontsize=24)
+    ylabel("Number of bursts", fontsize=24)
+    title("distribution of the number of components per burst")
+    legend(loc="upper right", prop={"size":24})
+    #savefig("sgr1550_nspikes.png", format="png")
+    #close()
+    draw()
+    plt.tight_layout()
+    savefig("f11.pdf", format="pdf")
+    close()
 
     return
 
 
-def differential_plots(sample=None, datadir="./", nsims=100, mean=True, filtered=True, froot="sgr1550"):
+def differential_plots(sample=None, datadir="./", nsims=100, mean=True, filtered=True, froot="f7"):
 
     if sample is None:
         sample,bids,hyper = dnest_sample.extract_sample(datadir=datadir, nsims=nsims,
@@ -493,7 +583,7 @@ def differential_plots(sample=None, datadir="./", nsims=100, mean=True, filtered
     return
 
 
-def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, filtered=False):
+def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, filtered=False, froot="f12"):
 
     #if par_exp is None:
     #    par_exp,bids_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
@@ -583,7 +673,7 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
     draw()
     plt.tight_layout()
 
-    savefig("f10.pdf", format="pdf")
+    savefig("f12.pdf", format="pdf")
     close()
 
 
@@ -591,7 +681,7 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
 
 
 
-def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot="sgr1550"):
+def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot="f9"):
 
     """
     Make plots with correlations for duration versus fluence and rise time versus fluence.
@@ -768,13 +858,13 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
     draw()
     plt.tight_layout()
 
-    savefig('f7.pdf', format="pdf")
+    savefig('%s.pdf'%froot, format="pdf")
     close()
 
     return
 
 
-def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=True, froot="sgr1550"):
+def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=True, froot="f10"):
 
     """
     Make plots with correlations for duration versus flux and rise time versus flux.
@@ -971,7 +1061,7 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
     draw()
     plt.tight_layout()
 
-    savefig('f8.pdf', format="pdf")
+    savefig('%s.pdf'%froot, format="pdf")
     close()
 
     return
@@ -988,20 +1078,24 @@ def all_dnest_plots(datadir="./", nsims=100, froot="sgr1550"):
 
 
 
-    par_exp, bids_exp, hyper_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
-                                                      filter_weak=False, trigfile="%s_ttrig.dat"%froot)
-    par_logn, bids_logn, hyper_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
-                                                      filter_weak=False, trigfile="%s_ttrig.dat"%froot)
+    #par_exp, bids_exp, hyper_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
+    #                                                  filter_weak=False, trigfile="%s_ttrig.dat"%froot)
+    #par_logn, bids_logn, hyper_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
+    #                                                  filter_weak=False, trigfile="%s_ttrig.dat"%froot)
 
 
 
+    #example_word()
+    #plot_example_bursts()
+    #plot_example_dnest_lightcurve()
+    #make_lightcurve_grid()
     nspike_plot(par_unfiltered, par_filtered)
     correlation_plots(par_filtered)
     correlation_plots_skewness(par_filtered)
     waitingtime_plot(par_unfiltered, bids_unfiltered)
     differential_plots(par_filtered)
-    priors_nspikes(par_exp, par_logn)
-    priors_differentials(par_exp, par_logn)
+    #priors_nspikes(par_unfiltered, par_logn)
+    #priors_differentials(par_unfiltered, par_logn)
 
     return
 

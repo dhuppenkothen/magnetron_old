@@ -531,7 +531,7 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None,
         #title()
         draw()
         plt.tight_layout()
-        savefig("f6.pdf", format="pdf")
+        savefig("%s.pdf"%froot, format="pdf")
         close()
 
     return waitingtime_sample
@@ -1645,7 +1645,7 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
         draw()
         plt.tight_layout()
 
-        savefig("f5.pdf", format="pdf")
+        savefig("%s.pdf"%froot, format="pdf")
         close()
 
     if mean is True:

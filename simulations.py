@@ -11,7 +11,7 @@ sns.set_style("white")
 import parameters
 import word
 import dnest_sample
-import run_dnest
+#import run_dnest
 ### Simulated light curves
 from pylab import *
 
@@ -91,7 +91,13 @@ def singlepeak_results():
     #r_all, a_all, n_all, s_all = [], [], [] ,[]
 
 
-    fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(1,5,figsize = (24, 6))
+    #fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(1,5,figsize = (24, 6))
+    fig = plt.figure()
+    ax1 = plt.subplot2grid((1,5), (0,0), colspan=1)
+
+    ax2 = plt.subplot2grid((1,5), (0,1), colspan=4)
+
+
     fig.subplots_adjust(top=0.95, bottom=0.15, left=0.03, right=0.97, wspace=0.2)
 
     ncomp_all, amp_all, pos_all = [], [], []
@@ -106,6 +112,7 @@ def singlepeak_results():
         pars = dnest_sample.parameter_sample(f, datadir="./", filter_weak=False,
                                              trigfile=None, bkg=None, prior="exp", efile=None)
 
+        pars = pars[0]
         ncomp = [len(p.all) for p in pars]
         rise = np.array([np.array([a.scale for a in s.all]) for s in pars])
         amp = np.array([np.array([a.amp for a in s.all]) for s in pars])
@@ -149,7 +156,8 @@ def singlepeak_results():
     sns.boxplot(ncomp_all, names=["0.6", "3.3", "6.5", "13.0"], ax=ax1)
     ax1.tick_params(axis='both', which='major', labelsize=fs)
     ax1.set_xlabel('SNR', fontsize=22)
-    ax1.set_ylabel( ylabel="Number of samples", fontsize=22)
+    ax1.set_ylabel( ylabel="Number of spikes", fontsize=22)
+    ax1.set_yscale("log")
 
     ax2.scatter(pos_all[0], amp_all[0], color=col[0])
     sns.kdeplot(np.transpose(np.array([pos_all[0],amp_all[0]])), shade=False, bw=(.01, .1), cmap=cmaps[0], ax=ax2)
@@ -172,7 +180,7 @@ def singlepeak_results():
     ax5.tick_params(axis='both', which='major', labelsize=fs)
     ax5.set_xlabel('Position since burst start [s]', fontsize=22, labelpad=10)
 
-    plt.savefig("f4a.pdf", format="pdf")
+    plt.savefig("f3.pdf", format="pdf")
     plt.close()
 
     return

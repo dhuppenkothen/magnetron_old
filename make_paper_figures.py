@@ -423,6 +423,7 @@ def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100)
 
     #print("nu shape " + str(np.shape(nu_all)))
     nu_mean = np.mean(np.array(nu_all), axis=0)
+    nu_std = np.std(np.array(nu_all), axis=0)
     nf_mean = np.mean(np.array(nf_all), axis=0)
 
     y_bottom = np.zeros(len(nu_mean))
@@ -439,15 +440,15 @@ def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100)
     #ax.plot(ubins[:-1]+0.5, nu_mean, color='navy',
     #        linewidth=2, label=None, linestyle="steps-mid")
 
-    sns.distplot(u, bins=50, ax=ax,label="unfiltered sample", kde=False,
-                 hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
-    #ax.bar(ubins[:-1]+0.5, nu_mean, ubins[1]-ubins[0]+0.005, color='navy',
-    #       alpha=0.6, linewidth=0, align="center", label="unfiltered sample")
+    #sns.distplot(u, bins=50, ax=ax,label="unfiltered sample", kde=False
+    #             hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
+    ax.bar(ubins[:-1]+0.5, nu_mean, ubins[1]-ubins[0]+0.005, yerr=nu_std,
+           alpha=0.6, linewidth=0, align="center", label="unfiltered sample")
     #ax.plot(fbins[:-1]+0.5, nf_mean, color='darkred',
     #        linewidth=2, label=None, linestyle="steps-mid")
 
-    sns.distplot(f, ax=ax,label="filtered sample", bins=50, kde=False,
-                 hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
+    #sns.distplot(f, ax=ax,label="filtered sample", bins=50, kde=False,
+    #             hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
 
     #ax.bar(fbins[:-1]+0.5, nf_mean, fbins[1]-fbins[0]+0.005, color='darkred',
     #       alpha=0.6, linewidth=0, align="center", label="filtered sample")
@@ -457,7 +458,7 @@ def nspike_plot(par_unfiltered=None, par_filtered=None, datadir="./", nsims=100)
     xlabel("Number of components", fontsize=24)
     ylabel("Number of bursts", fontsize=24)
     title("distribution of the number of components per burst")
-    legend(loc="upper right", prop={"size":24})
+    #legend(loc="upper right", prop={"size":24})
     #savefig("sgr1550_nspikes.png", format="png")
     #close()
     draw()
@@ -527,36 +528,27 @@ def priors_nspikes(par_exp=None, par_lognormal=None, datadir="./", nsims=100):
 
     #print("nu shape " + str(np.shape(nu_all)))
     nu_mean = np.mean(np.array(nu_all), axis=0)
-    nf_mean = np.mean(np.array(nf_all), axis=0)
+    nu_std = np.std(np.array(nu_all), axis=0)
 
+    nf_mean = np.mean(np.array(nf_all), axis=0)
+    nf_std = np.std(np.array(nf_all), axis=0)
     y_bottom = np.zeros(len(nu_mean))
 
-    #print("len ubins: %i"%(len(ubins)))
-    #print("len y_bottom: %i"%(len(y_bottom)))
-    #print("len nu_means: %i"%(len(nu_mean)))
 
-    #ax.plot(ubins[:-1]+0.5, nu_mean, lw=2, color="navy", linestyle="steps-mid")
-    #ax.fill(ubins[:-1]+0.5, 0.0, nu_mean, color="navy", alpha=0.7)
-    #ax.plot(fbins[:-1]+0.5, nf_mean, lw=2, color="darkred", linestyle="steps-mid")
-    #ax.fill_between(fbins[:-1]+0.5, y_bottom, nf_mean, color="darkred", alpha=0.7, drawstyle='steps-mid')
+    #sns.distplot(u, bins=50, ax=ax,label="exponential prior", kde=False,
+    #             hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
+    current_palette = sns.color_palette()
 
-    #ax.plot(ubins[:-1]+0.5, nu_mean, color='navy',
-    #        linewidth=2, label=None, linestyle="steps-mid")
+    ax.bar(ubins[:-1]+0.5, nu_mean, ubins[1]-ubins[0]+0.005, yerr=nu_std, color=current_palette[0],
+           alpha=0.6, linewidth=0, align="center", label="unfiltered sample", zorder=1)
 
-    sns.distplot(u, bins=50, ax=ax,label="exponential prior", kde=False,
-                 hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
-    #ax.bar(ubins[:-1]+0.5, nu_mean, ubins[1]-ubins[0]+0.005, color='navy',
-    #       alpha=0.6, linewidth=0, align="center", label="unfiltered sample")
-    #ax.plot(fbins[:-1]+0.5, nf_mean, color='darkred',
-    #        linewidth=2, label=None, linestyle="steps-mid")
+    #sns.distplot(f, ax=ax,label="lognormal prior sample", bins=50, kde=False,
+    #             hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
 
-    sns.distplot(f, ax=ax,label="lognormal prior sample", bins=50, kde=False,
-                 hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
+    ax.bar(fbins[:-1]+0.5, nf_mean, fbins[1]-fbins[0]+0.005, yerr=nf_std, color=current_palette[1],
+           alpha=0.6, linewidth=0, align="center", label="filtered sample", zorder=3)
 
-    #ax.bar(fbins[:-1]+0.5, nf_mean, fbins[1]-fbins[0]+0.005, color='darkred',
-    #       alpha=0.6, linewidth=0, align="center", label="filtered sample")
-
-    axis([1,30, 0.0, 70])
+    axis([1,30, 0.0, 60])
 
     xlabel("Number of components", fontsize=24)
     ylabel("Number of bursts", fontsize=24)
@@ -599,13 +591,13 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
 
 
 
-    db_exp, nd_exp, ab_exp, na_exp, fb_exp, nf_exp = \
+    db_exp, nd_exp, nd_std_exp, ab_exp, na_exp, na_std_exp, fb_exp, nf_exp, nf_std_exp= \
         dnest_sample.differential_distributions(sample=par_exp,  nsims=nsims, makeplot=False,
-                                                dt=0.0005, mean=True, normed=False)
+                                                dt=1.0, mean=True, normed=False)
 
-    db_logn, nd_logn, ab_logn, na_logn, fb_logn, nf_logn = \
+    db_logn, nd_logn, nd_std_logn, ab_logn, na_logn, na_std_logn, fb_logn, nf_logn, nf_std_logn = \
         dnest_sample.differential_distributions(sample=par_logn,  nsims=nsims, makeplot=False,
-                                                dt=0.0005, mean=True, normed=False)
+                                                dt=1.0, mean=True, normed=False)
 
     #db_gauss, nd_gauss, ab_gauss, na_gauss, fb_gauss, nf_gauss = \
     #    dnest_sample.differential_distributions(sample=par_gauss,  nsims=nsims, makeplot=False,
@@ -617,11 +609,13 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
     ### first subplot: differential duration distribution
     ax = fig.add_subplot(131)
 
-    ax.bar(db_exp[:-1]+0.5, nd_exp, db_exp[1]-db_exp[0], color = current_palette[0], 
-               alpha=0.7, linewidth=0, align="center", label="exponential prior")
+    ax.bar(db_exp[:-1]+0.5, nd_exp, db_exp[1]-db_exp[0], color = current_palette[0], yerr=nd_std_exp,
+               alpha=0.7, linewidth=0, align="center", label="exponential prior", zorder=1)
 
-    ax.bar(db_logn[:-1]+0.5, nd_logn, db_logn[1]-db_logn[0], color = current_palette[1],
-               alpha=0.7, linewidth=0, align="center", label="log-normal prior")
+    #plt.vlines(db_exp[:-1]+0.5, nd_exp-nd_std_exp, nd_exp+nd_std_exp, lw=2, zorder=2)
+
+    ax.bar(db_logn[:-1]+0.5, nd_logn, db_logn[1]-db_logn[0], color = current_palette[1], yerr=nd_std_logn,
+               alpha=0.7, linewidth=0, align="center", label="log-normal prior", zorder=3)
 
     #ax.bar(db_gauss[:-1]+0.5, nd_gauss, db_gauss[1]-db_gauss[0], color='limegreen',
     #           alpha=0.7, linewidth=0, align="center", label="normal prior")
@@ -638,11 +632,11 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
 
     min_a, max_a = [], []
 
-    ax1.bar(ab_exp[:-1]+0.5, na_exp, ab_exp[1]-ab_exp[0], color = current_palette[0],
-               alpha=0.6, linewidth=0, align="center", label="exponential prior")
+    ax1.bar(ab_exp[:-1]+0.5, na_exp, ab_exp[1]-ab_exp[0], color = current_palette[0], yerr=na_std_exp,
+               alpha=0.6, linewidth=0, align="center", label="exponential prior", zorder=1)
 
-    ax1.bar(ab_logn[:-1]+0.5, na_logn, ab_logn[1]-ab_logn[0], color = current_palette[1],
-               alpha=0.6, linewidth=0, align="center", label="log-normal prior")
+    ax1.bar(ab_logn[:-1]+0.5, na_logn, ab_logn[1]-ab_logn[0], color = current_palette[1], yerr=na_std_logn,
+               alpha=0.6, linewidth=0, align="center", label="log-normal prior", zorder=3)
 
     #ax1.bar(ab_gauss[:-1]+0.5, na_gauss, ab_gauss[1]-ab_gauss[0], color='limegreen',
     #           alpha=0.7, linewidth=0, align="center", label="normal prior")
@@ -654,11 +648,11 @@ def priors_differentials(par_exp=None, par_logn=None,  datadir="./", nsims=100, 
     #ax1.set_title("Differential Amplitude Distribution", fontsize=24)
 
     ax2 = fig.add_subplot(133)
-    ax2.bar(fb_exp[:-1]+0.5, nf_exp, fb_exp[1]-fb_exp[0], color= current_palette[0],
-               alpha=0.6, linewidth=0, align="center", label="exponential prior")
+    ax2.bar(fb_exp[:-1]+0.5, nf_exp, fb_exp[1]-fb_exp[0], color= current_palette[0], yerr=nf_std_exp,
+               alpha=0.6, linewidth=0, align="center", label="exponential prior", zorder=1)
 
-    ax2.bar(fb_logn[:-1]+0.5, nf_logn, fb_logn[1]-fb_logn[0], color = current_palette[1],
-               alpha=0.6, linewidth=0, align="center", label="log-normal prior")
+    ax2.bar(fb_logn[:-1]+0.5, nf_logn, fb_logn[1]-fb_logn[0], color = current_palette[1], yerr=nf_std_logn,
+               alpha=0.6, linewidth=0, align="center", label="log-normal prior", zorder=3)
 
     #ax2.bar(fb_gauss[:-1]+0.5, nf_gauss, fb_gauss[1]-fb_gauss[0], color='limegreen',
     #           alpha=0.7, linewidth=0, align="center", label="normal prior")
@@ -886,37 +880,19 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
     skewness_sample, flux_sample, duration_sample, amplitude_sample = [], [], [], []
 
     for i in xrange(nsims):
-
+        print(i)
         sample = parameters_red[:,i]
-        #amplitude_all = np.array([np.array([a.amp for a in s.all if a.duration > 0.0]) for s in sample])
-        #risetime_all = np.array([np.array([a.scale for a in s.all if a.duration > 0.0]) for s in sample])
-        #flux_all = [a/r for a,r in zip(amplitude_all, risetime_all)]
-#        duration_all = np.array([np.array([a.duration for a in s.all if a.duration > 0.0]) for s in sample])
-
-#        skewness_all = np.array([np.array([a.skew for a in s.all if a.duration > 0.0]) for s in sample])
-
-
         amplitude_all = np.array([np.array([a.amp for a in s.all]) for s in sample])
         risetime_all = np.array([np.array([a.scale for a in s.all]) for s in sample])
         flux_all = [a/r for a,r in zip(amplitude_all, risetime_all)]
         skewness_all = np.array([np.array([a.skew for a in s.all]) for s in sample])
         duration_all = np.array([np.array([a.duration for a in s.all]) for s in sample])
-
-
-
-        #print("len flux: " + str(len(amplitude_all)))
-        #print("len skewness: " + str(len(risetime_all)))
-
         flux, duration, skewness, amplitude = [], [], [], []
         for s,a,f,d in zip(skewness_all, amplitude_all, flux_all, duration_all):
             flux.extend(np.log10(f))
             duration.extend(np.log10(d))
             skewness.extend(np.log10(s))
             amplitude.extend(np.log10(a))
-
-        #print("len flux: " + str(len(flux)))
-        #print("len skewness: " + str(len(skewness)))
-
 
         flux_sample.append(flux)
         duration_sample.append(duration)
@@ -953,6 +929,11 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
     spsf_mean = np.mean(spsf, axis=0)
     spsf_std = np.std(spsf, axis=0)
 
+    H_all = []
+
+    for f, s, in zip(flux_sample, skewness_sample):
+        H, xedges, yedges = np.histogram2d(f, s, bins=(10,10), range=[[0,6],[-2.5,3.0]])
+        H_all.append(H)
 
     fig = figure(figsize=(12,9))
     #subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
@@ -973,28 +954,6 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
     cmap = sns.cubehelix_palette(start=.5, rot=-.75, as_cmap=True)
 
     try:
-        #X,Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-        #positions = np.vstack([X.ravel(), Y.ravel()])
-        #values = np.vstack([flux_flat, skewness_flat])
-        #kernel = scipy.stats.gaussian_kde(values)
-        #Z = np.reshape(kernel(positions).T, X.shape)
-
-
-        #im = ax1.imshow(np.transpose(Z), interpolation='bicubic', origin='lower',
-        #        cmap=cm.PuBuGn, extent=(xmin,xmax,ymin,ymax))
-        #im.set_clim(0.0,0.5)
-        #plt.colorbar(im)
-
-        #znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
-        #cs = ax1.contour(X,Y,znew,levels, linewidths=2, colors="black", origin="lower")
-        #manual_locations = [(0.0, -10.5), (-0.9, -11.5), (-0.7,-10.7), (-1.7,11.1), (-1.1,-10.4)]
-        #plt.clabel(cs, fontsize=24, inline=1, manual=manual_locations)
-
-        #divider = make_axes_locatable(ax1)
-        #cax = divider.append_axes("right", size="5%", pad=0.5)
-
-        #im.set_clim(0.0,0.5)
-        #plt.colorbar(im, cax=cax)
         sns.kdeplot(flux_flat, skewness_flat, cmap=cmap, shade=True, cut=5, ax=ax1)
 
 
@@ -1078,8 +1037,9 @@ def all_dnest_plots(datadir="./", nsims=100, froot="sgr1550"):
 
 
 
-    #par_exp, bids_exp, hyper_exp = dnest_sample.extract_sample(datadir=datadir+"expprior/", nsims=nsims,
-    #                                                  filter_weak=False, trigfile="%s_ttrig.dat"%froot)
+    par_exp, bids_exp, hyper_exp = dnest_sample.extract_sample(datadir=datadir+"unbinned/", nsims=nsims,
+                                                      filter_weak=False, trigfile="%s_ttrig.dat"%froot,
+                                                      datatype="unbinned")
     #par_logn, bids_logn, hyper_logn = dnest_sample.extract_sample(datadir=datadir+"lognormalprior/", nsims=nsims,
     #                                                  filter_weak=False, trigfile="%s_ttrig.dat"%froot)
 
@@ -1089,13 +1049,13 @@ def all_dnest_plots(datadir="./", nsims=100, froot="sgr1550"):
     #plot_example_bursts()
     #plot_example_dnest_lightcurve()
     #make_lightcurve_grid()
-    nspike_plot(par_unfiltered, par_filtered)
-    correlation_plots(par_filtered)
-    correlation_plots_skewness(par_filtered)
-    waitingtime_plot(par_unfiltered, bids_unfiltered)
-    differential_plots(par_filtered)
-    #priors_nspikes(par_unfiltered, par_logn)
-    #priors_differentials(par_unfiltered, par_logn)
+    #nspike_plot(par_unfiltered, par_filtered)
+    #correlation_plots(par_filtered)
+    #correlation_plots_skewness(par_filtered)
+    #waitingtime_plot(par_unfiltered, bids_unfiltered)
+    #differential_plots(par_filtered)
+    priors_nspikes(par_unfiltered, par_exp)
+    priors_differentials(par_unfiltered, par_exp)
 
     return
 

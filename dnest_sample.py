@@ -49,8 +49,8 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
         plot(data[:,0], data[:,1], lw=2, color="black", linestyle="steps-mid")
         sample = atleast_2d(loadtxt(f))
 
-        print(f)
-        print(sample.shape)
+        #print(f)
+        #print(sample.shape)
 
         ind = np.random.choice(np.arange(len(sample)), replace=False, size=nsims)
         for i in ind:
@@ -75,10 +75,11 @@ def plot_posterior_lightcurves(datadir="./", nsims=10):
     return
 
 
-def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None, prior="exp"):
+def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_ttrig.dat",
+                   bkg=None, prior="exp", datatype="binned"):
 
     files = glob.glob("%s*posterior*"%datadir)
-    print("files: " + str(files))
+    #print("files: " + str(files))
 
     all_parameters, bids, nsamples = [], [], []
     for f in files:
@@ -86,7 +87,7 @@ def extract_sample(datadir="./", nsims=50, filter_weak=False, trigfile="sgr1550_
         bid = fname.split("_")[0]
         bids.append(bid)
         parameters, hyper_all = parameter_sample(f, filter_weak=filter_weak, trigfile=trigfile,
-                                      bkg=bkg, prior=prior, datadir=datadir)
+                                      bkg=bkg, prior=prior, datadir=datadir, datatype=datatype)
         all_parameters.append(parameters)
         nsamples.append(len(parameters))
 
@@ -506,11 +507,13 @@ def waiting_times(sample=None, bids=None, datadir="./", nsims=10, trigfile=None,
 
             #print("n_all.shape: " + str(np.shape(n_all)))
             n_mean = np.mean(np.array(n_all), axis=0)
+            n_std = np.std(np.array(n_all), axis=0)
+
             #print(n_mean)
-            ax.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0],
+            ax.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], yerr=n_std,
                    alpha=0.7, linewidth=0, align="center")
 
-            axis([np.log10(0.0003), np.log10(330.0), 0.0, np.max(n_mean)+0.1])
+            axis([np.log10(0.0003), np.log10(330.0), 0.0, np.max(n_mean)+1.1*np.max(n_std)])
 
         else:
             for i,w in enumerate(waitingtime_sample):
@@ -1159,7 +1162,8 @@ def nspike_dist(sample=None, datadir="./", nsims=10, makeplot=True, froot="sgr15
 
         if mean is True:
             n_mean = np.mean(np.array(n_all), axis=0)
-            ax.bar(bins, n_mean, bins[1]-bins[0], color='navy', alpha=0.6)
+            n_std = np.std(np.arra(n_all), axis=0)
+            ax.bar(bins, n_mean, bins[1]-bins[0], color='navy', alpha=0.6, yerr=n_std)
             axis([1,50, 0.0, np.max(n_mean)])
         else:
             axis([1, 50, np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
@@ -1497,11 +1501,11 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
             nd, dbins = np.histogram(d, bins=40, range=[np.log10(0.0001),np.log10(10.0)], normed=False)
             nd_all.append(nd)
 
-            a = np.log10(a)
+            a = np.log10(np.array(a)*dt)
             na, abins = np.histogram(a, bins=40, range=[np.log10(0.0001), np.log10(3.5e5)], normed=False)
             na_all.append(na)
 
-            f = np.log10(f)
+            f = np.log10(np.array(f)*dt)
             nf, fbins = np.histogram(f, bins=40, range=[-17.0, -4.0], normed=False)
             nf_all.append(nf)
 
@@ -1509,6 +1513,10 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
         nd_mean = np.mean(np.array(nd_all), axis=0)
         na_mean = np.mean(np.array(na_all), axis=0)
         nf_mean = np.mean(np.array(nf_all), axis=0)
+
+        nd_std = np.std(np.array(nd_all), axis=0)
+        na_std = np.std(np.array(na_all), axis=0)
+        nf_std = np.std(np.array(nf_all), axis=0)
 
     if makeplot:
         fig, (ax1, ax2, ax3) = plt.subplots(1,3,figsize=(24,8))
@@ -1526,8 +1534,10 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
                 n_all.append(n)
 
             n_mean = np.mean(np.array(n_all), axis=0)
+            n_std = np.std(np.array(n_all), axis=0)
+
             #print(n_mean)
-            ax1.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0],
+            ax1.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], yerr=n_std,
                    alpha=0.7, linewidth=0, align="center", label="unfiltered sample")
 
             #sns.barplot(bins[:-1]+0.5, n_mean, ax=ax1)
@@ -1569,8 +1579,9 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
                 n_all.append(n)
 
             n_mean = np.mean(np.array(n_all), axis=0)
+            n_std = np.std(np.array(n_all), axis=0)
             #print(n_mean)
-            ax2.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0],
+            ax2.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], yerr=n_std,
                    alpha=0.7, linewidth=0, align="center")
             #sns.barplot(bins[:-1]+0.5, n_mean, ax=ax2)
 
@@ -1611,11 +1622,12 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
                 n_all.append(n)
 
             n_mean = np.mean(np.array(n_all), axis=0)
+            n_std = np.std(np.array(n_all), axis=0)
             #print(n_mean)
             #sns.distplot(np.log10(fluence_sample), bins=40, ax=ax3, kde=False, norm_hist = False,
             #        hist_kws={"histtype": "stepfilled", "range":[-2.0, 3.0], "alpha":0.7})
 
-            ax3.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0],
+            ax3.bar(bins[:-1]+0.5, n_mean, bins[1]-bins[0], yerr=n_std,
                    alpha=0.7, linewidth=0, align="center")
 
             ax3.set_xlim(-14,-7)
@@ -1649,7 +1661,7 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
         close()
 
     if mean is True:
-        return dbins, nd_mean, abins, na_mean, fbins, nf_mean
+        return dbins, nd_mean, nd_std, abins, na_mean, na_std, fbins, nf_mean, nf_std
 
     else:
         return
@@ -1870,7 +1882,7 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
 
     """
 
-    print("trigfile: %s"%trigfile)
+    #print("trigfile: %s"%trigfile)
     if prior == "exp":
         par_ind = 8
     elif prior == "lognormal":
@@ -1890,16 +1902,26 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
 
     if not efile is None:
         edata = burstmodel.conversion("%s%s"%(datadir, efile))
-        bids_energy = np.array(edata[0][1:])
+        bids_energy = edata[0][1:]
+        bids_energy = np.array([e[:9] for e in bids_energy])
         bsts_energy = np.array([np.float(e) for e in edata[1][1:]])
+        bsts_energy = np.around(bsts_energy, 3)
         fluence = np.array([np.float(e) for e in edata[2][1:]])
 
         #print("ttrig_all: " + str(ttrig_all))
         fsplit = filename.split("/")[-1]
-        bid_data = fsplit.split("_")[0]
-        bst_data = fsplit.split("_")[1]
-        #print("bid_data: " + str(bid_data))
-        bind = np.where((bids_energy == bid_data) & (np.float(bst_data) == bsts_energy))[0][0]
+        bid_data = fsplit.split("_")[0][:9]
+        bst_data = np.float(fsplit.split("_")[1])
+        print("bid_data: " + str(bid_data))
+        print("bst_data: " + str(bst_data))
+        print("bid_list: " + str(bids_energy[:10]))
+        print("bst_list: " + str(bsts_energy[:10]))
+
+        print("index test: " + str(np.where(np.around(bst_data, 3) == np.around(bsts_energy, 3))))
+        print("index test 2: " +  str(np.where(bids_energy == bid_data)))
+
+
+        bind = np.where((bids_energy == bid_data) & (np.around(bst_data, 3) == np.around(bsts_energy,3) ))[0][0]
         #print("bind: %i"%bind)
         b_fluence = fluence[bind]
     else:
@@ -1908,13 +1930,14 @@ def read_dnest_results(filename, datadir="./", filter_smallest=False, trigfile="
 
     if not trigfile is None:
         trigdata = burstmodel.conversion("%s%s"%(datadir,trigfile))
-        bids = np.array(trigdata[0])
+        bids = trigdata[0]
+        bids = np.array([b[:9] for b in bids])
         #print("bids: " + str(bids))
         ttrig_all = np.array([float(t) for t in trigdata[1]])
 
         #print("ttrig_all: " + str(ttrig_all))
         fsplit = filename.split("/")[-1]
-        bid_data = fsplit.split("_")[0]
+        bid_data = fsplit.split("_")[0][:9]
         #print("bid_data: " + str(bid_data))
         bind = np.where(bids == bid_data)[0][0]
         #print("bind: " + str(bind))
@@ -2036,23 +2059,32 @@ def extract_real_spikes(sample_dict, min_scale=1.0e-4):
 
 
 def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr1550_ttrig.dat", bkg=None, prior="exp",
-                     efile="sgr1550_fluence.dat"):
+                     efile="sgr1550_fluence.dat", datatype='binned'):
 
-    print("trigfile: %s"%trigfile)
+    #print("trigfile: %s"%trigfile)
     fname = filename.split("/")[-1]
     fsplit = fname.split("_")
+
     datafile = "%s%s_%s_all_data.dat"%(datadir, fsplit[0], fsplit[1])
 
-    times, counts = burstmodel.read_gbm_lightcurves(datafile)
+    if datatype == "binned":
+        datafile = "%s%s_%s_all_data.dat"%(datadir, fsplit[0], fsplit[1])
+        times, counts = burstmodel.read_gbm_lightcurves(datafile)
+        sum_counts = np.sum(counts)
 
-    sum_counts = np.sum(counts)
+    elif datatype == "unbinned":
+        datafile = "%s%s_%s_eventfile.dat"%(datadir, fsplit[0], fsplit[1])
+        times = np.loadtxt(datafile)
+        sum_counts = len(times)
+    else:
+        raise Exception("Data type not recognized")
 
     ### extract parameters from file
     sample_dict = read_dnest_results(filename, datadir=datadir, trigfile=trigfile, prior=prior, efile=efile)
 
     
-    print("filter_weak " + str(filter_weak))
-    print("sample_dict.keys: " + str(sample_dict.keys()))
+    #print("filter_weak " + str(filter_weak))
+    #print("sample_dict.keys: " + str(sample_dict.keys()))
 
     ### I need the parameters, the number of components, and the background parameter
     pars_all = sample_dict["parameters"]
@@ -2091,7 +2123,10 @@ def parameter_sample(filename, datadir="./", filter_weak=False, trigfile="sgr155
         e_all = p.compute_energy()
         d_all = p.compute_duration()
 
-        bkgsum = len(counts)*p.bkg
+        if datatype == "binned":
+            bkgsum = len(counts)*p.bkg
+        else:
+            bkgsum = p.bkg*(times[-1]-times[0])
 
         if not fluence is None:
             f_all = p.compute_fluence(fluence, sum_counts, bkgsum)

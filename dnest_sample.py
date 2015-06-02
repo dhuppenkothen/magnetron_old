@@ -1544,8 +1544,9 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
 
 
 
-            ax1.set_xlim(np.log10(0.0001), np.log10(10.0))
-            ax1.set_ylim(0.0, np.max(n_mean)+0.1)
+            ax1.set_xlim(np.log10(0.002), np.log10(19.0))
+            ax1.set_ylim(0.0, np.max(n_mean)+1.1*np.max(n_std))
+            ax1.set_xticks(np.arange(-3.0, 2.0, 1.0))
 
 
         else:
@@ -1561,7 +1562,9 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
                 #                       color=cm.jet(i*20),alpha=0.6, normed=False)
                 n_all.append(n)
 
-            axis([np.log10(0.0005/10.0), np.log10(2.0), np.min([np.min(n) for n in n_all]), np.max([np.max(n) for n in n_all])])
+            axis([np.log10(0.0005/10.0), np.log10(2.0),
+                  np.min([np.min(n) for n in n_all]),
+                  np.max([np.max(n) for n in n_all])])
 
 
         ax1.set_xlabel(r"$\log_{10}{(\mathrm{Duration})}$ [s]", fontsize=24)
@@ -1575,7 +1578,9 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
         if mean is True:
             for i,d in enumerate(amp_sample):
                 d = np.log10(d)
-                n, bins = np.histogram(d, bins=40, range=[np.log10(0.001), np.log10(2.5e4)], normed=False)
+                n, bins = np.histogram(d, bins=40,
+                                       range=[np.log10(0.001), np.log10(2.5e4)],
+                                       normed=False)
                 n_all.append(n)
 
             n_mean = np.mean(np.array(n_all), axis=0)
@@ -1632,6 +1637,7 @@ def differential_distributions(sample=None, datadir="./", nsims=10, makeplot=Tru
 
             ax3.set_xlim(-14,-7)
             ax3.set_ylim(0.0, np.max(n_mean)+0.1)
+            ax3.set_xticks(np.arange(-14, -7, 2.0))
 
         else:
             for i,e in enumerate(fluence_sample):

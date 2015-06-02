@@ -224,46 +224,6 @@ def plot_example_dnest_lightcurve():
 
 
 def make_lightcurve_grid():
- 
-    #files = glob.glob("*data.dat")
-    #low_fluence, mid_fluence, high_fluence = [], [], []
-    #for f in files:
-    #    data = np.loadtxt(f)
-    #    max_cr = np.max((data[:,1]/0.0005)/1.e4)
-    #    fluence = np.sum(data[:,1])
-    #    samplefile = glob.glob(f[:18] + "*posterior_sample.txt")[0]
-    #    sample = np.atleast_2d(np.loadtxt(samplefile))
-    #    nbursts = nbursts = sample[:, 7]
-    #    lcs = (sample[:,-data.shape[0]:]/0.0005)/1.e4
-    #    plt.figure(figsize=(12,6))
-    #    plt.plot(data[:,0]-data[0,0], (data[:,1]/0.0005)/1.e4, lw=2)
-    #    sampleinds = np.random.randint(0,len(lcs), 10)
-    #    for s in sampleinds:
-    #        plt.plot(data[:,0]-data[0,0],lcs[s, :], lw=1)
-    #    bid = f.split("_")[0]
-    #    bst = f.split("_")[1]
-    #    plt.title("ObsID: %s, t_st = %s, nbursts = %i, fluence =%i"%(bid, bst, np.mean(nbursts), fluence))
-    #    if max_cr < 3.:
-    #        tag = "lf"
-    #    elif 3. <= max_cr <= 8.:
-    #        tag = "mf"
-    #    else:
-    #        tag = "hf"
-    #    plt.savefig(tag + "_" + bid + "_" + bst + "lcs.pdf", format="pdf")
-    #    plt.close()
-
-    
-    #plot_files = [["090122044_+288.53", "090122037a_+146.71", "090122104_+164.55"],
-    #              ["090122052_-024.53", "090122037a_+143.09", "090122283_+131.84"],
-    #              ["090122037a_+180.67", "090122044_+031.42", "090122187_+064.99"],
-    #              ["090222540_-000.15", "090122194_+058.83", "090122173_+241.34"],
-    #              ["090122052_+237.81", "090122037a_+142.46", "090122187_+292.95"]]
-
-    #plot_nbursts = [[1, 2, 3],
-    #                [4, 5, 5],
-    #                [8, 10, 8],
-    #                [15, 13 ,13],
-    #                [48, 33, 13]]
 
 
     ### Picking bursts by maximum count rate
@@ -302,7 +262,7 @@ def make_lightcurve_grid():
 
 
     fig = plt.figure(figsize=(18, 20)) 
-    plt.subplots_adjust(top=0.98, bottom=0.05, left=0.05, right=0.98, wspace=0.15, hspace=0.15)
+    plt.subplots_adjust(top=0.98, bottom=0.05, left=0.08, right=0.98, wspace=0.15, hspace=0.15)
     sns.set_style("white")
     ax = fig.add_subplot(111)
     # Turn off axis lines and ticks of the big subplot
@@ -317,7 +277,7 @@ def make_lightcurve_grid():
     rc("font", size=20, family="serif", serif="Computer Sans")
     rc("axes", titlesize=16, labelsize=20)
     rc("text", usetex=True) 
-    plt.subplots_adjust(top=0.98, bottom=0.05, left=0.05, right=0.98, wspace=0.15, hspace=0.15)
+    plt.subplots_adjust(top=0.98, bottom=0.05, left=0.08, right=0.98, wspace=0.15, hspace=0.15)
 
     for i in range(4):
         for j in range(3):
@@ -540,13 +500,13 @@ def priors_nspikes(par_exp=None, par_lognormal=None, datadir="./", nsims=100):
     current_palette = sns.color_palette()
 
     ax.bar(ubins[:-1]+0.5, nu_mean, ubins[1]-ubins[0]+0.005, yerr=nu_std, color=current_palette[0],
-           alpha=0.6, linewidth=0, align="center", label="unfiltered sample", zorder=1)
+           alpha=0.6, linewidth=0, align="center", label="exponential prior", zorder=1)
 
     #sns.distplot(f, ax=ax,label="lognormal prior sample", bins=50, kde=False,
     #             hist_kws={"histtype": "stepfilled", "range":[1,50], "alpha":0.6})
 
     ax.bar(fbins[:-1]+0.5, nf_mean, fbins[1]-fbins[0]+0.005, yerr=nf_std, color=current_palette[1],
-           alpha=0.6, linewidth=0, align="center", label="filtered sample", zorder=3)
+           alpha=0.6, linewidth=0, align="center", label="lognormal prior", zorder=3)
 
     axis([1,30, 0.0, 60])
 
@@ -696,6 +656,7 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
 
     fluence_sample, duration_sample, risetime_sample = [], [], []
 
+    nsims=100
     for i in xrange(nsims):
 
         sample = parameters_red[:,i]
@@ -746,6 +707,13 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
     risetime_flat = np.array(risetime_flat)
     duration_flat = np.array(duration_flat)
 
+
+    fsamp = np.log10(np.hstack(np.array(fluence_sample[:20])))
+    dsamp = np.log10(np.hstack(np.array(duration_sample[:20])))
+    rsamp = np.log10(np.hstack(np.array(risetime_sample[:20])))
+
+
+
     spdf_mean = np.mean(spdf, axis=0)
     spdf_std = np.std(spdf, axis=0)
     sprf_mean = np.mean(sprf, axis=0)
@@ -777,8 +745,7 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
         #kernel = scipy.stats.gaussian_kde(values)
         #Z = np.reshape(kernel(positions).T, X.shape)
 
-
-        sns.kdeplot(duration_flat, fluence_flat, cmap=cmap, shade=True, cut=5, ax=ax1)
+        sns.kdeplot(dsamp, fsamp, cmap=cmap, shade=True, cut=5, ax=ax1, zorder=1)
         #im = ax1.imshow(np.transpose(Z), interpolation='nearest', origin='lower',
         #        cmap=cm.PuBuGn, extent=(-4.0,2.0,ymin,ymax))
         #im.set_clim(0.0,0.5)
@@ -794,12 +761,20 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
         print("Not making contours.")
 
 
-    ax1.scatter(dsamp, fsamp, color="black", alpha=0.7)
+
+    tt = np.linspace(10.**(-4.), 10**(0.0), 100)
+    e_rupture = np.log10(tt**2.) - 8
+    e_tearing = np.log10(tt) - 9
+
+    ax1.plot(np.log10(tt), e_rupture, "--", zorder=10, lw=4, color="black")
+    ax1.plot(np.log10(tt), e_tearing, "-.", zorder=10, lw=4, color="black")
+
+    #ax1.scatter(dsamp, fsamp, color="black", alpha=0.7)
 
     ax1.text(0.5,0.05, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(spdf_mean[0], spdf_std[0]),
                 verticalalignment='center', horizontalalignment='center', color='black', transform=ax1.transAxes,
                 fontsize=22)
-    ax1.axis([-3., 0.0, -13.0, -7.])
+    ax1.axis([-3., 0.0, -13.0, -8.])
 
 
     ax1.set_xlabel(r"$\log_{10}{(\mathrm{Duration} \; \mathrm{[s]})}$ ", fontsize=24)
@@ -830,7 +805,7 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
 
         #im.set_clim(0.0,0.5)
         #plt.colorbar(im)
-        sns.kdeplot(risetime_flat, fluence_flat, cmap=cmap, shade=True, cut=5, ax=ax2)
+        sns.kdeplot(rsamp, fsamp, cmap=cmap, shade=True, cut=5, ax=ax2, zorder=1)
 
         #znew = scipy.ndimage.gaussian_filter(Z, sigma=4.0, order=0)
         #cs = ax2.contour(X,Y,znew,levels,
@@ -841,9 +816,14 @@ def correlation_plots(sample=None, datadir="./", nsims=100, filtered=True, froot
     except ValueError:
         print("Not making contours.")
 
+    #tt = np.linspace(np.exp(-3.), np.exp(0.0), 100)
+    e_tearing2 = np.log10(tt**(2.0/3.0)) - 8.8
+    #e_tearing = tt - np.exp(-12)
 
-    ax2.scatter(rsamp, fsamp, color="black", alpha=0.7)
-    ax2.axis([-4.,0., -13.0, -7.])
+    ax2.plot(np.log10(tt), e_tearing2, "-.", zorder=10, lw=4, color="black")
+
+    #ax2.scatter(rsamp, fsamp, color="black", alpha=0.7)
+    ax2.axis([-4.,-1., -13.0, -7.5])
     ax2.text(0.5,0.1, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(sprf_mean[0], sprf_std[0]),
                 verticalalignment='center', horizontalalignment='center', color='black', transform=ax2.transAxes,
                 fontsize=22)
@@ -879,6 +859,7 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
 
     skewness_sample, flux_sample, duration_sample, amplitude_sample = [], [], [], []
 
+    nsims = 100
     for i in xrange(nsims):
         print(i)
         sample = parameters_red[:,i]
@@ -901,9 +882,9 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
 
 
     ### samples for scatter plot
-    fsamp = flux_sample[0]
+    fsamp = np.array(flux_sample[0])
     dsamp = duration_sample[0]
-    ssamp = skewness_sample[0]
+    ssamp = np.array(skewness_sample[0])
     asamp = amplitude_sample[0]
 
     flux_flat, duration_flat, skewness_flat, amplitude_flat = [], [], [], []
@@ -919,6 +900,13 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
         spsf.append(scipy.stats.spearmanr(f,s))
 
 
+    ### samples for scatter plot
+    fsamp = np.hstack(np.array(flux_sample[:10]))
+    dsamp = duration_sample[0]
+    ssamp = np.hstack(np.array(skewness_sample[:10]))
+    asamp = amplitude_sample[0]
+
+
     flux_flat = np.array(flux_flat)
     skewness_flat = np.array(skewness_flat)
     duration_flat = np.array(duration_flat)
@@ -929,11 +917,6 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
     spsf_mean = np.mean(spsf, axis=0)
     spsf_std = np.std(spsf, axis=0)
 
-    H_all = []
-
-    for f, s, in zip(flux_sample, skewness_sample):
-        H, xedges, yedges = np.histogram2d(f, s, bins=(10,10), range=[[0,6],[-2.5,3.0]])
-        H_all.append(H)
 
     fig = figure(figsize=(12,9))
     #subplots_adjust(top=0.9, bottom=0.1, left=0.03, right=0.97, wspace=0.15, hspace=0.2)
@@ -946,22 +929,23 @@ def correlation_plots_skewness(sample=None, datadir="./", nsims=100, filtered=Tr
 
     #xmin, xmax = duration_flat.min(), duration_flat.max()
     #ymin, ymax = fluence_flat.min(), fluence_flat.max()
-    xmin = 0.0 #np.min(flux_flat)
-    xmax = 6.0 #np.max(flux_flat)
-    ymin = -2.5 #np.min(skewness_flat)
-    ymax = 3.0 #np.max(skewness_flat)
+    xmin = 1.0 #np.min(flux_flat)
+    xmax = 5.5 #np.max(flux_flat)
+    ymin = -1.5 #np.min(skewness_flat)
+    ymax = 2.5 #np.max(skewness_flat)
     ### Perform Kernel density estimate on data
     cmap = sns.cubehelix_palette(start=.5, rot=-.75, as_cmap=True)
 
+    #print(fsamp)
     try:
-        sns.kdeplot(flux_flat, skewness_flat, cmap=cmap, shade=True, cut=5, ax=ax1)
+        sns.kdeplot(fsamp, ssamp, cmap=cmap, shade=True, cut=5, ax=ax1)
 
 
     except ValueError:
         print("Not making contours.")
 
 
-    ax1.scatter(fsamp, ssamp, color="black")
+    #ax1.scatter(fsamp, ssamp, color="black")
 
     #ax1.text(0.5,0.05, r"Spearman Rank Coefficient $R = %.2f \pm %.2f$"%(spsf_mean[0], spsf_std[0]),
     #            verticalalignment='center', horizontalalignment='center', color='black', transform=ax1.transAxes,

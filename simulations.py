@@ -5,9 +5,10 @@ import re
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set_style("white")
+#sns.set_style("white")
 #sns.set_context("poster")
-
+import matplotlib.gridspec as gridspec
+import matplotlib.ticker as ticker
 import parameters
 import word
 import dnest_sample
@@ -90,15 +91,17 @@ def singlepeak_results():
     p_sorted = [posterior_files[1], posterior_files[3], posterior_files[0], posterior_files[2]]
     #r_all, a_all, n_all, s_all = [], [], [] ,[]
 
-
-    #fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(1,5,figsize = (24, 6))
-    fig = plt.figure()
-    ax1 = plt.subplot2grid((1,5), (0,0), colspan=1)
-
-    ax2 = plt.subplot2grid((1,5), (0,1), colspan=4)
+    rc("font", size=20, family="serif", serif="Computer Sans")
+    rc("text", usetex=True)
 
 
-    fig.subplots_adjust(top=0.95, bottom=0.15, left=0.03, right=0.97, wspace=0.2)
+    fig = figure(figsize=(24,6))
+    gs1 = gridspec.GridSpec(1,1)
+    gs1.update(top=0.95, bottom=0.13, left=0.06, right=0.21)
+
+
+#    fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(1,5,figsize = (24, 6))
+#    fig.subplots_adjust(top=0.95, bottom=0.15, left=0.03, right=0.97, wspace=0.2)
 
     ncomp_all, amp_all, pos_all = [], [], []
     for f in p_sorted:
@@ -109,8 +112,8 @@ def singlepeak_results():
         tau_rise = 0.005
         skew = 5.0
 
-        pars = dnest_sample.parameter_sample(f, datadir="./", filter_weak=False,
-                                             trigfile=None, bkg=None, prior="exp", efile=None)
+        pars = dnest_sample.parameter_sample(f, datadir="./", filter_weak=False, efile=None,
+                                             trigfile=None, bkg=None, prior="exp")
 
         pars = pars[0]
         ncomp = [len(p.all) for p in pars]
@@ -137,53 +140,111 @@ def singlepeak_results():
         #ax2.hist(risetime, bins=20, range=[0.0, 0.03], color=c, alpha=0.5)
         #ax3.hist(amplitude, bins=20, range=[0,30], color=c, alpha=0.5)
 
-        #ax5.scatter(ncomp, pos, color=c)
-        #plt.title("$%s$"%f)
-        #ax1.bar(bins[:-1], h, zs=z, zdir='y', color=c, alpha=0.8)
-
-        #ax1.set_xlabel('X')
-        #ax1.set_ylabel('Y')
-        #ax1.set_zlabel('Z')
-
-        #ax2.scatter(position, amplitude, color=c)
-        #ax2.hexbin(position, amplitude, cmap=cm, alpha=0.5, gridsize=20)
-        #plt.show()
-
     col = sns.color_palette()[:4]
     cmaps = [sns.dark_palette(c, reverse=True, as_cmap=True) for c in col]
     fs = 18
 
+
+    rc("font", size=20, family="serif", serif="Computer Sans")
+    rc("text", usetex=True)
+
+    ax1 = plt.subplot(gs1[0,0])
+
     sns.boxplot(ncomp_all, names=["0.6", "3.3", "6.5", "13.0"], ax=ax1)
     ax1.tick_params(axis='both', which='major', labelsize=fs)
     ax1.set_xlabel('SNR', fontsize=22)
-    ax1.set_ylabel( ylabel="Number of spikes", fontsize=22)
+    ax1.set_ylabel( ylabel="Number of Spikes", fontsize=22)
+    ax1.set_ylim([0.8,70])
     ax1.set_yscale("log")
+    ax1.yaxis.set_ticks([1,2,5,10,20,50])
+    ax1.yaxis.set_major_formatter(ticker.FormatStrFormatter('%0.1f'))
+    #ax1.tick_params(axis='both',color='black',length=3,width=2)
+    plt.show()
 
+    gs2 = gridspec.GridSpec(1,4)
+    gs2.update(top=0.95, bottom=0.13, left=0.26, right=0.98, wspace=0.14)
+
+
+    sns.set_style("white")
+
+    ax_outer = fig.add_subplot(gs2[0,:])
+
+    ax_outer.spines['top'].set_color('none')
+    ax_outer.spines['bottom'].set_color('none')
+    ax_outer.spines['left'].set_color('none')
+    ax_outer.spines['right'].set_color('none')
+
+    ax_outer.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+
+    ax_outer.set_xlabel('Position since burst start [s]', fontsize=22, labelpad=0)
+    ax_outer.set_ylabel("Amplitude [Counts/(0.005 seconds)]", fontsize=22, labelpad=-10)
+    #ax_outer.xaxis.label.set_color('black')
+    #ax_outer.yaxis.label.set_color('black')
+
+    sns.set_style("darkgrid")
+    rc("font", size=20, family="serif", serif="Computer Sans")
+    rc("text", usetex=True)
+
+
+    ax2 = fig.add_subplot(gs2[0,0])
     ax2.scatter(pos_all[0], amp_all[0], color=col[0])
     sns.kdeplot(np.transpose(np.array([pos_all[0],amp_all[0]])), shade=False, bw=(.01, .1), cmap=cmaps[0], ax=ax2)
     ax2.tick_params(axis='both', which='major', labelsize=fs)
-    ax2.set_xlabel('Position since burst start [s]', fontsize=22, labelpad=10)
-    ax2.set_ylabel("Amplitude [Counts/(0.005 seconds)]", fontsize=22)
 
+    ax2.scatter(0.06, 1.0, s=100, marker="x", zorder=10, linewidths=3, color="black", alpha=0.6)
+    ax2.hlines(1.0, -0.05, 0.25, lw=2, alpha=0.6)
+    ax2.vlines(0.06, -1.0, 5.0, lw=2, alpha=0.6)
+    ax2.set_xlim([-0.05, 0.25])
+    ax2.set_ylim([-0.5, 4.5])
+    ax2.xaxis.set_ticks([0.0, 0.1, 0.2])
+
+
+    ax3 = fig.add_subplot(gs2[0,1])
     ax3.scatter(pos_all[1], amp_all[1], color=col[1])
     sns.kdeplot(np.transpose(np.array([pos_all[1],amp_all[1]])), shade=False, bw=(.01, .2), cmap=cmaps[1], ax=ax3)
     ax3.tick_params(axis='both', which='major', labelsize=fs)
-    ax3.set_xlabel('Position since burst start [s]', fontsize=22, labelpad=10)
 
+    ax3.scatter(0.06, 5.0, s=100, marker="x", zorder=10, linewidths=3, color="black", alpha=0.6)
+    ax3.hlines(5.0, -0.05, 0.25, lw=2, alpha=0.6)
+    ax3.vlines(0.06, -1.0, 6.5, lw=2, alpha=0.6)
+    ax3.set_xlim([-0.05, 0.25])
+    ax3.set_ylim([-0.5, 6.5])
+    ax3.xaxis.set_ticks([0.0, 0.1, 0.2])
+
+
+    ax4 = fig.add_subplot(gs2[0,2])
     ax4.scatter(pos_all[2], amp_all[2], color=col[2])
     sns.kdeplot(np.transpose(np.array([pos_all[2],amp_all[2]])), shade=False, bw=(.01, .2), cmap=cmaps[2], ax=ax4)
     ax4.tick_params(axis='both', which='major', labelsize=fs)
-    ax4.set_xlabel('Position since burst start [s]', fontsize=22, labelpad=10)
 
+    ax4.scatter(0.06, 10.0, s=100, marker="x", zorder=10, linewidths=3, color="black", alpha=0.6)
+    ax4.hlines(10.0, -0.05, 0.25, lw=2, alpha=0.6)
+    ax4.vlines(0.06, -1.0, 12.5, lw=2, alpha=0.6)
+    ax4.set_xlim([-0.05, 0.25])
+    ax4.set_ylim([-0.5, 12.5])
+    ax4.xaxis.set_ticks([0.0, 0.1, 0.2])
+
+
+
+    ax5 = fig.add_subplot(gs2[0,3])
     ax5.scatter(pos_all[3], amp_all[3], color=col[3])
     sns.kdeplot(np.transpose(np.array([pos_all[3],amp_all[3]])), shade=False, bw=(.01, 0.2), cmap=cmaps[3], ax=ax5)
     ax5.tick_params(axis='both', which='major', labelsize=fs)
-    ax5.set_xlabel('Position since burst start [s]', fontsize=22, labelpad=10)
+
+    ax5.scatter(0.06, 20.0, s=100, marker="x", zorder=10, linewidths=3, color="black", alpha=0.6)
+    ax5.hlines(20.0, -0.05, 0.25, lw=2, alpha=0.6)
+    ax5.vlines(0.06, -1.0, 33, lw=2, alpha=0.6)
+    ax5.set_xlim([-0.05, 0.25])
+    ax5.set_ylim([-0.5, 33])
+    ax5.xaxis.set_ticks([0.0, 0.1, 0.2])
+
+
+    #draw()
+    #plt.tight_layout()
 
     plt.savefig("f3.pdf", format="pdf")
     plt.close()
 
-    return
 
 def multipeak(bkg=None, datadir="./", trigfile="sgr1550_ttrig.dat"):
 

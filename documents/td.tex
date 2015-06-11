@@ -358,7 +358,7 @@ where the marginal likelihood, $p(\bm{\counts} | H)$ is defined as a normalisati
 % BJB: Also, you can't integrate over N as it's discrete :) It's a summation
 \begin{eqnarray}
 p(\bm{\counts} \given H) & = & \sum_{n=1}^{N} \int_{-\infty}^{\infty}{\likelihood(N, \bm{\alpha}, \{\bm{\theta}_n \})} \times \\ \nonumber
-&& p(N\given H)\, p(\bm{\alpha} \given H) \prod\limits_{n=0}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \dd\bm{\alpha}\, \dd\bm{\theta}_1 \, ...\, \dd\bm{\theta}_N \; .
+&& p(N\given H)\, p(\bm{\alpha} \given H) \prod\limits_{n=1}^{N}  p(\bm{\theta}_n\given \bm{\alpha}, H) \dd\bm{\alpha}\, \dd\bm{\theta}_1 \, ...\, \dd\bm{\theta}_N \; .
 \label{eqn:marginal}
 \end{eqnarray}
 
@@ -370,6 +370,19 @@ p(\bm{\counts} \given H) & = & \sum_{n=1}^{N} \int_{-\infty}^{\infty}{\likelihoo
 The marginal likelihood involves integration in a high-dimensional parameter space as well as summation over $N$, which is analytically intractable for all but the
 simplest cases. Here, we use DNS to efficiently traverse parameter space and approximate the marginal 
 likelihood as well as sample from the posterior probability distribution. 
+
+ \begin{figure}[h]
+\begin{center}
+\includegraphics[width=9cm]{f2.pdf}%word.pdf}
+\caption{An example of the component model used for magnetar bursts: a spike is defined by an exponential rise with characteristic
+time scale $\tau$ and an exponential fall with a fall time scale $\tau s$, where $s$ is a skewness parameter that describes how the fall
+time is stretched ($s > 1$) or contracted ($s < 1$) compared to the rise time. Individual spikes are also characterised by a time offset
+$t_{\mathrm{offset}}$ describing the location of the peak count rate in a time series (the difference between the dashed line and the 0 point
+on the x-axis), and an amplitude $A$ describing the height of a peak.}
+\label{fig:word_example}
+\end{center}
+\end{figure}
+
 Nested sampling \citep{skilling2006} samples parameter space by uniformly sampling $M$ points (particles) from the space allowed by the prior. 
 One then computes the likelihood values associated with each particle, and the particle with the lowest likelihood is discarded. A new point
 can be generated, for example, via MCMC\footnote{In our case, the MCMC process will include trans-dimensional jumps that change the number of components $N$.}, subject to the hard constraint that the
@@ -388,22 +401,12 @@ are multi-modal. It is here that DNS provides a reliable alternative \citep[for 
  one again computes the $1-e^{-1}$ quantile, and constructs a new likelihood contour. This process is repeated, and as in the classical Nested Sampling
  approach, the population contracts towards regions of high likelihood, but it will do so even for complex probability distributions subject to multi-modality.
  Details of an implementation of DNS for hierarchical models with an unknown number of model components can be found in \citet{brewer2013} and \citet{brewer2014}.
- 
+
 % BJB: Techically the posterior isn't a PDF here because N is discrete.
 DNS as implemented in {\it DNest3}\footnote{the code is available under the GNU public license at \url{https://github.com/eggplantbren/DNest3}} can return both an estimate for the marginal likelihood,
 suitable for model comparison, as well as samples drawn from the posterior distribution for a given burst. The latter is done by letting a particle explore
 the final mixture of levels freely via MCMC\@. 
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=9cm]{f2.pdf}%word.pdf}
-\caption{An example of the component model used for magnetar bursts: a spike is defined by an exponential rise with characteristic
-time scale $\tau$ and an exponential fall with a fall time scale $\tau s$, where $s$ is a skewness parameter that describes how the fall
-time is stretched ($s > 1$) or contracted ($s < 1$) compared to the rise time. Individual spikes are also characterised by a time offset
-$t_{\mathrm{offset}}$ describing the location of the peak count rate in a time series (the difference between the dashed line and the 0 point
-on the x-axis), and an amplitude $A$ describing the height of a peak.}
-\label{fig:word_example}
-\end{center}
-\end{figure}
+
 
 
 
@@ -520,7 +523,7 @@ For a summary of all model parameters, their definition and prior distributions,
 \caption{We test the model constructed in Section \ref{ch6:methods} on simulated data. We simulated light curves of a single spike with \fermi/GBM-like background count rates and
 varied the amplitude of the spike in order to test detectability. In the left panel, we show the posterior distribution of the number of spikes as a function of the signal-to-noise ratio of the spike
  as a box plot. The box encompasses the interquartile range (the $0.25$ and $0.75$ quantiles) with the median marked. The whiskers extend out to $1.5$ times the interquartile range; 
- outliers are marked as scatter points. In the other panels, we show distributions of peak position versus amplitude for the four signal-to-noise ratios of the left panel (in the same order). The position and time and amplitude of the signal injected into the light curve is marked as a dark grey cross; similarly coloured lines are added to guide the eye. If the noise 
+ outliers are marked as scatter points. In the other panels, we show distributions of peak position versus amplitude for the four signal-to-noise ratios of the left panel (in the same order). {\bf The position and time and amplitude of the signal injected into the light curve is marked as a dark grey cross; similarly coloured lines are added to guide the eye.} If the noise 
  in the light curve dominates the signal, the model will place a large number of low-amplitude spikes all throughout the light curve (second panel). For a signal-to-noise ratio of 3 or greater, the 
  probability distributions over amplitude and position collapse into a sharp peak at the position and amplitude where we places the spike in the simulations (panels 3-5).}
 \label{fig:onespike}
@@ -564,6 +567,19 @@ with little ambiguity.
 Any feature in the data with a count
 rate exceeding the background by a factor of at least $3$ will be modelled fairly unambiguously by our method, allowing us to make inferences about the underlying processes based on these models. 
 
+\begin{figure*}[htbp]
+%\begin{center}
+\includegraphics[width=\textwidth]{f5.pdf}%example_dnest_result.pdf}
+\caption{Light curves (black) of $15$ examples of bursts from SGR J1550-5418, each with $10$ random draws from the posterior distribution of the model (color). We sorted bursts by maximum count rate 
+(left to right) and by the average number of spike components in a given burst inferred from the model (top to bottom). Note that the y-axes are different for each burst, and, in particular, change
+quite drastically from left to right. At high count rates 
+(with maximum count rates $ > 3\times10^{4}\,\mathrm{counts}\,\mathrm{s}^{-1}$), there are no bursts with an average number of components inferred from the model larger than $15$, and components
+ for these models are very well constrained. Conversely, at low count rates $< 3\times10^{4}\,\mathrm{counts}\,\mathrm{s}^{-1}$, there is a population of bursts with a small signal-to-noise ratio, which the 
+ model tends to find a large number of low-amplitude spikes at random positions in the light curve (compare last row of panels). This behaviour was also observed in the simulations in Section 
+ \ref{ch6:modelsims}.}
+\label{fig:lcpanel}
+%\end{center}
+\end{figure*}
 
 \section{Individual Bursts}
 \label{ch6:oneburst}
@@ -588,19 +604,7 @@ uncertainty in the distribution of waiting times between spikes.
 
 The number of components (spikes) per burst (Figure \ref{fig:dnest_example}, right panel) has a posterior distribution that is bounded, and all samples drawn
 from this distribution contain between $10$ and $20$ components, with most of the posterior mass between $11$ and $16$ components. This range is slightly higher than the features that are immediately obvious to the eye in the burst itself, but may in part be due to some visible features being superpositions of spikes. 
-\begin{figure*}[htbp]
-%\begin{center}
-\includegraphics[width=\textwidth]{f5.pdf}%example_dnest_result.pdf}
-\caption{Light curves (black) of $15$ examples of bursts from SGR J1550-5418, each with $10$ random draws from the posterior distribution of the model (color). We sorted bursts by maximum count rate 
-(left to right) and by the average number of spike components in a given burst inferred from the model (top to bottom). Note that the y-axes are different for each burst, and, in particular, change
-quite drastically from left to right. At high count rates 
-(with maximum count rates $ > 3\times10^{4}\,\mathrm{counts}\,\mathrm{s}^{-1}$), there are no bursts with an average number of components inferred from the model larger than $15$, and components
- for these models are very well constrained. Conversely, at low count rates $< 3\times10^{4}\,\mathrm{counts}\,\mathrm{s}^{-1}$, there is a population of bursts with a small signal-to-noise ratio, which the 
- model tends to find a large number of low-amplitude spikes at random positions in the light curve (compare last row of panels). This behaviour was also observed in the simulations in Section 
- \ref{ch6:modelsims}.}
-\label{fig:lcpanel}
-%\end{center}
-\end{figure*}
+
 
 In Figure \ref{fig:lcpanel}, we show a grid of light curves with random draws from the posterior distribution of the model for each burst displayed. We choose a wide range
 of peak count rates from very weak bursts to the brightest examples in our sample, as well as light curves that vary strongly in complexity, from light curves with only one
@@ -622,6 +626,15 @@ the amplitude $A$, and derived quantities such as the fluence (as a proxy for to
  In a naive way, this can be done by picking a parameter set from the posterior distribution run for each burst, and combining these parameter sets from all bursts to a single ensemble 
 to compute the quantity of interest (say, a correlation between two model parameters). This procedure can be repeated, such that we build up a sample
 for the quantity in question. 
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=9cm]{f6.pdf}%sgr1550_nspikes.pdf}
+\caption{Number of components in a given burst for $332$ modelled bursts. We computed the distributions by picking single samples
+from the posterior for each burst and formed an ensemble of these individual draws for all bursts to make a single distribution. We repeated this process $100$ times,
+and computed the mean number of bursts for each bin (corresponding to the number of components per burst) in the distribution.}
+\label{fig:spikes}
+\end{center}
+\end{figure}
 
 {\bf There are some important limitations to this approach. The most important one is the inherent assumption of independence between bursts. By computing and sampling from 
 the posterior for each burst individually, we have effectively assumed that each burst is independent of all other bursts; thus each burst has its own posterior distribution for model 
@@ -640,15 +653,6 @@ as well as for a number of different possible spike model shapes, to a follow-up
 below should be seen as a first exploratory analysis of the data. }
 
 
-\begin{figure}[htbp]
-\begin{center}
-\includegraphics[width=9cm]{f6.pdf}%sgr1550_nspikes.pdf}
-\caption{Number of components in a given burst for $332$ modelled bursts. We computed the distributions by picking single samples
-from the posterior for each burst and formed an ensemble of these individual draws for all bursts to make a single distribution. We repeated this process $100$ times,
-and computed the mean number of bursts for each bin (corresponding to the number of components per burst) in the distribution.}
-\label{fig:spikes}
-\end{center}
-\end{figure}
   \begin{figure*}[htbp]
 \begin{center}
 \includegraphics[width=\textwidth]{f7.pdf}%sgr1550_diff_dist.pdf}
@@ -713,7 +717,19 @@ length of a single \fermi/GBM TTE data file. This cut-off introduces a bias into
 \end{center}
 \end{figure}
 
-
+\begin{figure*}[htbp]
+\begin{center}
+\includegraphics[width=\textwidth]{f9.pdf}%sgr1550_correlations.pdf}
+\caption{Joint distributions of spike duration and fluence (left) and spike rise time and fluence (right). Shaded contours are derived from a single realization of 
+draws for all bursts. The duration is defined as the time between the two points where
+the count rate drops to $0.01$ of the peak count rate on either side of that peak, computed from the inferred model parameters of each spike. The rise time is the exponential
+rise time scale defined in Equation \ref{eqn:word}. The fluence is calculated by computing the fraction of photons within a single spike compared to the number of photons in the
+entire burst, and using
+this fraction in combination with fluences inferred from spectral modelling \citep{vanderhorst2012,vonkienlin2012} to derive the fluence in a single spike. The dashed line in the left panel corresponds to 
+the prediction of the crust rupture model, the dash-dotted line in both panel to the predictions of a reconnection model with a tearing mode instability. Both models are described in more detail in Section \ref{ch6:discussion}.}
+\label{fig:correlations}
+\end{center}
+\end{figure*}
  Here, we test for correlation between fluence and rise time as well as fluence and duration, and construct differential distributions
  in order to compare with predictions from SOC theory. We construct differential distributions by picking a sample from the posterior distribution
  for each burst in the data set, and hence form an ensemble of posterior draws for all bursts, for which we can construct the differential distribution.
@@ -743,19 +759,7 @@ and thus introduces a significant skew towards short waiting times.
 The distribution of short waiting times, on the other hand, traces the time between consecutive spikes within a burst. The peak of this distribution indicates
 that there is a characteristic time scale determining the waiting time between individual peaks within a burst as well. 
 
-\begin{figure*}[htbp]
-\begin{center}
-\includegraphics[width=\textwidth]{f9.pdf}%sgr1550_correlations.pdf}
-\caption{Joint distributions of spike duration and fluence (left) and spike rise time and fluence (right). Shaded contours are derived from a single realization of 
-draws for all bursts. The duration is defined as the time between the two points where
-the count rate drops to $0.01$ of the peak count rate on either side of that peak, computed from the inferred model parameters of each spike. The rise time is the exponential
-rise time scale defined in Equation \ref{eqn:word}. The fluence is calculated by computing the fraction of photons within a single spike compared to the number of photons in the
-entire burst, and using
-this fraction in combination with fluences inferred from spectral modelling \citep{vanderhorst2012,vonkienlin2012} to derive the fluence in a single spike. The dashed line in the left panel corresponds to 
-the prediction of the crust rupture model, the dash-dotted line in both panel to the predictions of a reconnection model with a tearing mode instability. Both models are described in more detail in Section \ref{ch6:discussion}.}
-\label{fig:correlations}
-\end{center}
-\end{figure*}
+
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=9cm]{f10.pdf}%sgr1550_skewness_correlations.pdf}
@@ -793,7 +797,19 @@ distribution leads to an increase in the number of components per burst.}
 \label{fig:nspikes_prior}
 \end{center}
 \end{figure}
-
+\begin{figure*}[htbp]
+\begin{center}
+\includegraphics[width=\textwidth]{f12.pdf}%sgr1550_prior_diff_dist.pdf}
+\caption{Differential distributions for burst duration (left panel), amplitude (middle panel) and fluence (right panel) for an exponential prior on spike 
+amplitudes and rise timescales (blue; see also Figure \ref{fig:diffdist}),
+and a log-normal prior on the same parameters (green). {\bf For each distribution, we drew $100$ realizations from the posterior for each burst and combined them to $100$ ensembles of burst models, for which we computed mean (bars) and standard deviation (error bars).}  A log-normal prior leads to a larger number of spikes overall (as shown in Figure \ref{fig:nspikes_prior}), but distributions of
+similar shape {\bf which are largely consistent within error bars}. There is an excess of short-duration spikes when using a log-normal prior compared to an exponential prior. Note also the 
+sharp cut-off in duration when using the exponential prior: this is set by the hard limit on the minimum rise time scale, which we did not include in the lognormal prior. 
+The reason for omitting this limit in the latter case is the fact that the lognormal distribution, by design, can move its mass away from small time scales, if the data 
+demands it, while the exponential distribution cannot. The overall shape and location of the maximum for each distribution, remains unchanged.}
+\label{fig:diff_prior}
+\end{center}
+\end{figure*}
 
 
 \subsection{Testing the Prior Assumptions}
@@ -814,19 +830,7 @@ the log-normal distribution, and a uniform prior on the standard deviations (see
 (e.g.\ using the marginal likelihood introduced in Equation \ref{eqn:marginal}), but simply explore how the use of different priors
 changes the results reported in the previous section.
 
-\begin{figure*}[htbp]
-\begin{center}
-\includegraphics[width=\textwidth]{f12.pdf}%sgr1550_prior_diff_dist.pdf}
-\caption{Differential distributions for burst duration (left panel), amplitude (middle panel) and fluence (right panel) for an exponential prior on spike 
-amplitudes and rise timescales (blue; see also Figure \ref{fig:diffdist}),
-and a log-normal prior on the same parameters (green). {\bf For each distribution, we drew $100$ realizations from the posterior for each burst and combined them to $100$ ensembles of burst models, for which we computed mean (bars) and standard deviation (error bars).}  A log-normal prior leads to a larger number of spikes overall (as shown in Figure \ref{fig:nspikes_prior}), but distributions of
-similar shape {\bf which are largely consistent within error bars}. There is an excess of short-duration spikes when using a log-normal prior compared to an exponential prior. Note also the 
-sharp cut-off in duration when using the exponential prior: this is set by the hard limit on the minimum rise time scale, which we did not include in the lognormal prior. 
-The reason for omitting this limit in the latter case is the fact that the lognormal distribution, by design, can move its mass away from small time scales, if the data 
-demands it, while the exponential distribution cannot. The overall shape and location of the maximum for each distribution, remains unchanged.}
-\label{fig:diff_prior}
-\end{center}
-\end{figure*}
+
 
 In Figures \ref{fig:nspikes_prior} and \ref{fig:diff_prior} we present a comparison between the distributions for the number of spikes 
 per burst for each set of priors, and the differential distributions for the most important quantities for both priors.
@@ -1272,7 +1276,7 @@ yields $E\propto\tau_{\rm rise}^{2/3}$.  This is qualitatively consistent with t
  above, the exact power law exponent is difficult to tell due to the large scatter in the data.   Note that this large scatter in the fluence versus rise time plots 
  may be due to the fact that the energy is also strongly dependent on the local magnetic field strength ($E\propto B_S^{7/4}r^{-33/8}$), where the energy of 
  the spike will be highly dependent on the height of the reconnection region $E\propto r^{-33/8}\sim r^{-4}$. 
- {While the scatter in the data makes the determination of the power law exponent difficult, it is not that large from a physical perspective: given the very strong dependence
+ {\bf While the scatter in the data makes the determination of the power law exponent difficult, it is not that large from a physical perspective: given the very strong dependence
  of the energy on the height of the reconnection region, a scatter over $\sim 2$ orders of magnitude nevertheless implies that } %Since the scatter is, on the other hand, not that
 the spikes all occur at relatively the same height ($r\sim r_{\rm rec}$), where the local conditions for reconnection are 
 favourable, instead of happening all throughout the magnetosphere.
@@ -1314,7 +1318,7 @@ models evolve, they can inform the probabilistic models we build for studying va
 
 
 \paragraph{acknowledgements}
-DH, BJB, DWH, MF and IM thank the organizers of MaxEnt2013. DH was partially supported by a Netherlands Organization for Scientific Research (NWO) Vidi Fellowship (PI A. Watts) and the Moore-Sloan Data Science Environment at NYU. BJB is supported
+DH, BJB, DWH, MF and IM thank the organizers of MaxEnt2013, and also thank Ewan Cameron for valuable input to this project. DH was partially supported by a Netherlands Organization for Scientific Research (NWO) Vidi Fellowship (PI A. Watts) and the Moore-Sloan Data Science Environment at NYU. BJB is supported
 by a Marsden Fast Start grant from the Royal Society of New Zealand. CE acknowledges funding from NOVA Network 4. YL acknowledges support from a Monash Reaseach Acceleration grant.  AJvdH acknowledges support from the European Research Council via Advanced Investigator Grant no. 247295 (PI: R.A.M.J. Wijers).
 C.K. and was partially supported by NASA grant NNH07ZDA001-GLAST.  
 
